@@ -36,7 +36,7 @@ static string ToHtml(IList<DxfRawTag> sections, string fileName)
 
     sb.AppendLine("<html>");
     sb.AppendLine("<head>");
-    sb.AppendFormat("<title>{0}</title>{1}", fileName, Environment.NewLine);
+    sb.Append($"<title>{fileName}</title>{Environment.NewLine}");
     sb.AppendLine("<meta charset=\"utf-8\"/>");
     sb.AppendLine("<style type=\"text/css\">");
     sb.AppendLine("body     { background-color:rgb(221,221,221); }");
@@ -66,11 +66,19 @@ static string ToHtml(IList<DxfRawTag> sections, string fileName)
         }
 
         // section
-        sb.AppendFormat("{3}<div class=\"Toggle\" onclick=\"toggle_visibility('{0}');\"><p>{1} {2}</p></div>{3}", i, section.DataElement, (section.Children != null) && (section.Children.Count > 0) && (section.Children[0].GroupCode == DxfParser.DxfCodeForName) ? section.Children[0].DataElement : "<Unknown>", Environment.NewLine);
+        sb.Append(string.Format(
+            "{3}<div class=\"Toggle\" onclick=\"toggle_visibility('{0}');\"><p>{1} {2}</p></div>{3}", i,
+            section.DataElement,
+            (section.Children != null) && (section.Children.Count > 0) &&
+            (section.Children[0].GroupCode == DxfParser.DxfCodeForName)
+                ? section.Children[0].DataElement
+                : "<Unknown>", Environment.NewLine));
         //sb.AppendFormat("<!-- SECTION i={0} -->{1}", i, Environment.NewLine);
-        sb.AppendFormat("<div class=\"Table\" id=\"{0}\">{1}", i, Environment.NewLine);
-        sb.AppendFormat("    <div class=\"Header\"><div class=\"Cell\"><p>LINE</p></div><div class=\"Cell\"><p>CODE</p></div><div class=\"Cell\"><p>DATA</p></div></div>{0}", Environment.NewLine);
-        sb.AppendFormat("    <div class=\"{0}\"><div class=\"Cell\"><p class=\"Line\">{1}</p></div><div class=\"Cell\"><p class=\"Code\">{2}:</p></div><div class=\"Cell\"><p class=\"Data\">{3}</p></div></div>{4}", "Section", lineNumber += 2, section.GroupCode, section.DataElement, Environment.NewLine);
+        sb.Append($"<div class=\"Table\" id=\"{i}\">{Environment.NewLine}");
+        sb.Append(
+            $"    <div class=\"Header\"><div class=\"Cell\"><p>LINE</p></div><div class=\"Cell\"><p>CODE</p></div><div class=\"Cell\"><p>DATA</p></div></div>{Environment.NewLine}");
+        sb.Append(
+            $"    <div class=\"{"Section"}\"><div class=\"Cell\"><p class=\"Line\">{lineNumber += 2}</p></div><div class=\"Cell\"><p class=\"Code\">{section.GroupCode}:</p></div><div class=\"Cell\"><p class=\"Data\">{section.DataElement}</p></div></div>{Environment.NewLine}");
 
         if (section.Children != null)
         {
@@ -89,7 +97,8 @@ static string ToHtml(IList<DxfRawTag> sections, string fileName)
 
                     // entity with children (type)
                     //sb.AppendFormat("    <!-- OTHER j={0} -->{1}", j, Environment.NewLine);
-                    sb.AppendFormat("    <div class=\"{0}\"><div class=\"Cell\"><p class=\"Line\">{1}</p></div><div class=\"Cell\"><p class=\"Code\">{2}:</p></div><div class=\"Cell\"><p class=\"Data\">{3}</p></div></div>{4}", "Other", lineNumber += 2, other.GroupCode, other.DataElement, Environment.NewLine);
+                    sb.Append(
+                        $"    <div class=\"{"Other"}\"><div class=\"Cell\"><p class=\"Line\">{lineNumber += 2}</p></div><div class=\"Cell\"><p class=\"Code\">{other.GroupCode}:</p></div><div class=\"Cell\"><p class=\"Data\">{other.DataElement}</p></div></div>{Environment.NewLine}");
 
                     if (other.Children != null)
                     {
@@ -100,7 +109,8 @@ static string ToHtml(IList<DxfRawTag> sections, string fileName)
                             {
                                 // entity without type
                                 //sb.AppendFormat("        <!-- ENTITY k={0} -->{1}", k, Environment.NewLine);
-                                sb.AppendFormat("        <div class=\"Row\"><div class=\"Cell\"><p class=\"Line\">{0}</p></div><div class=\"Cell\"><p class=\"Code\">{1}:</p></div><div class=\"Cell\"><p class=\"Data\">{2}</p></div></div>{3}", lineNumber += 2, entity.GroupCode, entity.DataElement, Environment.NewLine);
+                                sb.Append(
+                                    $"        <div class=\"Row\"><div class=\"Cell\"><p class=\"Line\">{lineNumber += 2}</p></div><div class=\"Cell\"><p class=\"Code\">{entity.GroupCode}:</p></div><div class=\"Cell\"><p class=\"Data\">{entity.DataElement}</p></div></div>{Environment.NewLine}");
                             }
                         }
                     }
@@ -111,7 +121,8 @@ static string ToHtml(IList<DxfRawTag> sections, string fileName)
 
                     // entity without children (type)
                     //sb.AppendFormat("    <!-- ENTITY j={0} -->{1}", j, Environment.NewLine);
-                    sb.AppendFormat("    <div class=\"Row\"><div class=\"Cell\"><p class=\"Line\">{0}</p></div><div class=\"Cell\"><p class=\"Code\">{1}:</p></div><div class=\"Cell\"><p class=\"Data\">{2}</p></div></div>{3}", lineNumber += 2, entity.GroupCode, entity.DataElement, Environment.NewLine);
+                    sb.Append(
+                        $"    <div class=\"Row\"><div class=\"Cell\"><p class=\"Line\">{lineNumber += 2}</p></div><div class=\"Cell\"><p class=\"Code\">{entity.GroupCode}:</p></div><div class=\"Cell\"><p class=\"Data\">{entity.DataElement}</p></div></div>{Environment.NewLine}");
                 }
             }
         }
@@ -119,7 +130,7 @@ static string ToHtml(IList<DxfRawTag> sections, string fileName)
         sb.AppendLine("</div>");
     }
 
-    sb.AppendFormat("{0}</body></html>", Environment.NewLine);
+    sb.Append($"{Environment.NewLine}</body></html>");
 
     return sb.ToString();
 }
