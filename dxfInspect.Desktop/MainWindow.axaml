@@ -1,0 +1,80 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="dxfInspect.Desktop.MainWindow"
+        Title="dxfInspect"
+        Background="#DDDDDD">
+
+    <Grid RowDefinitions="Auto,*">
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="10">
+            <Button Name="LoadButton"
+                    Content="Load DXF"
+                    Classes="primary" 
+                    Margin="0,0,10,0"/>
+            <TextBlock Name="FileNameBlock"
+                      VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <DataGrid Name="DxfGrid"
+                 Grid.Row="1"
+                 Margin="10"
+                 IsVisible="False"
+                 AutoGenerateColumns="False"
+                 IsReadOnly="True"
+                 GridLinesVisibility="All"
+                 CanUserResizeColumns="True"
+                 CanUserSortColumns="True"
+                 FontFamily="Courier New"
+                 FontSize="10">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="LINE"
+                                  Binding="{Binding LineNumber}"
+                                  Width="80"/>
+                <DataGridTextColumn Header="CODE"
+                                  Binding="{Binding Code}"
+                                  Width="80"/>
+                <DataGridTextColumn Header="DATA"
+                                  Binding="{Binding Data}"
+                                  Width="300"/>
+            </DataGrid.Columns>
+            <DataGrid.Styles>
+                <Style Selector="DataGridRow">
+                    <Setter Property="Background" Value="#DDDDDD"/>
+                </Style>
+                <Style Selector="DataGridColumnHeader">
+                    <Setter Property="Background" Value="#FF1E66"/>
+                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="FontWeight" Value="Bold"/>
+                    <Setter Property="Height" Value="32"/>
+                    <Setter Property="Padding" Value="8 0"/>
+                </Style>
+            </DataGrid.Styles>
+            <DataGrid.RowTheme>
+                <ControlTheme TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                    <ControlTheme.Children>
+                        <Style Selector="^:nth-child(1)">
+                            <Setter Property="Background" Value="#FFF266"/>
+                            <Setter Property="FontWeight" Value="Bold"/>
+                        </Style>
+                        <Style Selector="^.Section">
+                            <Setter Property="Background" Value="#FFF266"/>
+                            <Setter Property="FontWeight" Value="Bold"/>
+                        </Style>
+                        <Style Selector="^.Other">
+                            <Setter Property="Background" Value="#BFBFBF"/>
+                            <Setter Property="FontWeight" Value="Bold"/>
+                        </Style>
+                    </ControlTheme.Children>
+                </ControlTheme>
+            </DataGrid.RowTheme>
+        </DataGrid>
+
+        <TextBlock Name="PlaceholderText"
+                   Grid.Row="1" 
+                   Text="No DXF file loaded. Click 'Load DXF' to begin."
+                   HorizontalAlignment="Center" 
+                   VerticalAlignment="Center"/>
+    </Grid>
+</Window>
