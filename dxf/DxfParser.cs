@@ -1,10 +1,14 @@
-﻿namespace Dxf;
+﻿using System.Text.RegularExpressions;
+
+namespace Dxf;
 
 /// <summary>
 /// 
 /// </summary>
 public static class DxfParser
 {
+    private static readonly Regex s_lineSplitter = new(@"\r\n|\r|\n", RegexOptions.Compiled);
+
     /// <summary>
     /// 
     /// </summary>
@@ -32,23 +36,26 @@ public static class DxfParser
     /// <returns></returns>
     public static IList<DxfRawTag> Parse(string text)
     {
-        var lines = text.Split("\n".ToCharArray(), StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).ToArray();
-
-        if (lines.Length % 2 != 0)
-        {
-            throw new Exception("Invalid number of lines.");
-        }
-
+        var lines = string.IsNullOrEmpty(text) ? [] : s_lineSplitter.Split(text);
         var sections = new List<DxfRawTag>();
-
         var section = default(DxfRawTag);
         var other = default(DxfRawTag);
 
         for (var i = 0; i < lines.Length; i += 2)
         {
-            var tag = new DxfRawTag();
-            tag.GroupCode = int.Parse(lines[i]);
-            tag.DataElement = lines[i + 1];
+            if (i + 1 >= lines.Length)
+            {
+                break;
+            }
+
+            var groupCode = lines[i].Trim();
+            var dataElement = lines[i + 1];
+
+            var tag = new DxfRawTag
+            {
+                GroupCode = int.Parse(groupCode), 
+                DataElement = dataElement
+            };
 
             var isEntityWithType = tag.GroupCode == DxfCodeForType;
             var isSectionStart = (isEntityWithType) && tag.DataElement == DxfCodeNameSection;
