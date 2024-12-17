@@ -41,7 +41,7 @@ public static class DxfExtensions
         if (string.IsNullOrEmpty(text))
             return text;
         var sb = new StringBuilder();
-        foreach (char c in text)
+        foreach (var c in text)
         {
             if (c > 255)
                 sb.Append(string.Concat("\\U+", Convert.ToInt32(c).ToString("X4")));

@@ -121,9 +121,9 @@ public class DxfUcs : DxfObject
                 OrthographicOrigin != null &&
                 OrthographicType.Length == OrthographicOrigin.Length)
             {
-                int length = OrthographicType.Length;
+                var length = OrthographicType.Length;
 
-                for (int i = 0; i < length; i++)
+                for (var i = 0; i < length; i++)
                 {
                     Add(71, (int)OrthographicType[i]);
                     Add(13, OrthographicOrigin[i].X);

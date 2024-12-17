@@ -77,18 +77,18 @@ public static class DxfInspect
 
         var sections = new List<DxfRawTag>();
 
-        DxfRawTag section = default(DxfRawTag);
-        DxfRawTag other = default(DxfRawTag);
+        var section = default(DxfRawTag);
+        var other = default(DxfRawTag);
 
-        for (int i = 0; i < lines.Length; i += 2)
+        for (var i = 0; i < lines.Length; i += 2)
         {
             var tag = new DxfRawTag();
             tag.GroupCode = int.Parse(lines[i]);
             tag.DataElement = lines[i + 1];
 
-            bool isEntityWithType = tag.GroupCode == DxfCodeForType;
-            bool isSectionStart = (isEntityWithType) && tag.DataElement == DxfCodeNameSection;
-            bool isSectionEnd = (isEntityWithType) && tag.DataElement == DxfCodeNameEndsec;
+            var isEntityWithType = tag.GroupCode == DxfCodeForType;
+            var isSectionStart = (isEntityWithType) && tag.DataElement == DxfCodeNameSection;
+            var isSectionEnd = (isEntityWithType) && tag.DataElement == DxfCodeNameEndsec;
 
             if (isSectionStart)
             {
@@ -175,8 +175,8 @@ public static class DxfInspect
         sb.AppendLine("</head>");
         sb.AppendLine("<body>");
 
-        int lineNumber = 0;
-        for (int i = 0; i < sections.Count; i++)
+        var lineNumber = 0;
+        for (var i = 0; i < sections.Count; i++)
         {
             var section = sections[i];
 
@@ -191,12 +191,12 @@ public static class DxfInspect
 
                 if (section.Children != null)
                 {
-                    for (int j = 0; j < section.Children.Count; j++)
+                    for (var j = 0; j < section.Children.Count; j++)
                     {
                         var child = section.Children[j];
                         if (child.IsEnabled)
                         {
-                            bool isEntityWithType = child.GroupCode == DxfCodeForType;
+                            var isEntityWithType = child.GroupCode == DxfCodeForType;
                             if (isEntityWithType)
                             {
                                 var other = child;
@@ -207,7 +207,7 @@ public static class DxfInspect
 
                                 if (other.Children != null)
                                 {
-                                    for (int k = 0; k < other.Children.Count; k++)
+                                    for (var k = 0; k < other.Children.Count; k++)
                                     {
                                         var entity = other.Children[k];
                                         if (entity.IsEnabled)

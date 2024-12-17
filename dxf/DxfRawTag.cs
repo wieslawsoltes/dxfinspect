@@ -57,7 +57,7 @@ public class DxfRawTag
             sb.Append(Environment.NewLine);
             if (tag.Children != null)
             {
-                for (int i = 0; i < tag.Children.Count; i++)
+                for (var i = 0; i < tag.Children.Count; i++)
                 {
                     var child = tag.Children[i];
                     if (child.IsEnabled)
