@@ -49,7 +49,7 @@ public static class DxfParser
             }
 
             var groupCode = lines[i].Trim();
-            var dataElement = lines[i + 1];
+            var dataElement = lines[i + 1].Trim();
 
             var tag = new DxfRawTag
             {
