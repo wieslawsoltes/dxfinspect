@@ -98,7 +98,7 @@ static string ToHtml(IList<DxfRawTag> sections, string fileName)
                     // entity with children (type)
                     //sb.AppendFormat("    <!-- OTHER j={0} -->{1}", j, Environment.NewLine);
                     sb.Append(
-                        $"    <div class=\"{"Other"}\"><div class=\"Cell\"><p class=\"Line\">{lineNumber += 2}</p></div><div class=\"Cell\"><p class=\"Code\">{other.GroupCode}:</p></div><div class=\"Cell\"><p class=\"Data\">{other.DataElement}</p></div></div>{Environment.NewLine}");
+                        $"    <div class=\"Other\"><div class=\"Cell\"><p class=\"Line\">{lineNumber += 2}</p></div><div class=\"Cell\"><p class=\"Code\">{other.GroupCode}:</p></div><div class=\"Cell\"><p class=\"Data\">{other.DataElement}</p></div></div>{Environment.NewLine}");
 
                     if (other.Children != null)
                     {
