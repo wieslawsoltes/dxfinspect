@@ -77,39 +77,41 @@ static string ToHtml(IList<DxfRawTag> sections, string fileName)
             for (var j = 0; j < section.Children.Count; j++)
             {
                 var child = section.Children[j];
-                if (child.IsEnabled)
+                if (!child.IsEnabled)
                 {
-                    var isEntityWithType = child.GroupCode == DxfParser.DxfCodeForType;
-                    if (isEntityWithType)
+                    continue;
+                }
+                
+                var isEntityWithType = child.GroupCode == DxfParser.DxfCodeForType;
+                if (isEntityWithType)
+                {
+                    var other = child;
+
+                    // entity with children (type)
+                    //sb.AppendFormat("    <!-- OTHER j={0} -->{1}", j, Environment.NewLine);
+                    sb.AppendFormat("    <div class=\"{0}\"><div class=\"Cell\"><p class=\"Line\">{1}</p></div><div class=\"Cell\"><p class=\"Code\">{2}:</p></div><div class=\"Cell\"><p class=\"Data\">{3}</p></div></div>{4}", "Other", lineNumber += 2, other.GroupCode, other.DataElement, Environment.NewLine);
+
+                    if (other.Children != null)
                     {
-                        var other = child;
-
-                        // entity with children (type)
-                        //sb.AppendFormat("    <!-- OTHER j={0} -->{1}", j, Environment.NewLine);
-                        sb.AppendFormat("    <div class=\"{0}\"><div class=\"Cell\"><p class=\"Line\">{1}</p></div><div class=\"Cell\"><p class=\"Code\">{2}:</p></div><div class=\"Cell\"><p class=\"Data\">{3}</p></div></div>{4}", "Other", lineNumber += 2, other.GroupCode, other.DataElement, Environment.NewLine);
-
-                        if (other.Children != null)
+                        for (var k = 0; k < other.Children.Count; k++)
                         {
-                            for (var k = 0; k < other.Children.Count; k++)
+                            var entity = other.Children[k];
+                            if (entity.IsEnabled)
                             {
-                                var entity = other.Children[k];
-                                if (entity.IsEnabled)
-                                {
-                                    // entity without type
-                                    //sb.AppendFormat("        <!-- ENTITY k={0} -->{1}", k, Environment.NewLine);
-                                    sb.AppendFormat("        <div class=\"Row\"><div class=\"Cell\"><p class=\"Line\">{0}</p></div><div class=\"Cell\"><p class=\"Code\">{1}:</p></div><div class=\"Cell\"><p class=\"Data\">{2}</p></div></div>{3}", lineNumber += 2, entity.GroupCode, entity.DataElement, Environment.NewLine);
-                                }
+                                // entity without type
+                                //sb.AppendFormat("        <!-- ENTITY k={0} -->{1}", k, Environment.NewLine);
+                                sb.AppendFormat("        <div class=\"Row\"><div class=\"Cell\"><p class=\"Line\">{0}</p></div><div class=\"Cell\"><p class=\"Code\">{1}:</p></div><div class=\"Cell\"><p class=\"Data\">{2}</p></div></div>{3}", lineNumber += 2, entity.GroupCode, entity.DataElement, Environment.NewLine);
                             }
                         }
                     }
-                    else
-                    {
-                        var entity = child;
+                }
+                else
+                {
+                    var entity = child;
 
-                        // entity without children (type)
-                        //sb.AppendFormat("    <!-- ENTITY j={0} -->{1}", j, Environment.NewLine);
-                        sb.AppendFormat("    <div class=\"Row\"><div class=\"Cell\"><p class=\"Line\">{0}</p></div><div class=\"Cell\"><p class=\"Code\">{1}:</p></div><div class=\"Cell\"><p class=\"Data\">{2}</p></div></div>{3}", lineNumber += 2, entity.GroupCode, entity.DataElement, Environment.NewLine);
-                    }
+                    // entity without children (type)
+                    //sb.AppendFormat("    <!-- ENTITY j={0} -->{1}", j, Environment.NewLine);
+                    sb.AppendFormat("    <div class=\"Row\"><div class=\"Cell\"><p class=\"Line\">{0}</p></div><div class=\"Cell\"><p class=\"Code\">{1}:</p></div><div class=\"Cell\"><p class=\"Data\">{2}</p></div></div>{3}", lineNumber += 2, entity.GroupCode, entity.DataElement, Environment.NewLine);
                 }
             }
         }
