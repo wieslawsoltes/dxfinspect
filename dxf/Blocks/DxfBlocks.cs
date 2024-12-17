@@ -19,7 +19,7 @@ public class DxfBlocks : DxfObject
     public DxfBlocks(DxfAcadVer version, int id)
         : base(version, id)
     {
-        this.Blocks = new List<DxfBlock>();
+        Blocks = new List<DxfBlock>();
     }
 
     /// <summary>

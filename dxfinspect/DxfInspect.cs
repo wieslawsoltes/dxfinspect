@@ -13,14 +13,17 @@ public static class DxfInspect
     /// 
     /// </summary>
     public const int DxfCodeForType = 0;
+    
     /// <summary>
     /// 
     /// </summary>
     public const int DxfCodeForName = 2;
+    
     /// <summary>
     /// 
     /// </summary>
     public const string DxfCodeNameSection = "SECTION";
+    
     /// <summary>
     /// 
     /// </summary>
@@ -33,19 +36,10 @@ public static class DxfInspect
     /// <returns></returns>
     public static string ToHtml(string path)
     {
-        try
-        {
-            var dxf = Read(path);
-            var sections = Parse(dxf);
-            var fileName = System.IO.Path.GetFileName(path);
-            return ToHtml(sections, fileName);
-        }
-        catch (Exception ex)
-        {
-            Debug.Print(ex.Message);
-            Debug.Print(ex.StackTrace);
-        }
-        return null;
+        var dxf = Read(path);
+        var sections = Parse(dxf);
+        var fileName = Path.GetFileName(path);
+        return ToHtml(sections, fileName);
     }
 
     /// <summary>
@@ -55,12 +49,32 @@ public static class DxfInspect
     /// <returns></returns>
     public static string Read(string path)
     {
-        using (var reader = new System.IO.StreamReader(path))
-        {
-            return reader.ReadToEnd();
-        }
+        using var reader = new StreamReader(path);
+        return reader.ReadToEnd();
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="dxfPath"></param>
+    /// <param name="htmlPath"></param>
+    public static void Convert(string dxfPath, string htmlPath)
+    {
+        var html = ToHtml(dxfPath);
+        Save(htmlPath, html);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="path"></param>
+    /// <param name="text"></param>
+    public static void Save(string path, string text)
+    {
+        using var stream = File.CreateText(path);
+        stream.Write(text);
+    }
+    
     /// <summary>
     /// 
     /// </summary>
@@ -238,48 +252,5 @@ public static class DxfInspect
         sb.AppendFormat("{0}</body></html>", Environment.NewLine);
 
         return sb.ToString();
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="dxfPath"></param>
-    /// <param name="htmlPath"></param>
-    public static void Convert(string dxfPath, string htmlPath)
-    {
-        try
-        {
-            var html = DxfInspect.ToHtml(dxfPath);
-            Save(htmlPath, html);
-        }
-        catch (Exception ex)
-        {
-            Debug.Print(ex.Message);
-            Debug.Print(ex.StackTrace);
-        }
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="path"></param>
-    /// <param name="text"></param>
-    public static void Save(string path, string text)
-    {
-        try
-        {
-            if (text != null)
-            {
-                using (var stream = System.IO.File.CreateText(path))
-                {
-                    stream.Write(text);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.Print(ex.Message);
-            Debug.Print(ex.StackTrace);
-        }
     }
 }
