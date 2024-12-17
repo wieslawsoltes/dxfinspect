@@ -2,24 +2,23 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 using System;
 
-namespace Dxf
+namespace Dxf;
+
+/// <summary>
+/// Group code: 70
+/// </summary>
+public enum DxfLwpolylineFlags : int
 {
     /// <summary>
-    /// Group code: 70
+    /// 
     /// </summary>
-    public enum DxfLwpolylineFlags : int
-    {
-        /// <summary>
-        /// 
-        /// </summary>
-        Default = 0,
-        /// <summary>
-        /// 
-        /// </summary>
-        Closed = 1,
-        /// <summary>
-        /// 
-        /// </summary>
-        Plinegen = 128
-    }
+    Default = 0,
+    /// <summary>
+    /// 
+    /// </summary>
+    Closed = 1,
+    /// <summary>
+    /// 
+    /// </summary>
+    Plinegen = 128
 }

@@ -4,39 +4,38 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Dxf
+namespace Dxf;
+
+/// <summary>
+/// 
+/// </summary>
+/// <typeparam name="T"></typeparam>
+public class DxfTable<T>
 {
     /// <summary>
     /// 
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public class DxfTable<T>
+    public int Id { get; set; }
+    /// <summary>
+    /// 
+    /// </summary>
+    public IList<T> Items { get; set; }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public DxfTable()
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        public int Id { get; set; }
-        /// <summary>
-        /// 
-        /// </summary>
-        public IList<T> Items { get; set; }
+        Items = new List<T>();
+    }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public DxfTable()
-        {
-            Items = new List<T>();
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        public DxfTable(int id)
-            : this()
-        {
-            Id = id;
-        }
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="id"></param>
+    public DxfTable(int id)
+        : this()
+    {
+        Id = id;
     }
 }

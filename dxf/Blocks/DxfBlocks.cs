@@ -3,48 +3,47 @@
 using System;
 using System.Collections.Generic;
 
-namespace Dxf
+namespace Dxf;
+
+/// <summary>
+/// 
+/// </summary>
+public class DxfBlocks : DxfObject
 {
     /// <summary>
     /// 
     /// </summary>
-    public class DxfBlocks : DxfObject
+    public IList<DxfBlock> Blocks { get; set; }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="version"></param>
+    /// <param name="id"></param>
+    public DxfBlocks(DxfAcadVer version, int id)
+        : base(version, id)
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        public IList<DxfBlock> Blocks { get; set; }
+        this.Blocks = new List<DxfBlock>();
+    }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="version"></param>
-        /// <param name="id"></param>
-        public DxfBlocks(DxfAcadVer version, int id)
-            : base(version, id)
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
+    public override string Create()
+    {
+        Reset();
+
+        Add(0, DxfCodeName.Section);
+        Add(2, "BLOCKS");
+
+        foreach (var block in Blocks)
         {
-            this.Blocks = new List<DxfBlock>();
+            Append(block.Create());
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public override string Create()
-        {
-            Reset();
+        Add(0, DxfCodeName.EndSec);
 
-            Add(0, DxfCodeName.Section);
-            Add(2, "BLOCKS");
-
-            foreach (var block in Blocks)
-            {
-                Append(block.Create());
-            }
-
-            Add(0, DxfCodeName.EndSec);
-
-            return Build();
-        }
+        return Build();
     }
 }

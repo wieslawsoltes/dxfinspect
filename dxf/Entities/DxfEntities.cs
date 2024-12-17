@@ -3,48 +3,47 @@
 using System;
 using System.Collections.Generic;
 
-namespace Dxf
+namespace Dxf;
+
+/// <summary>
+/// 
+/// </summary>
+public class DxfEntities : DxfObject
 {
     /// <summary>
     /// 
     /// </summary>
-    public class DxfEntities : DxfObject
+    public IList<DxfObject> Entities { get; set; }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="version"></param>
+    /// <param name="id"></param>
+    public DxfEntities(DxfAcadVer version, int id)
+        : base(version, id)
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        public IList<DxfObject> Entities { get; set; }
+        Entities = new List<DxfObject>();
+    }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="version"></param>
-        /// <param name="id"></param>
-        public DxfEntities(DxfAcadVer version, int id)
-            : base(version, id)
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
+    public override string Create()
+    {
+        Reset();
+
+        Add(0, DxfCodeName.Section);
+        Add(2, DxfCodeName.Entities);
+
+        foreach (var entity in Entities)
         {
-            Entities = new List<DxfObject>();
+            Append(entity.Create());
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public override string Create()
-        {
-            Reset();
+        Add(0, DxfCodeName.EndSec);
 
-            Add(0, DxfCodeName.Section);
-            Add(2, DxfCodeName.Entities);
-
-            foreach (var entity in Entities)
-            {
-                Append(entity.Create());
-            }
-
-            Add(0, DxfCodeName.EndSec);
-
-            return Build();
-        }
+        return Build();
     }
 }
