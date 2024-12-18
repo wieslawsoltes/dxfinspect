@@ -189,11 +189,40 @@ public class DxfViewerViewModel : ReactiveObject
     {
         if (node != null)
         {
-            LineNumberStart = node.StartLine;
-            LineNumberEnd = node.EndLine;
-            // Clear other filters but don't reset line range
+            // Get the full range including all children
+            var startLine = node.StartLine;
+            var endLine = node.EndLine;
+
+            // If has children, recursively find min start line and max end line
+            if (node.HasChildren)
+            {
+                var allLines = GetAllLineRanges(node);
+                startLine = allLines.Min(r => r.StartLine);
+                endLine = allLines.Max(r => r.EndLine);
+            }
+
+            LineNumberStart = startLine;
+            LineNumberEnd = endLine;
+        
+            // Clear other filters
             SearchText = "";
             TypeFilter = "";
+        }
+    }
+
+    private IEnumerable<DxfTreeNodeModel> GetAllLineRanges(DxfTreeNodeModel node)
+    {
+        yield return node;
+    
+        if (node.HasChildren)
+        {
+            foreach (var child in node.Children)
+            {
+                foreach (var descendant in GetAllLineRanges(child))
+                {
+                    yield return descendant;
+                }
+            }
         }
     }
 
