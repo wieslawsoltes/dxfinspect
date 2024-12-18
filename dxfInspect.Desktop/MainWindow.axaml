@@ -48,6 +48,10 @@
                        Minimum="0"
                        ClipValueToMinMax="True" />
       </StackPanel>
+
+      <Button Content="Reset Filters"
+              Command="{Binding ResetFiltersCommand}"
+              Classes="primary" />
     </StackPanel>
 
     <TreeDataGrid Name="DxfTree"
@@ -71,6 +75,9 @@
                 <MenuItem Header="Filter by Data"
                           Command="{Binding $parent[Window].DataContext.FilterByDataCommand}"
                           CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
+                <Separator />
+                <MenuItem Header="Reset All Filters"
+                          Command="{Binding $parent[Window].DataContext.ResetFiltersCommand}" />
               </ContextMenu>
             </Setter.Value>
           </Setter>
