@@ -128,13 +128,16 @@ public class DxfViewerViewModel : ReactiveObject
             this.RaiseAndSetIfChanged(ref _expandAll, value);
             if (value)
             {
-                ExpandAllNodes(_allNodes);
+                _expandedNodes.Clear(); // Clear individual tracking when using ExpandAll
+                foreach (var node in _allNodes)
+                {
+                    ExpandAllNodes(new List<DxfTreeNodeModel> { node });
+                }
             }
             else
             {
                 CollapseAllNodes(_allNodes);
             }
-            ApplyFilters();
         }
     }
 
@@ -170,7 +173,7 @@ public class DxfViewerViewModel : ReactiveObject
         foreach (var node in nodes)
         {
             bool nodeOrDescendantMatches = MatchesFilters(node) || 
-                (node.HasChildren && HasMatchingDescendant(node.Children.ToList()));
+                                           (node.HasChildren && HasMatchingDescendant(node.Children.ToList()));
 
             if (nodeOrDescendantMatches)
             {
@@ -180,7 +183,10 @@ public class DxfViewerViewModel : ReactiveObject
                     node.Code,
                     node.Data,
                     node.Type,
-                    GetNodeKey(node));
+                    node.NodeKey)
+                {
+                    IsExpanded = _expandAll || _expandedNodes.Contains(node.NodeKey)
+                };
 
                 if (node.HasChildren)
                 {
@@ -277,21 +283,35 @@ public class DxfViewerViewModel : ReactiveObject
         }
     }
 
-    private void ExpandAllNodes(List<DxfTreeNodeModel> nodes)
+    public void ExpandAllNodes(List<DxfTreeNodeModel> nodes)
     {
         foreach (var node in nodes)
         {
             if (node.HasChildren)
             {
-                _expandedNodes.Add(node.NodeKey);
+                node.IsExpanded = true;
+                if (!_expandAll) // Only track individual nodes when not in ExpandAll mode
+                {
+                    _expandedNodes.Add(node.NodeKey);
+                }
                 ExpandAllNodes(node.Children.ToList());
             }
         }
+        ApplyFilters(); // Refresh the view
     }
 
-    private void CollapseAllNodes(List<DxfTreeNodeModel> nodes)
+    public void CollapseAllNodes(List<DxfTreeNodeModel> nodes)
     {
+        foreach (var node in nodes)
+        {
+            if (node.HasChildren)
+            {
+                node.IsExpanded = false;
+                CollapseAllNodes(node.Children.ToList());
+            }
+        }
         _expandedNodes.Clear();
+        ApplyFilters(); // Refresh the view
     }
 
     private static string GetNodeKey(DxfTreeNodeModel node)
