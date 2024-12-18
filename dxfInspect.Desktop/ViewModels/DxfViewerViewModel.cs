@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Models.TreeDataGrid;
 using Avalonia.Controls.Selection;
 using Dxf;
+using dxfInspect.Desktop.ViewModels;
 using ReactiveUI;
 
 namespace dxfInspect.Desktop;

@@ -2,7 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 
-namespace dxfInspect.Desktop;
+namespace dxfInspect.Desktop.Views;
 
 public partial class MainWindow : Window
 {

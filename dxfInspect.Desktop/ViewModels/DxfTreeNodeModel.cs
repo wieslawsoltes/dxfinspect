@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
 using ReactiveUI;
 
-namespace dxfInspect.Desktop;
+namespace dxfInspect.Desktop.ViewModels;
 
 public class DxfTreeNodeModel : ReactiveObject
 {
