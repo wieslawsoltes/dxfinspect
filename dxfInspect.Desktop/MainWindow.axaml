@@ -8,18 +8,22 @@
         Background="#DDDDDD">
 
     <Grid RowDefinitions="Auto,Auto,*">
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="10">
-            <Button Name="LoadButton"
-                    Content="Load DXF"
-                    Classes="primary" 
-                    Margin="0,0,10,0"/>
-            <TextBlock Name="FileNameBlock"
-                      VerticalAlignment="Center"/>
-            <CheckBox Name="CellSelectionCheckBox"
-                     Content="Cell Selection"
-                     Margin="10,0,0,0"
-                     IsChecked="{Binding CellSelection}"/>
-        </StackPanel>
+      <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="10">
+        <Button Name="LoadButton"
+                Content="Load DXF"
+                Classes="primary" 
+                Margin="0,0,10,0"/>
+        <TextBlock Name="FileNameBlock"
+                   VerticalAlignment="Center"/>
+        <CheckBox Name="CellSelectionCheckBox"
+                  Content="Cell Selection"
+                  Margin="10,0,0,0"
+                  IsChecked="{Binding CellSelection}"/>
+        <CheckBox Name="ExpandAllCheckBox"
+                  Content="Expand All"
+                  Margin="10,0,0,0"
+                  IsChecked="{Binding ExpandAll}"/>
+      </StackPanel>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="10,0,10,10" Spacing="10">
             <StackPanel Orientation="Horizontal" Spacing="5">
