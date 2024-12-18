@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
@@ -7,29 +6,25 @@ using System.IO;
 using Dxf;
 using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
+using dxfInspect.ViewModels;
 
-namespace dxfInspect.Desktop.Views;
+namespace dxfInspect.Views;
 
-public partial class MainView : UserControl
+public class DxfMainView : UserControl
 {
-    private TextBlock? fileNameBlock;
-    private TreeDataGrid? dxfTree;
-    private TextBlock? placeholderText;
-    private DxfViewerViewModel viewModel;
+    private readonly TextBlock? _fileNameBlock;
+    private readonly DxfViewerViewModel _viewModel;
 
-    public MainView()
+    public DxfMainView()
     {
         InitializeComponent();
+
+        _viewModel = new DxfViewerViewModel();
         
-        viewModel = new DxfViewerViewModel();
-        
-        DataContext = viewModel;
+        DataContext = _viewModel;
 
         var loadButton = this.FindControl<Button>("LoadButton");
-        fileNameBlock = this.FindControl<TextBlock>("FileNameBlock");
-        dxfTree = this.FindControl<TreeDataGrid>("DxfTree");
-        placeholderText = this.FindControl<TextBlock>("PlaceholderText");
-
+        _fileNameBlock = this.FindControl<TextBlock>("FileNameBlock");
         if (loadButton != null)
         {
             loadButton.Click += LoadButton_Click;
@@ -55,24 +50,24 @@ public partial class MainView : UserControl
             {
                 Title = "Select DXF File",
                 AllowMultiple = false,
-                FileTypeFilter = new[]
-                {
-                    new FilePickerFileType("DXF Files") { Patterns = new[] { "*.dxf" } },
-                    new FilePickerFileType("All Files") { Patterns = new[] { "*.*" } }
-                }
+                FileTypeFilter =
+                [
+                    new FilePickerFileType("DXF Files") { Patterns = ["*.dxf"] },
+                    new FilePickerFileType("All Files") { Patterns = ["*.*"] }
+                ]
             });
 
             if (files.Count > 0)
             {
                 var file = files[0];
-                if (fileNameBlock != null) 
+                if (_fileNameBlock != null) 
                 {
-                    fileNameBlock.Text = file.Name;
+                    _fileNameBlock.Text = file.Name;
                 }
 
                 var text = await File.ReadAllTextAsync(file.Path.LocalPath);
                 var sections = DxfParser.Parse(text);
-                viewModel.LoadDxfData(sections);
+                _viewModel.LoadDxfData(sections);
             }
         }
         catch (Exception ex)

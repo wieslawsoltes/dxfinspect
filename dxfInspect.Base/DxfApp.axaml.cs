@@ -1,11 +1,11 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using dxfInspect.Desktop.Views;
+using dxfInspect.Views;
 
-namespace dxfInspect.Desktop;
+namespace dxfInspect;
 
-public partial class App : Application
+public class DxfApp : Application
 {
     public override void Initialize()
     {
@@ -16,11 +16,11 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            desktop.MainWindow = new MainWindow();
+            desktop.MainWindow = new DxfMainWindow();
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime single)
         {
-            single.MainView = new MainView();
+            single.MainView = new DxfMainView();
         }
 
         base.OnFrameworkInitializationCompleted();
