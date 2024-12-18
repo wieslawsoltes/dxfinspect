@@ -15,66 +15,35 @@
                     Margin="0,0,10,0"/>
             <TextBlock Name="FileNameBlock"
                       VerticalAlignment="Center"/>
+            <CheckBox Name="CellSelectionCheckBox"
+                     Content="Cell Selection"
+                     Margin="10,0,0,0"
+                     IsChecked="{Binding CellSelection}"/>
         </StackPanel>
 
-        <DataGrid Name="DxfGrid"
-                 Grid.Row="1"
-                 Margin="10"
-                 IsVisible="False"
-                 AutoGenerateColumns="False"
-                 IsReadOnly="True"
-                 GridLinesVisibility="All"
-                 CanUserResizeColumns="True"
-                 CanUserSortColumns="True"
-                 FontFamily="Courier New"
-                 FontSize="10">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="LINE"
-                                  Binding="{Binding LineNumber}"
-                                  Width="80"/>
-                <DataGridTextColumn Header="CODE"
-                                  Binding="{Binding Code}"
-                                  Width="80"/>
-                <DataGridTextColumn Header="DATA"
-                                  Binding="{Binding Data}"
-                                  Width="300"/>
-            </DataGrid.Columns>
-            <DataGrid.Styles>
-                <Style Selector="DataGridRow">
-                    <Setter Property="Background" Value="#DDDDDD"/>
+        <TreeDataGrid Name="DxfTree"
+                     Grid.Row="1"
+                     Margin="10"
+                     Source="{Binding Source}">
+            <TreeDataGrid.Styles>
+                <Style Selector="TreeDataGrid TreeDataGridRow:nth-child(2n)">
+                    <Setter Property="Background" Value="#20808080"/>
                 </Style>
-                <Style Selector="DataGridColumnHeader">
+                <Style Selector="TreeDataGrid TreeDataGridColumnHeader">
                     <Setter Property="Background" Value="#FF1E66"/>
                     <Setter Property="Foreground" Value="White"/>
                     <Setter Property="FontWeight" Value="Bold"/>
                     <Setter Property="Height" Value="32"/>
-                    <Setter Property="Padding" Value="8 0"/>
+                    <Setter Property="Padding" Value="8,0"/>
                 </Style>
-            </DataGrid.Styles>
-            <DataGrid.RowTheme>
-                <ControlTheme TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
-                    <ControlTheme.Children>
-                        <Style Selector="^:nth-child(1)">
-                            <Setter Property="Background" Value="#FFF266"/>
-                            <Setter Property="FontWeight" Value="Bold"/>
-                        </Style>
-                        <Style Selector="^.Section">
-                            <Setter Property="Background" Value="#FFF266"/>
-                            <Setter Property="FontWeight" Value="Bold"/>
-                        </Style>
-                        <Style Selector="^.Other">
-                            <Setter Property="Background" Value="#BFBFBF"/>
-                            <Setter Property="FontWeight" Value="Bold"/>
-                        </Style>
-                    </ControlTheme.Children>
-                </ControlTheme>
-            </DataGrid.RowTheme>
-        </DataGrid>
+            </TreeDataGrid.Styles>
+        </TreeDataGrid>
 
         <TextBlock Name="PlaceholderText"
                    Grid.Row="1" 
                    Text="No DXF file loaded. Click 'Load DXF' to begin."
                    HorizontalAlignment="Center" 
-                   VerticalAlignment="Center"/>
+                   VerticalAlignment="Center"
+                   IsVisible="{Binding !Source.Items.Count}"/>
     </Grid>
 </Window>

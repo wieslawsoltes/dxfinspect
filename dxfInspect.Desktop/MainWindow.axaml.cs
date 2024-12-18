@@ -18,19 +18,23 @@ namespace dxfInspect.Desktop;
 public partial class MainWindow : Window
 {
     private TextBlock? fileNameBlock;
-    private DataGrid? dxfGrid;
+    private TreeDataGrid? dxfTree;
     private TextBlock? placeholderText;
+    private DxfViewerViewModel viewModel;
 
     public MainWindow()
     {
         InitializeComponent();
+        viewModel = new DxfViewerViewModel();
+        DataContext = viewModel;
+
 #if DEBUG
         this.AttachDevTools();
 #endif
 
         var loadButton = this.FindControl<Button>("LoadButton");
         fileNameBlock = this.FindControl<TextBlock>("FileNameBlock");
-        dxfGrid = this.FindControl<DataGrid>("DxfGrid");
+        dxfTree = this.FindControl<TreeDataGrid>("DxfTree");
         placeholderText = this.FindControl<TextBlock>("PlaceholderText");
 
         if (loadButton != null)
@@ -70,20 +74,7 @@ public partial class MainWindow : Window
 
                 var text = await File.ReadAllTextAsync(file.Path.LocalPath);
                 var sections = DxfParser.Parse(text);
-                
-                if (dxfGrid != null)
-                {
-                    var rows = ConvertToRows(sections);
-                    var collectionView = new DataGridCollectionView(rows);
-                    collectionView.GroupDescriptions.Add(new DataGridPathGroupDescription("SectionName"));
-                    dxfGrid.ItemsSource = collectionView;
-                    dxfGrid.IsVisible = true;
-                    
-                    if (placeholderText != null)
-                    {
-                        placeholderText.IsVisible = false;
-                    }
-                }
+                viewModel.LoadDxfData(sections);
             }
         }
         catch (Exception ex)
@@ -91,84 +82,5 @@ public partial class MainWindow : Window
             Console.WriteLine(ex.Message);
             Console.WriteLine(ex.StackTrace);
         }
-    }
-
-    private static List<DxfRow> ConvertToRows(IList<DxfRawTag> sections)
-    {
-        var rows = new List<DxfRow>();
-        var lineNumber = 0;
-
-        foreach (var section in sections.Where(s => s.IsEnabled))
-        {
-            // Get section name from first NAME child if available
-            string sectionName = section.Children?.Count > 0 && 
-                               section.Children[0].GroupCode == DxfParser.DxfCodeForName
-                ? section.Children[0].DataElement
-                : section.DataElement;
-
-            // Add section header
-            rows.Add(new DxfRow
-            {
-                LineNumber = lineNumber += 2,
-                Code = section.GroupCode.ToString(),
-                Data = section.DataElement,
-                RowType = "Section",
-                SectionName = $"SECTION: {sectionName}"
-            });
-
-            if (section.Children != null)
-            {
-                var currentGroup = $"SECTION: {sectionName}";
-                var currentEntityType = "";
-
-                foreach (var child in section.Children.Where(c => c.IsEnabled))
-                {
-                    if (child.GroupCode == DxfParser.DxfCodeForType)
-                    {
-                        currentEntityType = child.DataElement;
-                        currentGroup = $"SECTION: {sectionName} | {currentEntityType}";
-                        
-                        // Entity type header
-                        rows.Add(new DxfRow
-                        {
-                            LineNumber = lineNumber += 2,
-                            Code = child.GroupCode.ToString(),
-                            Data = child.DataElement,
-                            RowType = "Other",
-                            SectionName = currentGroup
-                        });
-
-                        if (child.Children != null)
-                        {
-                            foreach (var entity in child.Children.Where(e => e.IsEnabled))
-                            {
-                                rows.Add(new DxfRow
-                                {
-                                    LineNumber = lineNumber += 2,
-                                    Code = entity.GroupCode.ToString(),
-                                    Data = entity.DataElement,
-                                    RowType = "Row",
-                                    SectionName = currentGroup
-                                });
-                            }
-                        }
-                    }
-                    else
-                    {
-                        // If not a type code, add to current group
-                        rows.Add(new DxfRow
-                        {
-                            LineNumber = lineNumber += 2,
-                            Code = child.GroupCode.ToString(),
-                            Data = child.DataElement,
-                            RowType = "Row",
-                            SectionName = currentGroup
-                        });
-                    }
-                }
-            }
-        }
-
-        return rows;
     }
 }
