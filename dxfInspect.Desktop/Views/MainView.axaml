@@ -1,11 +1,10 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        x:Class="dxfInspect.Desktop.MainWindow"
-        Title="dxfInspect"
-        Background="#DDDDDD">
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="dxfInspect.Desktop.Views.MainView"
+             Background="#DDDDDD">
 
   <Grid RowDefinitions="Auto,Auto,*">
     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="10">
@@ -67,17 +66,17 @@
             <Setter.Value>
               <ContextMenu>
                 <MenuItem Header="Filter by Line Range"
-                          Command="{Binding $parent[Window].DataContext.FilterByLineRangeCommand}"
+                          Command="{Binding $parent[UserControl].DataContext.FilterByLineRangeCommand}"
                           CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
                 <MenuItem Header="Filter by Type"
-                          Command="{Binding $parent[Window].DataContext.FilterByTypeCommand}"
+                          Command="{Binding $parent[UserControl].DataContext.FilterByTypeCommand}"
                           CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
                 <MenuItem Header="Filter by Data"
-                          Command="{Binding $parent[Window].DataContext.FilterByDataCommand}"
+                          Command="{Binding $parent[UserControl].DataContext.FilterByDataCommand}"
                           CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
                 <Separator />
                 <MenuItem Header="Reset All Filters"
-                          Command="{Binding $parent[Window].DataContext.ResetFiltersCommand}" />
+                          Command="{Binding $parent[UserControl].DataContext.ResetFiltersCommand}" />
               </ContextMenu>
             </Setter.Value>
           </Setter>
@@ -99,4 +98,6 @@
                VerticalAlignment="Center"
                IsVisible="{Binding !HasLoadedFile}" />
   </Grid>
-</Window>
+
+</UserControl>
+

@@ -6,25 +6,24 @@ using System;
 using System.IO;
 using Dxf;
 using Avalonia.Platform.Storage;
+using Avalonia.VisualTree;
 
-namespace dxfInspect.Desktop;
+namespace dxfInspect.Desktop.Views;
 
-public partial class MainWindow : Window
+public partial class MainView : UserControl
 {
     private TextBlock? fileNameBlock;
     private TreeDataGrid? dxfTree;
     private TextBlock? placeholderText;
     private DxfViewerViewModel viewModel;
 
-    public MainWindow()
+    public MainView()
     {
         InitializeComponent();
+        
         viewModel = new DxfViewerViewModel();
+        
         DataContext = viewModel;
-
-#if DEBUG
-        this.AttachDevTools();
-#endif
 
         var loadButton = this.FindControl<Button>("LoadButton");
         fileNameBlock = this.FindControl<TextBlock>("FileNameBlock");
@@ -46,7 +45,12 @@ public partial class MainWindow : Window
     {
         try
         {
-            var storageProvider = StorageProvider;
+            var storageProvider = (this.GetVisualRoot() as TopLevel)?.StorageProvider;
+            if (storageProvider is null)
+            {
+                return;
+            }
+
             var files = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
                 Title = "Select DXF File",
@@ -78,3 +82,4 @@ public partial class MainWindow : Window
         }
     }
 }
+
