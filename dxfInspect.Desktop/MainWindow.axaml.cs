@@ -3,14 +3,8 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using Dxf;
-using System.Collections.ObjectModel;
-using Avalonia.Collections;
-using Avalonia.Data;
 using Avalonia.Platform.Storage;
 
 namespace dxfInspect.Desktop;
