@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Input;
 using Avalonia.Controls;
 using Avalonia.Controls.Models.TreeDataGrid;
 using Avalonia.Controls.Selection;
@@ -21,6 +22,9 @@ public class DxfViewerViewModel : ReactiveObject
     private List<DxfTreeNodeModel> _allNodes = new();
     private bool _hasLoadedFile;
     private bool _expandAll;
+    private ICommand? _filterByLineRangeCommand;
+    private ICommand? _filterByTypeCommand;
+    private ICommand? _filterByDataCommand;
 
     public DxfViewerViewModel()
     {
@@ -55,7 +59,15 @@ public class DxfViewerViewModel : ReactiveObject
                 _expandedNodes.Remove(model.NodeKey);
             }
         };
+
+        _filterByLineRangeCommand = ReactiveCommand.Create<DxfTreeNodeModel>(FilterByLineRange);
+        _filterByTypeCommand = ReactiveCommand.Create<DxfTreeNodeModel>(FilterByType);
+        _filterByDataCommand = ReactiveCommand.Create<DxfTreeNodeModel>(FilterByData);
     }
+    
+    public ICommand FilterByLineRangeCommand => _filterByLineRangeCommand!;
+    public ICommand FilterByTypeCommand => _filterByTypeCommand!;
+    public ICommand FilterByDataCommand => _filterByDataCommand!;
 
     public bool CellSelection
     {
@@ -160,126 +172,162 @@ public class DxfViewerViewModel : ReactiveObject
         HasLoadedFile = true;
         ApplyFilters();
     }
+    
+    private void FilterByLineRange(DxfTreeNodeModel node)
+    {
+        if (node != null)
+        {
+            LineNumberStart = node.StartLine;
+            LineNumberEnd = node.EndLine;
+            // Clear other filters
+            SearchText = "";
+            TypeFilter = "";
+        }
+    }
 
+    private void FilterByType(DxfTreeNodeModel node)
+    {
+        if (node != null)
+        {
+            TypeFilter = node.Type;
+            // Clear other filters
+            SearchText = "";
+            LineNumberStart = 0;
+            LineNumberEnd = int.MaxValue;
+        }
+    }
+
+    private void FilterByData(DxfTreeNodeModel node)
+    {
+        if (node != null)
+        {
+            SearchText = node.Data;
+            // Clear other filters
+            TypeFilter = "";
+            LineNumberStart = 0;
+            LineNumberEnd = int.MaxValue;
+        }
+    }
+    
     private void ApplyFilters()
     {
         var filteredNodes = FilterNodes(_allNodes);
         _source.Items = filteredNodes;
     }
 
-private List<DxfTreeNodeModel> FilterNodes(List<DxfTreeNodeModel> nodes)
-{
-    var result = new List<DxfTreeNodeModel>();
-    foreach (var node in nodes)
+    private List<DxfTreeNodeModel> FilterNodes(List<DxfTreeNodeModel> nodes)
     {
-        bool isTypeNode = node.Code == DxfParser.DxfCodeForType.ToString();
-        bool nodeMatches = MatchesFilters(node);
-        bool hasMatchingDescendant = node.HasChildren && HasMatchingDescendant(node.Children.ToList());
-        
-        if (nodeMatches || hasMatchingDescendant)
+        var result = new List<DxfTreeNodeModel>();
+        foreach (var node in nodes)
         {
-            var filteredNode = new DxfTreeNodeModel(
-                node.StartLine,
-                node.EndLine,
-                node.Code,
-                node.Data,
-                node.Type,
-                node.NodeKey)
+            bool isTypeNode = node.Code == DxfParser.DxfCodeForType.ToString();
+            bool nodeMatches = MatchesFilters(node);
+            bool hasMatchingDescendant = node.HasChildren && HasMatchingDescendant(node.Children.ToList());
+            
+            if (nodeMatches || hasMatchingDescendant)
             {
-                IsExpanded = _expandAll || _expandedNodes.Contains(node.NodeKey)
-            };
-
-            if (node.HasChildren)
-            {
-                if (isTypeNode && nodeMatches)
+                var filteredNode = new DxfTreeNodeModel(
+                    node.StartLine,
+                    node.EndLine,
+                    node.Code,
+                    node.Data,
+                    node.Type,
+                    node.NodeKey)
                 {
-                    // For matching type nodes, include all children
-                    foreach (var child in node.Children)
+                    IsExpanded = _expandAll || _expandedNodes.Contains(node.NodeKey)
+                };
+
+                if (node.HasChildren)
+                {
+                    if (isTypeNode && nodeMatches)
                     {
-                        var childNode = new DxfTreeNodeModel(
-                            child.StartLine,
-                            child.EndLine,
-                            child.Code,
-                            child.Data,
-                            child.Type,
-                            child.NodeKey)
+                        // For matching type nodes, include all children
+                        foreach (var child in node.Children)
                         {
-                            IsExpanded = _expandAll || _expandedNodes.Contains(child.NodeKey)
-                        };
-                        
-                        if (child.HasChildren)
-                        {
-                            AddAllDescendants(child, childNode);
+                            var childNode = new DxfTreeNodeModel(
+                                child.StartLine,
+                                child.EndLine,
+                                child.Code,
+                                child.Data,
+                                child.Type,
+                                child.NodeKey)
+                            {
+                                IsExpanded = _expandAll || _expandedNodes.Contains(child.NodeKey)
+                            };
+                            
+                            if (child.HasChildren)
+                            {
+                                AddAllDescendants(child, childNode);
+                            }
+                            
+                            filteredNode.Children.Add(childNode);
                         }
-                        
-                        filteredNode.Children.Add(childNode);
                     }
-                }
-                else
-                {
-                    // Normal filtering for non-type nodes or non-matching type nodes
-                    var filteredChildren = FilterNodes(node.Children.ToList());
-                    foreach (var child in filteredChildren)
+                    else
                     {
-                        filteredNode.Children.Add(child);
+                        // Normal filtering for non-type nodes or non-matching type nodes
+                        var filteredChildren = FilterNodes(node.Children.ToList());
+                        foreach (var child in filteredChildren)
+                        {
+                            filteredNode.Children.Add(child);
+                        }
                     }
                 }
+
+                result.Add(filteredNode);
             }
+        }
+        return result;
+    }
 
-            result.Add(filteredNode);
+    private void AddAllDescendants(DxfTreeNodeModel source, DxfTreeNodeModel target)
+    {
+        foreach (var child in source.Children)
+        {
+            var childNode = new DxfTreeNodeModel(
+                child.StartLine,
+                child.EndLine,
+                child.Code,
+                child.Data,
+                child.Type,
+                child.NodeKey)
+            {
+                IsExpanded = _expandAll || _expandedNodes.Contains(child.NodeKey)
+            };
+            
+            if (child.HasChildren)
+            {
+                AddAllDescendants(child, childNode);
+            }
+            
+            target.Children.Add(childNode);
         }
     }
-    return result;
-}
 
-private void AddAllDescendants(DxfTreeNodeModel source, DxfTreeNodeModel target)
-{
-    foreach (var child in source.Children)
+    private bool MatchesFilters(DxfTreeNodeModel node)
     {
-        var childNode = new DxfTreeNodeModel(
-            child.StartLine,
-            child.EndLine,
-            child.Code,
-            child.Data,
-            child.Type,
-            child.NodeKey)
+        bool matchesLineRange = node.StartLine >= LineNumberStart && 
+                              node.EndLine <= (LineNumberEnd == 0 ? int.MaxValue : LineNumberEnd);
+
+        bool matchesType = string.IsNullOrWhiteSpace(TypeFilter) || 
+                          node.Type.Contains(TypeFilter, StringComparison.OrdinalIgnoreCase);  // Changed to partial matching
+
+        bool matchesSearch = string.IsNullOrWhiteSpace(SearchText) || 
+                           node.Data.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                           node.Code.Contains(SearchText, StringComparison.OrdinalIgnoreCase);
+
+        return matchesLineRange && matchesType && matchesSearch;
+    }
+
+    private bool HasMatchingDescendant(List<DxfTreeNodeModel> nodes)
+    {
+        foreach (var node in nodes)
         {
-            IsExpanded = _expandAll || _expandedNodes.Contains(child.NodeKey)
-        };
-        
-        if (child.HasChildren)
-        {
-            AddAllDescendants(child, childNode);
+            if (MatchesFilters(node)) return true;
+            if (node.HasChildren && HasMatchingDescendant(node.Children.ToList())) return true;
         }
-        
-        target.Children.Add(childNode);
+        return false;
     }
-}
-
-private bool MatchesFilters(DxfTreeNodeModel node)
-{
-    bool matchesLineRange = node.StartLine >= LineNumberStart && 
-                          node.EndLine <= (LineNumberEnd == 0 ? int.MaxValue : LineNumberEnd);
-
-    bool matchesType = string.IsNullOrWhiteSpace(TypeFilter) || 
-                      node.Type.Contains(TypeFilter, StringComparison.OrdinalIgnoreCase);  // Changed to partial matching
-
-    bool matchesSearch = string.IsNullOrWhiteSpace(SearchText) || 
-                       node.Data.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
-                       node.Code.Contains(SearchText, StringComparison.OrdinalIgnoreCase);
-
-    return matchesLineRange && matchesType && matchesSearch;
-}
-
-private bool HasMatchingDescendant(List<DxfTreeNodeModel> nodes)
-{
-    foreach (var node in nodes)
-    {
-        if (MatchesFilters(node)) return true;
-        if (node.HasChildren && HasMatchingDescendant(node.Children.ToList())) return true;
-    }
-    return false;
-}
 
     private static List<DxfTreeNodeModel> ConvertToTreeNodes(IList<DxfRawTag> sections)
     {
