@@ -19,15 +19,15 @@ public class DxfRawTag
     /// <summary>
     /// 
     /// </summary>
-    public string DataElement { get; set; }
+    public string? DataElement { get; set; }
     /// <summary>
     /// 
     /// </summary>
-    public DxfRawTag Parent { get; set; }
+    public DxfRawTag? Parent { get; set; }
     /// <summary>
     /// 
     /// </summary>
-    public IList<DxfRawTag> Children { get; set; }
+    public IList<DxfRawTag>? Children { get; set; }
         
     /// <summary>
     /// 
@@ -49,7 +49,7 @@ public class DxfRawTag
     /// <param name="sb"></param>
     private static void ToDxf(DxfRawTag tag, StringBuilder sb)
     {
-        if (tag.IsEnabled && sb != null)
+        if (tag.IsEnabled)
         {
             sb.Append(tag.GroupCode);
             sb.Append(Environment.NewLine);
