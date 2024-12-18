@@ -106,18 +106,18 @@ public class DxfViewerViewModel : ReactiveObject
     public void LoadDxfData(IList<DxfRawTag> sections)
     {
         _allNodes = ConvertToTreeNodes(sections);
-        
+    
         // Update the line range to match the file content
         if (_allNodes.Any())
         {
             var maxLine = _allNodes
                 .SelectMany(node => GetAllNodes(node))
                 .Max(n => n.EndLine);
-            
-            LineNumberStart = 0;
-            LineNumberEnd = maxLine;
-        }
         
+            LineNumberEnd = maxLine;  // Set end line first
+            LineNumberStart = 0;      // Then set start line
+        }
+    
         HasLoadedFile = true;
         ApplyFilters();
     }
@@ -145,7 +145,11 @@ public class DxfViewerViewModel : ReactiveObject
         var result = new List<DxfTreeNodeModel>();
         foreach (var node in nodes)
         {
-            if (MatchesFilters(node))
+            // Check if node or any of its descendants match the filter
+            bool nodeOrDescendantMatches = MatchesFilters(node) || 
+                                           (node.HasChildren && HasMatchingDescendant(node.Children.ToList()));
+
+            if (nodeOrDescendantMatches)
             {
                 var filteredNode = new DxfTreeNodeModel(
                     node.StartLine,
@@ -166,23 +170,36 @@ public class DxfViewerViewModel : ReactiveObject
                     }
                 }
 
-                if (filteredNode.HasChildren || MatchesFilters(node))
-                {
-                    result.Add(filteredNode);
-                }
+                result.Add(filteredNode);
             }
         }
         return result;
     }
 
+    private bool HasMatchingDescendant(List<DxfTreeNodeModel> nodes)
+    {
+        foreach (var node in nodes)
+        {
+            if (MatchesFilters(node)) return true;
+            if (node.HasChildren && HasMatchingDescendant(node.Children.ToList())) return true;
+        }
+        return false;
+    }
+
     private bool MatchesFilters(DxfTreeNodeModel node)
     {
-        return node.StartLine >= LineNumberStart &&
-               node.EndLine <= LineNumberEnd &&
-               (string.IsNullOrWhiteSpace(TypeFilter) || 
-                node.Type.Contains(TypeFilter, StringComparison.OrdinalIgnoreCase)) &&
-               (string.IsNullOrWhiteSpace(SearchText) || 
-                node.Data.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
+        bool matchesLineRange = node.StartLine >= LineNumberStart && 
+                                node.EndLine <= (LineNumberEnd == 0 ? int.MaxValue : LineNumberEnd);
+
+        bool matchesType = string.IsNullOrWhiteSpace(TypeFilter) || 
+                           node.Type.Contains(TypeFilter, StringComparison.OrdinalIgnoreCase);
+
+        bool matchesSearch = string.IsNullOrWhiteSpace(SearchText) || 
+                             node.Data.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                             node.Type.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                             node.Code.Contains(SearchText, StringComparison.OrdinalIgnoreCase);
+
+        return matchesLineRange && matchesType && matchesSearch;
     }
 
     private static List<DxfTreeNodeModel> ConvertToTreeNodes(IList<DxfRawTag> sections)
