@@ -7,7 +7,7 @@
         Title="dxfInspect"
         Background="#DDDDDD">
 
-    <Grid RowDefinitions="Auto,*">
+    <Grid RowDefinitions="Auto,Auto,*">
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="10">
             <Button Name="LoadButton"
                     Content="Load DXF"
@@ -21,8 +21,33 @@
                      IsChecked="{Binding CellSelection}"/>
         </StackPanel>
 
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="10,0,10,10" Spacing="10">
+            <StackPanel Orientation="Horizontal" Spacing="5">
+                <TextBlock Text="Search:" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding SearchText}" Width="200"/>
+            </StackPanel>
+            
+            <StackPanel Orientation="Horizontal" Spacing="5">
+                <TextBlock Text="Type:" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding TypeFilter}" Width="150"/>
+            </StackPanel>
+            
+            <StackPanel Orientation="Horizontal" Spacing="5">
+                <TextBlock Text="Line Range:" VerticalAlignment="Center"/>
+                <NumericUpDown Value="{Binding LineNumberStart}" 
+                              Width="150" 
+                              Minimum="0"
+                              ClipValueToMinMax="True"/>
+                <TextBlock Text="-" VerticalAlignment="Center"/>
+                <NumericUpDown Value="{Binding LineNumberEnd}" 
+                              Width="150" 
+                              Minimum="0"
+                              ClipValueToMinMax="True"/>
+            </StackPanel>
+        </StackPanel>
+
         <TreeDataGrid Name="DxfTree"
-                     Grid.Row="1"
+                     Grid.Row="2"
                      Margin="10"
                      Source="{Binding Source}">
             <TreeDataGrid.Styles>
@@ -40,10 +65,10 @@
         </TreeDataGrid>
 
         <TextBlock Name="PlaceholderText"
-                   Grid.Row="1" 
+                   Grid.Row="2" 
                    Text="No DXF file loaded. Click 'Load DXF' to begin."
                    HorizontalAlignment="Center" 
                    VerticalAlignment="Center"
-                   IsVisible="{Binding !Source.Items.Count}"/>
+                   IsVisible="{Binding !HasLoadedFile}"/>
     </Grid>
 </Window>
