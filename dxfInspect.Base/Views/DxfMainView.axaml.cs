@@ -65,7 +65,8 @@ public class DxfMainView : UserControl
                     _fileNameBlock.Text = file.Name;
                 }
 
-                var text = await File.ReadAllTextAsync(file.Path.LocalPath);
+                await using var stream = await file.OpenReadAsync();
+                var text = await new StreamReader(stream).ReadToEndAsync();
                 var sections = DxfParser.Parse(text);
                 _viewModel.LoadDxfData(sections);
             }
