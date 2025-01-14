@@ -27,7 +27,6 @@ public class DxfViewerViewModel : ReactiveObject
     private int _lineNumberEnd = int.MaxValue;
     private List<DxfTreeNodeViewModel> _allNodes = [];
     private bool _hasLoadedFile;
-    private bool _expandAll;
     private int _maxLineNumber = int.MaxValue;
 
     public DxfViewerViewModel()
@@ -68,8 +67,8 @@ public class DxfViewerViewModel : ReactiveObject
         FilterByDataCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(FilterByData);
         FilterByCodeCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(FilterByCode);
         ResetFiltersCommand = ReactiveCommand.Create(ResetFilters);
-        CopyCodeAndDataCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(CopyCodeAndData);
-        CopyObjectTreeCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(CopyObjectTree);
+        CopyCodeAndDataCommand = ReactiveCommand.CreateFromTask<DxfTreeNodeViewModel>(CopyCodeAndData);
+        CopyObjectTreeCommand = ReactiveCommand.CreateFromTask<DxfTreeNodeViewModel>(CopyObjectTree);
     }
 
     public ICommand ExpandAllCommand { get; }
@@ -244,7 +243,7 @@ public class DxfViewerViewModel : ReactiveObject
         return null;
     }
 
-    private async void CopyCodeAndData(DxfTreeNodeViewModel? nodeView)
+    private async Task CopyCodeAndData(DxfTreeNodeViewModel? nodeView)
     {
         if (nodeView != null)
         {
@@ -257,7 +256,7 @@ public class DxfViewerViewModel : ReactiveObject
         }
     }
 
-    private async void CopyObjectTree(DxfTreeNodeViewModel? nodeView)
+    private async Task CopyObjectTree(DxfTreeNodeViewModel? nodeView)
     {
         if (nodeView?.RawTag != null)
         {
@@ -360,7 +359,7 @@ public class DxfViewerViewModel : ReactiveObject
                     node.NodeKey,
                     node.OriginalGroupCodeLine,
                     node.OriginalDataLine,
-                    node.RawTag) { IsExpanded = _expandAll || _expandedNodes.Contains(node.NodeKey) };
+                    node.RawTag) { IsExpanded = _expandedNodes.Contains(node.NodeKey) };
 
                 if (node.HasChildren)
                 {
@@ -377,7 +376,7 @@ public class DxfViewerViewModel : ReactiveObject
                                 child.NodeKey,
                                 child.OriginalGroupCodeLine,
                                 child.OriginalDataLine,
-                                child.RawTag) { IsExpanded = _expandAll || _expandedNodes.Contains(child.NodeKey) };
+                                child.RawTag) { IsExpanded = _expandedNodes.Contains(child.NodeKey) };
 
                             if (child.HasChildren)
                             {
@@ -417,7 +416,7 @@ public class DxfViewerViewModel : ReactiveObject
                 child.NodeKey,
                 child.OriginalGroupCodeLine,
                 child.OriginalDataLine,
-                child.RawTag) { IsExpanded = _expandAll || _expandedNodes.Contains(child.NodeKey) };
+                child.RawTag) { IsExpanded = _expandedNodes.Contains(child.NodeKey) };
 
             if (child.HasChildren)
             {
