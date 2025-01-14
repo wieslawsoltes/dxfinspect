@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
@@ -16,6 +18,7 @@ namespace dxfInspect.ViewModels;
 public class DxfViewerViewModel : ReactiveObject
 {
     private readonly HierarchicalTreeDataGridSource<DxfTreeNodeViewModel> _source;
+    private bool _isExpanding;
     private readonly HashSet<string> _expandedNodes = [];
     private string _codeSearch = "";
     private string _dataSearch = "";
@@ -58,6 +61,7 @@ public class DxfViewerViewModel : ReactiveObject
             }
         };
 
+        ExpandAllCommand = ReactiveCommand.CreateFromTask(ExpandAllAsync);
         FilterByLineRangeCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(FilterByLineRange);
         FilterByDataCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(FilterByData);
         FilterByCodeCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(FilterByCode);
@@ -65,6 +69,8 @@ public class DxfViewerViewModel : ReactiveObject
         CopyCodeAndDataCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(CopyCodeAndData);
         CopyObjectTreeCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(CopyObjectTree);
     }
+
+    public ICommand ExpandAllCommand { get; }
 
     public ICommand FilterByLineRangeCommand { get; }
 
@@ -124,31 +130,12 @@ public class DxfViewerViewModel : ReactiveObject
         private set => this.RaiseAndSetIfChanged(ref _hasLoadedFile, value);
     }
 
-    public bool ExpandAll
-    {
-        get => _expandAll;
-        set
-        {
-            this.RaiseAndSetIfChanged(ref _expandAll, value);
-            if (value)
-            {
-                _expandedNodes.Clear();
-                foreach (var node in _allNodes)
-                {
-                    ExpandAllNodes([node]);
-                }
-            }
-            else
-            {
-                CollapseAllNodes(_allNodes);
-            }
-        }
-    }
-
     public ITreeDataGridSource<DxfTreeNodeViewModel> Source => _source;
 
     public void LoadDxfData(IList<DxfRawTag> sections)
     {
+        _expandedNodes.Clear();
+
         _allNodes = ConvertToTreeNodes(sections);
 
         if (_allNodes.Any())
@@ -161,6 +148,38 @@ public class DxfViewerViewModel : ReactiveObject
 
         HasLoadedFile = true;
         ApplyFilters();
+    }
+    
+    private async Task ExpandAllAsync(CancellationToken cancellationToken)
+    {
+        if (_isExpanding)
+        {
+            return;
+        }
+
+        try
+        {
+            _isExpanding = true;
+
+            await Task.Run(() =>
+            {
+                _expandedNodes.Clear();
+                foreach (var node in _allNodes)
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
+                    ExpandAllNodes([node]);
+                }
+            }, cancellationToken);
+
+            ApplyFilters();
+        }
+        finally
+        {
+            _isExpanding = false;
+        }
     }
 
     private void ResetFilters()
@@ -475,16 +494,10 @@ public class DxfViewerViewModel : ReactiveObject
             if (node.HasChildren)
             {
                 node.IsExpanded = true;
-                if (!_expandAll)
-                {
-                    _expandedNodes.Add(node.NodeKey);
-                }
-
+                _expandedNodes.Add(node.NodeKey);
                 ExpandAllNodes(node.Children.ToList());
             }
         }
-
-        ApplyFilters();
     }
 
     private void CollapseAllNodes(List<DxfTreeNodeViewModel> nodes)
