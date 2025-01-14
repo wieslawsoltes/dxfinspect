@@ -17,7 +17,7 @@ public class DxfViewerViewModel : ReactiveObject
     private bool _cellSelection;
     private string _codeSearch = "";
     private string _dataSearch = "";
-    private int _lineNumberStart;
+    private int _lineNumberStart = 1;
     private int _lineNumberEnd = int.MaxValue;
     private List<DxfTreeNodeViewModel> _allNodes = [];
     private bool _hasLoadedFile;
@@ -168,7 +168,7 @@ public class DxfViewerViewModel : ReactiveObject
                 .Max(n => n.EndLine);
 
             LineNumberEnd = _maxLineNumber;
-            LineNumberStart = 0;
+            LineNumberStart = 1;
         }
 
         HasLoadedFile = true;
@@ -179,7 +179,7 @@ public class DxfViewerViewModel : ReactiveObject
     {
         CodeSearch = "";
         DataSearch = "";
-        LineNumberStart = 0;
+        LineNumberStart = 1;
         LineNumberEnd = _maxLineNumber;
     }
 
@@ -340,7 +340,7 @@ public class DxfViewerViewModel : ReactiveObject
     private bool MatchesFilters(DxfTreeNodeViewModel nodeView)
     {
         bool matchesLineRange = nodeView.StartLine >= LineNumberStart &&
-                                nodeView.EndLine <= (LineNumberEnd == 0 ? int.MaxValue : LineNumberEnd);
+                                nodeView.EndLine <= (LineNumberEnd == 1 ? int.MaxValue : LineNumberEnd);
 
         bool matchesCode = string.IsNullOrWhiteSpace(CodeSearch) ||
                            nodeView.Code.Equals(CodeSearch, StringComparison.OrdinalIgnoreCase);
@@ -365,7 +365,7 @@ public class DxfViewerViewModel : ReactiveObject
     private static List<DxfTreeNodeViewModel> ConvertToTreeNodes(IList<DxfRawTag> sections)
     {
         var nodes = new List<DxfTreeNodeViewModel>();
-        var lineNumber = 0;
+        var lineNumber = 1;
 
         foreach (var section in sections.Where(s => s.IsEnabled))
         {

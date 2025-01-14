@@ -39,13 +39,13 @@
       <StackPanel Orientation="Horizontal" Spacing="5">
         <TextBlock Text="Line Range:" VerticalAlignment="Center" />
         <NumericUpDown Value="{Binding LineNumberStart}"
-                       Width="150"
-                       Minimum="0"
+                       Width="180"
+                       Minimum="1"
                        ClipValueToMinMax="True" />
         <TextBlock Text="-" VerticalAlignment="Center" />
         <NumericUpDown Value="{Binding LineNumberEnd}"
-                       Width="150"
-                       Minimum="0"
+                       Width="180"
+                       Minimum="1"
                        ClipValueToMinMax="True" />
       </StackPanel>
 
