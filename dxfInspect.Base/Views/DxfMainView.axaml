@@ -39,35 +39,35 @@
                 MinWidth="100" />
       </UniformGrid>
 
-        <StackPanel Spacing="12">
+      <StackPanel Spacing="12">
 
-          <StackPanel Spacing="4">
-            <TextBlock Text="Code:" />
-            <TextBox Text="{Binding CodeSearch}" />
-          </StackPanel>
-
-          <StackPanel Spacing="4">
-            <TextBlock Text="Data:" />
-            <TextBox Text="{Binding DataSearch}" />
-          </StackPanel>
-
-          <StackPanel Spacing="4">
-            <TextBlock Text="Line Range:" />
-            <Grid ColumnDefinitions="*,Auto,*">
-              <NumericUpDown Grid.Column="0"
-                             Value="{Binding LineNumberStart}"
-                             Minimum="1" />
-              <TextBlock Grid.Column="1"
-                         Text="-"
-                         VerticalAlignment="Center"
-                         Margin="8,0" />
-              <NumericUpDown Grid.Column="2"
-                             Value="{Binding LineNumberEnd}"
-                             Minimum="1" />
-            </Grid>
-          </StackPanel>
-
+        <StackPanel Spacing="4">
+          <TextBlock Text="Code:" />
+          <TextBox Text="{Binding CodeSearch}" />
         </StackPanel>
+
+        <StackPanel Spacing="4">
+          <TextBlock Text="Data:" />
+          <TextBox Text="{Binding DataSearch}" />
+        </StackPanel>
+
+        <StackPanel Spacing="4">
+          <TextBlock Text="Line Range:" />
+          <Grid ColumnDefinitions="*,Auto,*">
+            <NumericUpDown Grid.Column="0"
+                           Value="{Binding LineNumberStart}"
+                           Minimum="1" />
+            <TextBlock Grid.Column="1"
+                       Text="-"
+                       VerticalAlignment="Center"
+                       Margin="8,0" />
+            <NumericUpDown Grid.Column="2"
+                           Value="{Binding LineNumberEnd}"
+                           Minimum="1" />
+          </Grid>
+        </StackPanel>
+
+      </StackPanel>
 
     </StackPanel>
 
@@ -77,7 +77,7 @@
                  Text="-"
                  TextWrapping="Wrap" />
     </StackPanel>
- 
+
     <Grid>
       <TreeDataGrid Name="DxfTree"
                     Source="{Binding Source}">
