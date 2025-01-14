@@ -4,14 +4,14 @@ namespace Dxf;
 
 public class DxfRawTag
 {
-    // Add new properties for original lines
     public string OriginalGroupCodeLine { get; set; } = string.Empty;
+
     public string OriginalDataLine { get; set; } = string.Empty;
 
     /// <summary>
     /// Indicates whether this tag is enabled and should be included in processing
     /// </summary>
-    public bool IsEnabled { get; set; } = true; // Initialize to true by default
+    public bool IsEnabled { get; set; }
 
     /// <summary>
     /// The group code number for this tag
@@ -35,10 +35,9 @@ public class DxfRawTag
 
     public DxfRawTag()
     {
-        IsEnabled = true; // Explicitly set in constructor as well
+        IsEnabled = true;
     }
 
-    // Add method to get original lines for this tag and its children
     public string GetOriginalTreeText()
     {
         var sb = new StringBuilder();
