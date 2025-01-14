@@ -13,6 +13,9 @@ using ReactiveUI;
 
 namespace dxfInspect.ViewModels;
 
+/// <summary>
+/// View model for the DXF viewer that manages the data display and filtering
+/// </summary>
 public class DxfViewerViewModel : ReactiveObject
 {
     private readonly HierarchicalTreeDataGridSource<DxfTreeNodeViewModel> _source;
@@ -151,24 +154,14 @@ public class DxfViewerViewModel : ReactiveObject
 
     public void LoadDxfData(IList<DxfRawTag> sections)
     {
-        Console.WriteLine($"Loading DXF data. Number of sections: {sections.Count}");
-
         _allNodes = ConvertToTreeNodes(sections);
-        Console.WriteLine($"Converted to tree nodes. Number of nodes: {_allNodes.Count}");
 
         if (_allNodes.Any())
         {
             var allNodes = _allNodes.SelectMany(GetAllNodes).ToList();
             _maxLineNumber = allNodes.Max(n => n.EndLine);
-            Console.WriteLine($"Max line number: {_maxLineNumber}");
-            Console.WriteLine($"Total nodes including children: {allNodes.Count}");
-
             LineNumberEnd = _maxLineNumber;
             LineNumberStart = 1;
-        }
-        else
-        {
-            Console.WriteLine("No nodes were created from sections");
         }
 
         HasLoadedFile = true;
@@ -298,7 +291,6 @@ public class DxfViewerViewModel : ReactiveObject
         }
     }
 
-
     private void ApplyFilters()
     {
         var filteredNodes = FilterNodes(_allNodes);
@@ -306,7 +298,6 @@ public class DxfViewerViewModel : ReactiveObject
             $"Applying filters. Original nodes: {_allNodes.Count}, Filtered nodes: {filteredNodes.Count}");
         _source.Items = filteredNodes;
     }
-
 
     private List<DxfTreeNodeViewModel> FilterNodes(List<DxfTreeNodeViewModel> nodes)
     {
@@ -428,15 +419,10 @@ public class DxfViewerViewModel : ReactiveObject
         var nodes = new List<DxfTreeNodeViewModel>();
         var lineNumber = 1;
 
-        Console.WriteLine($"Starting conversion of {sections.Count} sections");
         foreach (var section in sections)
         {
-            Console.WriteLine(
-                $"Section IsEnabled: {section.IsEnabled}, GroupCode: {section.GroupCode}, DataElement: {section.DataElement}");
-
             if (!section.IsEnabled)
             {
-                Console.WriteLine("Skipping disabled section");
                 continue;
             }
 
@@ -455,15 +441,12 @@ public class DxfViewerViewModel : ReactiveObject
 
             if (section.Children != null)
             {
-                Console.WriteLine($"Processing {section.Children.Count} children for section");
                 AddChildNodes(sectionNode, section.Children, ref lineNumber);
-                Console.WriteLine($"Added {sectionNode.Children.Count} children to node");
             }
 
             nodes.Add(sectionNode);
         }
 
-        Console.WriteLine($"Converted {nodes.Count} nodes");
         return nodes;
     }
 

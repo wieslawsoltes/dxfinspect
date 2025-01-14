@@ -3,42 +3,41 @@
 namespace Dxf;
 
 /// <summary>
-/// 
+/// Parser for DXF (Drawing Exchange Format) files.
+/// Processes DXF content into a hierarchical structure of tags.
 /// </summary>
 public static class DxfParser
 {
     private static readonly Regex s_lineSplitter = new(@"\r\n|\r|\n", RegexOptions.Compiled);
 
     /// <summary>
-    /// 
+    /// Group code indicating entity type
     /// </summary>
     public const int DxfCodeForType = 0;
 
     /// <summary>
-    /// 
+    /// Group code indicating entity name
     /// </summary>
     public const int DxfCodeForName = 2;
 
     /// <summary>
-    /// 
+    /// Section start marker
     /// </summary>
     public const string DxfCodeNameSection = "SECTION";
 
     /// <summary>
-    /// 
+    /// Section end marker
     /// </summary>
     public const string DxfCodeNameEndsec = "ENDSEC";
 
     /// <summary>
-    /// 
+    /// Parses DXF content into a hierarchical structure of tags
     /// </summary>
-    /// <param name="text"></param>
-    /// <returns></returns>
+    /// <param name="text">Raw DXF file content</param>
+    /// <returns>List of parsed DXF tags representing the file structure</returns>
     public static IList<DxfRawTag> Parse(string text)
     {
         var lines = string.IsNullOrEmpty(text) ? [] : s_lineSplitter.Split(text);
-        Console.WriteLine($"Parsing DXF file. Total lines: {lines.Length}");
-
         var sections = new List<DxfRawTag>();
         var section = default(DxfRawTag);
         var other = default(DxfRawTag);
@@ -61,7 +60,7 @@ public static class DxfParser
                 DataElement = dataElement,
                 OriginalGroupCodeLine = groupCodeLine,
                 OriginalDataLine = dataLine,
-                IsEnabled = true // Set to true for every new tag
+                IsEnabled = true
             };
 
             var isEntityWithType = tag.GroupCode == DxfCodeForType;
@@ -82,7 +81,6 @@ public static class DxfParser
                 {
                     section.Children.Add(tag);
                 }
-
                 section = default(DxfRawTag);
                 other = default(DxfRawTag);
             }
@@ -120,7 +118,6 @@ public static class DxfParser
             }
         }
 
-        // Enable all nodes in the hierarchy
         foreach (var dxfSection in sections)
         {
             EnableHierarchy(dxfSection);
