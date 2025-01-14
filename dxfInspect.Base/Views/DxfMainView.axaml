@@ -27,13 +27,18 @@
 
     <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="10,0,10,10" Spacing="10">
       <StackPanel Orientation="Horizontal" Spacing="5">
-        <TextBlock Text="Search:" VerticalAlignment="Center" />
-        <TextBox Text="{Binding SearchText}" Width="200" />
+        <TextBlock Text="Code:" VerticalAlignment="Center" />
+        <TextBox Text="{Binding CodeSearch}" Width="100" />
       </StackPanel>
 
       <StackPanel Orientation="Horizontal" Spacing="5">
         <TextBlock Text="Type:" VerticalAlignment="Center" />
         <TextBox Text="{Binding TypeFilter}" Width="150" />
+      </StackPanel>
+
+      <StackPanel Orientation="Horizontal" Spacing="5">
+        <TextBlock Text="Data:" VerticalAlignment="Center" />
+        <TextBox Text="{Binding DataSearch}" Width="200" />
       </StackPanel>
 
       <StackPanel Orientation="Horizontal" Spacing="5">

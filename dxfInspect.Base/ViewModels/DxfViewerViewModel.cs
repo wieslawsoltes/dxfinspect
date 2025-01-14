@@ -15,7 +15,8 @@ public class DxfViewerViewModel : ReactiveObject
     private readonly HierarchicalTreeDataGridSource<DxfTreeNodeViewModel> _source;
     private readonly HashSet<string> _expandedNodes = [];
     private bool _cellSelection;
-    private string _searchText = "";
+    private string _codeSearch = "";
+    private string _dataSearch = "";
     private string _typeFilter = "";
     private int _lineNumberStart;
     private int _lineNumberEnd = int.MaxValue;
@@ -90,12 +91,22 @@ public class DxfViewerViewModel : ReactiveObject
         }
     }
 
-    public string SearchText
+    public string CodeSearch
     {
-        get => _searchText;
+        get => _codeSearch;
         set
         {
-            this.RaiseAndSetIfChanged(ref _searchText, value);
+            this.RaiseAndSetIfChanged(ref _codeSearch, value);
+            ApplyFilters();
+        }
+    }
+
+    public string DataSearch
+    {
+        get => _dataSearch;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _dataSearch, value);
             ApplyFilters();
         }
     }
@@ -179,7 +190,8 @@ public class DxfViewerViewModel : ReactiveObject
 
     private void ResetFilters()
     {
-        SearchText = "";
+        CodeSearch = "";
+        DataSearch = "";
         TypeFilter = "";
         LineNumberStart = 0;
         LineNumberEnd = _maxLineNumber;
@@ -205,7 +217,8 @@ public class DxfViewerViewModel : ReactiveObject
             LineNumberEnd = endLine;
 
             // Clear other filters
-            SearchText = "";
+            CodeSearch = "";
+            DataSearch = "";
             TypeFilter = "";
         }
     }
@@ -231,7 +244,8 @@ public class DxfViewerViewModel : ReactiveObject
         if (nodeView != null)
         {
             TypeFilter = nodeView.Type;
-            SearchText = "";
+            CodeSearch = "";
+            DataSearch = "";
             // Don't reset line range to int.MaxValue
             if (LineNumberEnd == _maxLineNumber)
             {
@@ -244,8 +258,9 @@ public class DxfViewerViewModel : ReactiveObject
     {
         if (nodeView != null)
         {
-            SearchText = nodeView.Data;
+            DataSearch = nodeView.Data;
             TypeFilter = "";
+            CodeSearch = "";
             // Don't reset line range to int.MaxValue
             if (LineNumberEnd == _maxLineNumber)
             {
@@ -347,14 +362,15 @@ public class DxfViewerViewModel : ReactiveObject
                                 nodeView.EndLine <= (LineNumberEnd == 0 ? int.MaxValue : LineNumberEnd);
 
         bool matchesType = string.IsNullOrWhiteSpace(TypeFilter) ||
-                           nodeView.Type.Contains(TypeFilter,
-                               StringComparison.OrdinalIgnoreCase); // Changed to partial matching
+                           nodeView.Type.Contains(TypeFilter, StringComparison.OrdinalIgnoreCase);
 
-        bool matchesSearch = string.IsNullOrWhiteSpace(SearchText) ||
-                             nodeView.Data.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
-                             nodeView.Code.Contains(SearchText, StringComparison.OrdinalIgnoreCase);
+        bool matchesCode = string.IsNullOrWhiteSpace(CodeSearch) ||
+                           nodeView.Code.Equals(CodeSearch, StringComparison.OrdinalIgnoreCase);
 
-        return matchesLineRange && matchesType && matchesSearch;
+        bool matchesData = string.IsNullOrWhiteSpace(DataSearch) ||
+                           nodeView.Data.Contains(DataSearch, StringComparison.OrdinalIgnoreCase);
+
+        return matchesLineRange && matchesType && matchesCode && matchesData;
     }
 
     private bool HasMatchingDescendant(List<DxfTreeNodeViewModel> nodes)
