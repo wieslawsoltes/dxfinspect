@@ -5,7 +5,6 @@
              xmlns:viewModels="clr-namespace:dxfInspect.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="dxfInspect.Views.DxfMainView"
-             Background="#DDDDDD"
              x:CompileBindings="True" x:DataType="viewModels:DxfViewerViewModel">
 
   <Grid RowDefinitions="Auto,Auto,*">
@@ -15,10 +14,6 @@
               Margin="0,0,10,0" />
       <TextBlock Name="FileNameBlock"
                  VerticalAlignment="Center" />
-      <CheckBox Name="CellSelectionCheckBox"
-                Content="Cell Selection"
-                Margin="10,0,0,0"
-                IsChecked="{Binding CellSelection}" />
       <CheckBox Name="ExpandAllCheckBox"
                 Content="Expand All"
                 Margin="10,0,0,0"
@@ -87,13 +82,6 @@
               </ContextMenu>
             </Setter.Value>
           </Setter>
-        </Style>
-        <Style Selector="TreeDataGrid TreeDataGridColumnHeader">
-          <Setter Property="Background" Value="#FF1E66" />
-          <Setter Property="Foreground" Value="White" />
-          <Setter Property="FontWeight" Value="Bold" />
-          <Setter Property="Height" Value="32" />
-          <Setter Property="Padding" Value="8,0" />
         </Style>
       </TreeDataGrid.Styles>
     </TreeDataGrid>
