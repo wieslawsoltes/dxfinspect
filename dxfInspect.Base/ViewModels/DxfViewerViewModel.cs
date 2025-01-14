@@ -6,7 +6,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Models.TreeDataGrid;
-using Avalonia.Controls.Selection;
 using Avalonia.Input.Platform;
 using Avalonia.VisualTree;
 using Dxf;
@@ -80,23 +79,6 @@ public class DxfViewerViewModel : ReactiveObject
     public ICommand ResetFiltersCommand => _resetFiltersCommand;
     public ICommand CopyCodeAndDataCommand => _copyCodeAndDataCommand;
     public ICommand CopyObjectTreeCommand => _copyObjectTreeCommand;
-
-    public bool CellSelection
-    {
-        get => _cellSelection;
-        set
-        {
-            if (_cellSelection != value)
-            {
-                _cellSelection = value;
-                if (_cellSelection)
-                    Source.Selection = new TreeDataGridCellSelectionModel<DxfTreeNodeViewModel>(Source);
-                else
-                    Source.Selection = new TreeDataGridRowSelectionModel<DxfTreeNodeViewModel>(Source);
-                this.RaisePropertyChanged();
-            }
-        }
-    }
 
     public string CodeSearch
     {
