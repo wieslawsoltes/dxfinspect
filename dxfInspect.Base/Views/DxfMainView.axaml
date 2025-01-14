@@ -18,6 +18,10 @@
               Content="Expand All"
               Margin="10,0,0,0"
               Command="{Binding ExpandAllCommand}" />
+      <Button Name="CollapseAllButton"
+              Content="Collapse All"
+              Margin="10,0,0,0"
+              Command="{Binding CollapseAllCommand}" />
     </StackPanel>
 
     <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="10,0,10,10" Spacing="10">
