@@ -13,14 +13,10 @@ using ReactiveUI;
 
 namespace dxfInspect.ViewModels;
 
-/// <summary>
-/// View model for the DXF viewer that manages the data display and filtering
-/// </summary>
 public class DxfViewerViewModel : ReactiveObject
 {
     private readonly HierarchicalTreeDataGridSource<DxfTreeNodeViewModel> _source;
     private readonly HashSet<string> _expandedNodes = [];
-    private bool _cellSelection;
     private string _codeSearch = "";
     private string _dataSearch = "";
     private int _lineNumberStart = 1;
@@ -28,12 +24,6 @@ public class DxfViewerViewModel : ReactiveObject
     private List<DxfTreeNodeViewModel> _allNodes = [];
     private bool _hasLoadedFile;
     private bool _expandAll;
-    private readonly ICommand _filterByLineRangeCommand;
-    private readonly ICommand _filterByDataCommand;
-    private readonly ICommand _filterByCodeCommand;
-    private readonly ICommand _resetFiltersCommand;
-    private readonly ICommand _copyCodeAndDataCommand;
-    private readonly ICommand _copyObjectTreeCommand;
     private int _maxLineNumber = int.MaxValue;
 
     public DxfViewerViewModel()
@@ -68,20 +58,25 @@ public class DxfViewerViewModel : ReactiveObject
             }
         };
 
-        _filterByLineRangeCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(FilterByLineRange);
-        _filterByDataCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(FilterByData);
-        _filterByCodeCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(FilterByCode);
-        _resetFiltersCommand = ReactiveCommand.Create(ResetFilters);
-        _copyCodeAndDataCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(CopyCodeAndData);
-        _copyObjectTreeCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(CopyObjectTree);
+        FilterByLineRangeCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(FilterByLineRange);
+        FilterByDataCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(FilterByData);
+        FilterByCodeCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(FilterByCode);
+        ResetFiltersCommand = ReactiveCommand.Create(ResetFilters);
+        CopyCodeAndDataCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(CopyCodeAndData);
+        CopyObjectTreeCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(CopyObjectTree);
     }
 
-    public ICommand FilterByLineRangeCommand => _filterByLineRangeCommand;
-    public ICommand FilterByDataCommand => _filterByDataCommand;
-    public ICommand FilterByCodeCommand => _filterByCodeCommand;
-    public ICommand ResetFiltersCommand => _resetFiltersCommand;
-    public ICommand CopyCodeAndDataCommand => _copyCodeAndDataCommand;
-    public ICommand CopyObjectTreeCommand => _copyObjectTreeCommand;
+    public ICommand FilterByLineRangeCommand { get; }
+
+    public ICommand FilterByDataCommand { get; }
+
+    public ICommand FilterByCodeCommand { get; }
+
+    public ICommand ResetFiltersCommand { get; }
+
+    public ICommand CopyCodeAndDataCommand { get; }
+
+    public ICommand CopyObjectTreeCommand { get; }
 
     public string CodeSearch
     {
@@ -137,7 +132,7 @@ public class DxfViewerViewModel : ReactiveObject
             this.RaiseAndSetIfChanged(ref _expandAll, value);
             if (value)
             {
-                _expandedNodes.Clear(); // Clear individual tracking when using ExpandAll
+                _expandedNodes.Clear();
                 foreach (var node in _allNodes)
                 {
                     ExpandAllNodes([node]);
@@ -228,11 +223,9 @@ public class DxfViewerViewModel : ReactiveObject
     {
         if (nodeView != null)
         {
-            // Get the full range including all children
             var startLine = nodeView.StartLine;
             var endLine = nodeView.EndLine;
 
-            // If it has children, recursively find min start line and max end line
             if (nodeView.HasChildren)
             {
                 var allLines = GetAllLineRanges(nodeView).ToList();
@@ -243,7 +236,6 @@ public class DxfViewerViewModel : ReactiveObject
             LineNumberStart = startLine;
             LineNumberEnd = endLine;
 
-            // Clear other filters
             CodeSearch = "";
             DataSearch = "";
         }
@@ -294,8 +286,6 @@ public class DxfViewerViewModel : ReactiveObject
     private void ApplyFilters()
     {
         var filteredNodes = FilterNodes(_allNodes);
-        Console.WriteLine(
-            $"Applying filters. Original nodes: {_allNodes.Count}, Filtered nodes: {filteredNodes.Count}");
         _source.Items = filteredNodes;
     }
 
@@ -325,7 +315,6 @@ public class DxfViewerViewModel : ReactiveObject
                 {
                     if (isTypeNode && nodeMatches)
                     {
-                        // For matching type nodes, include all children
                         foreach (var child in node.Children)
                         {
                             var childNode = new DxfTreeNodeViewModel(
@@ -349,7 +338,6 @@ public class DxfViewerViewModel : ReactiveObject
                     }
                     else
                     {
-                        // Normal filtering for non-type nodes or non-matching type nodes
                         var filteredChildren = FilterNodes(node.Children.ToList());
                         foreach (var child in filteredChildren)
                         {
@@ -487,7 +475,7 @@ public class DxfViewerViewModel : ReactiveObject
             if (node.HasChildren)
             {
                 node.IsExpanded = true;
-                if (!_expandAll) // Only track individual nodes when not in ExpandAll mode
+                if (!_expandAll)
                 {
                     _expandedNodes.Add(node.NodeKey);
                 }
@@ -496,7 +484,7 @@ public class DxfViewerViewModel : ReactiveObject
             }
         }
 
-        ApplyFilters(); // Refresh the view
+        ApplyFilters();
     }
 
     private void CollapseAllNodes(List<DxfTreeNodeViewModel> nodes)
@@ -511,7 +499,7 @@ public class DxfViewerViewModel : ReactiveObject
         }
 
         _expandedNodes.Clear();
-        ApplyFilters(); // Refresh the view
+        ApplyFilters();
     }
 
     private IEnumerable<DxfTreeNodeViewModel> GetAllNodes(DxfTreeNodeViewModel nodeView)
