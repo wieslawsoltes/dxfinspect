@@ -2,9 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Input;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Models.TreeDataGrid;
 using Avalonia.Controls.Selection;
+using Avalonia.Input.Platform;
+using Avalonia.VisualTree;
 using Dxf;
 using ReactiveUI;
 
@@ -26,6 +30,8 @@ public class DxfViewerViewModel : ReactiveObject
     private readonly ICommand _filterByDataCommand;
     private readonly ICommand _filterByCodeCommand;
     private readonly ICommand _resetFiltersCommand;
+    private readonly ICommand _copyCodeAndDataCommand;
+    private readonly ICommand _copyObjectTreeCommand;
     private int _maxLineNumber = int.MaxValue;
 
     public DxfViewerViewModel()
@@ -64,12 +70,16 @@ public class DxfViewerViewModel : ReactiveObject
         _filterByDataCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(FilterByData);
         _filterByCodeCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(FilterByCode);
         _resetFiltersCommand = ReactiveCommand.Create(ResetFilters);
+        _copyCodeAndDataCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(CopyCodeAndData);
+        _copyObjectTreeCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(CopyObjectTree);
     }
 
     public ICommand FilterByLineRangeCommand => _filterByLineRangeCommand;
     public ICommand FilterByDataCommand => _filterByDataCommand;
     public ICommand FilterByCodeCommand => _filterByCodeCommand;
     public ICommand ResetFiltersCommand => _resetFiltersCommand;
+    public ICommand CopyCodeAndDataCommand => _copyCodeAndDataCommand;
+    public ICommand CopyObjectTreeCommand => _copyObjectTreeCommand;
 
     public bool CellSelection
     {
@@ -159,16 +169,24 @@ public class DxfViewerViewModel : ReactiveObject
 
     public void LoadDxfData(IList<DxfRawTag> sections)
     {
+        Console.WriteLine($"Loading DXF data. Number of sections: {sections.Count}");
+
         _allNodes = ConvertToTreeNodes(sections);
+        Console.WriteLine($"Converted to tree nodes. Number of nodes: {_allNodes.Count}");
 
         if (_allNodes.Any())
         {
-            _maxLineNumber = _allNodes
-                .SelectMany(GetAllNodes)
-                .Max(n => n.EndLine);
+            var allNodes = _allNodes.SelectMany(GetAllNodes).ToList();
+            _maxLineNumber = allNodes.Max(n => n.EndLine);
+            Console.WriteLine($"Max line number: {_maxLineNumber}");
+            Console.WriteLine($"Total nodes including children: {allNodes.Count}");
 
             LineNumberEnd = _maxLineNumber;
             LineNumberStart = 1;
+        }
+        else
+        {
+            Console.WriteLine("No nodes were created from sections");
         }
 
         HasLoadedFile = true;
@@ -181,6 +199,54 @@ public class DxfViewerViewModel : ReactiveObject
         DataSearch = "";
         LineNumberStart = 1;
         LineNumberEnd = _maxLineNumber;
+    }
+
+    private IClipboard? GetClipboard()
+    {
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime
+            {
+                MainWindow: { } window
+            })
+        {
+            return window.Clipboard;
+        }
+
+        if (Application.Current?.ApplicationLifetime is ISingleViewApplicationLifetime { MainView: { } mainView })
+        {
+            var visualRoot = mainView.GetVisualRoot();
+            if (visualRoot is TopLevel topLevel)
+            {
+                return topLevel.Clipboard;
+            }
+        }
+
+        return null;
+    }
+
+    private async void CopyCodeAndData(DxfTreeNodeViewModel? nodeView)
+    {
+        if (nodeView != null)
+        {
+            var clipboard = GetClipboard();
+            if (clipboard != null)
+            {
+                var text = $"{nodeView.OriginalGroupCodeLine}{Environment.NewLine}{nodeView.OriginalDataLine}";
+                await clipboard.SetTextAsync(text);
+            }
+        }
+    }
+
+    private async void CopyObjectTree(DxfTreeNodeViewModel? nodeView)
+    {
+        if (nodeView?.RawTag != null)
+        {
+            var clipboard = GetClipboard();
+            if (clipboard != null)
+            {
+                var text = nodeView.RawTag.GetOriginalTreeText();
+                await clipboard.SetTextAsync(text);
+            }
+        }
     }
 
     private void FilterByLineRange(DxfTreeNodeViewModel? nodeView)
@@ -250,11 +316,15 @@ public class DxfViewerViewModel : ReactiveObject
         }
     }
 
+
     private void ApplyFilters()
     {
         var filteredNodes = FilterNodes(_allNodes);
+        Console.WriteLine(
+            $"Applying filters. Original nodes: {_allNodes.Count}, Filtered nodes: {filteredNodes.Count}");
         _source.Items = filteredNodes;
     }
+
 
     private List<DxfTreeNodeViewModel> FilterNodes(List<DxfTreeNodeViewModel> nodes)
     {
@@ -273,7 +343,10 @@ public class DxfViewerViewModel : ReactiveObject
                     node.Code,
                     node.Data,
                     node.Type,
-                    node.NodeKey) { IsExpanded = _expandAll || _expandedNodes.Contains(node.NodeKey) };
+                    node.NodeKey,
+                    node.OriginalGroupCodeLine,
+                    node.OriginalDataLine,
+                    node.RawTag) { IsExpanded = _expandAll || _expandedNodes.Contains(node.NodeKey) };
 
                 if (node.HasChildren)
                 {
@@ -288,7 +361,10 @@ public class DxfViewerViewModel : ReactiveObject
                                 child.Code,
                                 child.Data,
                                 child.Type,
-                                child.NodeKey) { IsExpanded = _expandAll || _expandedNodes.Contains(child.NodeKey) };
+                                child.NodeKey,
+                                child.OriginalGroupCodeLine,
+                                child.OriginalDataLine,
+                                child.RawTag) { IsExpanded = _expandAll || _expandedNodes.Contains(child.NodeKey) };
 
                             if (child.HasChildren)
                             {
@@ -326,7 +402,10 @@ public class DxfViewerViewModel : ReactiveObject
                 child.Code,
                 child.Data,
                 child.Type,
-                child.NodeKey) { IsExpanded = _expandAll || _expandedNodes.Contains(child.NodeKey) };
+                child.NodeKey,
+                child.OriginalGroupCodeLine,
+                child.OriginalDataLine,
+                child.RawTag) { IsExpanded = _expandAll || _expandedNodes.Contains(child.NodeKey) };
 
             if (child.HasChildren)
             {
@@ -367,26 +446,42 @@ public class DxfViewerViewModel : ReactiveObject
         var nodes = new List<DxfTreeNodeViewModel>();
         var lineNumber = 1;
 
-        foreach (var section in sections.Where(s => s.IsEnabled))
+        Console.WriteLine($"Starting conversion of {sections.Count} sections");
+        foreach (var section in sections)
         {
+            Console.WriteLine(
+                $"Section IsEnabled: {section.IsEnabled}, GroupCode: {section.GroupCode}, DataElement: {section.DataElement}");
+
+            if (!section.IsEnabled)
+            {
+                Console.WriteLine("Skipping disabled section");
+                continue;
+            }
+
             var sectionNode = new DxfTreeNodeViewModel(
                 lineNumber,
                 lineNumber + 1,
                 section.GroupCode.ToString(),
                 section.DataElement ?? string.Empty,
                 "SECTION",
-                $"{lineNumber}:SECTION:{section.DataElement}");
+                $"{lineNumber}:SECTION:{section.DataElement}",
+                section.OriginalGroupCodeLine,
+                section.OriginalDataLine,
+                section);
 
             lineNumber += 2;
 
             if (section.Children != null)
             {
+                Console.WriteLine($"Processing {section.Children.Count} children for section");
                 AddChildNodes(sectionNode, section.Children, ref lineNumber);
+                Console.WriteLine($"Added {sectionNode.Children.Count} children to node");
             }
 
             nodes.Add(sectionNode);
         }
 
+        Console.WriteLine($"Converted {nodes.Count} nodes");
         return nodes;
     }
 
@@ -404,7 +499,10 @@ public class DxfViewerViewModel : ReactiveObject
                 child.GroupCode.ToString(),
                 child.DataElement ?? string.Empty,
                 type,
-                $"{lineNumber}:{type}:{child.DataElement}");
+                $"{lineNumber}:{type}:{child.DataElement}",
+                child.OriginalGroupCodeLine,
+                child.OriginalDataLine,
+                child);
 
             lineNumber += 2;
 

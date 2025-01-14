@@ -77,6 +77,13 @@
                 <Separator />
                 <MenuItem Header="Reset All Filters"
                           Command="{Binding $parent[UserControl].((viewModels:DxfViewerViewModel)DataContext).ResetFiltersCommand}" />
+                <Separator />
+                <MenuItem Header="Copy Code + Data"
+                          Command="{Binding $parent[UserControl].((viewModels:DxfViewerViewModel)DataContext).CopyCodeAndDataCommand}"
+                          CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
+                <MenuItem Header="Copy Object Tree"
+                          Command="{Binding $parent[UserControl].((viewModels:DxfViewerViewModel)DataContext).CopyObjectTreeCommand}"
+                          CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
               </ContextMenu>
             </Setter.Value>
           </Setter>

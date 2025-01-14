@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Linq;
+using Dxf;
 using ReactiveUI;
 
 namespace dxfInspect.ViewModels;
@@ -8,7 +9,16 @@ public class DxfTreeNodeViewModel : ReactiveObject
 {
     private bool _isExpanded;
 
-    public DxfTreeNodeViewModel(int startLine, int endLine, string code, string data, string type, string nodeKey)
+    public DxfTreeNodeViewModel(
+        int startLine, 
+        int endLine, 
+        string code, 
+        string data, 
+        string type, 
+        string nodeKey,
+        string originalGroupCodeLine,
+        string originalDataLine,
+        DxfRawTag rawTag)
     {
         StartLine = startLine;
         EndLine = endLine;
@@ -16,6 +26,9 @@ public class DxfTreeNodeViewModel : ReactiveObject
         Data = data;
         Type = type;
         NodeKey = nodeKey;
+        OriginalGroupCodeLine = originalGroupCodeLine;
+        OriginalDataLine = originalDataLine;
+        RawTag = rawTag;
     }
 
     public int StartLine { get; }
@@ -24,6 +37,9 @@ public class DxfTreeNodeViewModel : ReactiveObject
     public string Data { get; }
     public string Type { get; }
     public string NodeKey { get; }
+    public string OriginalGroupCodeLine { get; }
+    public string OriginalDataLine { get; }
+    public DxfRawTag RawTag { get; }
     public ObservableCollection<DxfTreeNodeViewModel> Children { get; } = [];
     public bool HasChildren => Children.Count > 0;
 
