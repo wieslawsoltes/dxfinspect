@@ -9,40 +9,81 @@
 
   <DockPanel Margin="8">
 
-    <StackPanel Spacing="8" DockPanel.Dock="Top">
-      <StackPanel Orientation="Horizontal" Spacing="8" DockPanel.Dock="Top">
-        <Button Name="LoadButton" Content="Load DXF" />
-        <Button Content="Expand All" Command="{Binding ExpandAllCommand}" />
-        <Button Content="Collapse All" Command="{Binding CollapseAllCommand}" />
-        <Button Content="Reset Filters" Command="{Binding ResetFiltersCommand}" />
-      </StackPanel>
-      <StackPanel Orientation="Horizontal" Spacing="8">
-        <TextBlock Text="Code:" Width="100" VerticalAlignment="Center" />
-        <TextBox Text="{Binding CodeSearch}" Width="170" />
-      </StackPanel>
-      <StackPanel Orientation="Horizontal" Spacing="8">
-        <TextBlock Text="Data:" Width="100" VerticalAlignment="Center" />
-        <TextBox Text="{Binding DataSearch}" Width="170" />
-      </StackPanel>
-      <StackPanel Orientation="Horizontal" Spacing="8">
-        <TextBlock Text="Line Range:" Width="100" VerticalAlignment="Center" />
-        <NumericUpDown Value="{Binding LineNumberStart}" Width="170" Minimum="1" />
-        <TextBlock Text="-" VerticalAlignment="Center" />
-        <NumericUpDown Value="{Binding LineNumberEnd}" Width="170" Minimum="1" />
-      </StackPanel>
-      <StackPanel Orientation="Horizontal" Spacing="8" DockPanel.Dock="Top">
-        <TextBlock Text="File:" Width="100" VerticalAlignment="Center" />
-        <TextBlock Name="FileNameBlock" Text="-" VerticalAlignment="Center" />
-      </StackPanel>
+    <StackPanel Spacing="12" DockPanel.Dock="Top">
+
+      <UniformGrid Columns="4">
+        <Button Name="LoadButton" Content="Load DXF"
+                Padding="12,8"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Center"
+                MinWidth="100" />
+        <Button Content="Expand All"
+                Command="{Binding ExpandAllCommand}"
+                Padding="12,8"
+                Margin="8,0,8,0"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Center"
+                MinWidth="100" />
+        <Button Content="Collapse All"
+                Command="{Binding CollapseAllCommand}"
+                Padding="12,8"
+                Margin="8,0,8,0"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Center"
+                MinWidth="100" />
+        <Button Content="Reset Filters"
+                Command="{Binding ResetFiltersCommand}"
+                Padding="12,8"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Center"
+                MinWidth="100" />
+      </UniformGrid>
+
+        <StackPanel Spacing="12">
+
+          <StackPanel Spacing="4">
+            <TextBlock Text="Code:" />
+            <TextBox Text="{Binding CodeSearch}" />
+          </StackPanel>
+
+          <StackPanel Spacing="4">
+            <TextBlock Text="Data:" />
+            <TextBox Text="{Binding DataSearch}" />
+          </StackPanel>
+
+          <StackPanel Spacing="4">
+            <TextBlock Text="Line Range:" />
+            <Grid ColumnDefinitions="*,Auto,*">
+              <NumericUpDown Grid.Column="0"
+                             Value="{Binding LineNumberStart}"
+                             Minimum="1" />
+              <TextBlock Grid.Column="1"
+                         Text="-"
+                         VerticalAlignment="Center"
+                         Margin="8,0" />
+              <NumericUpDown Grid.Column="2"
+                             Value="{Binding LineNumberEnd}"
+                             Minimum="1" />
+            </Grid>
+          </StackPanel>
+
+        </StackPanel>
+
     </StackPanel>
 
-    <Panel Height="8" DockPanel.Dock="Top" />
-
+    <StackPanel Spacing="4" Margin="0,12,0,12" DockPanel.Dock="Top">
+      <TextBlock Text="File:" />
+      <TextBlock Name="FileNameBlock"
+                 Text="-"
+                 TextWrapping="Wrap" />
+    </StackPanel>
+ 
     <Grid>
       <TreeDataGrid Name="DxfTree"
                     Source="{Binding Source}">
         <TreeDataGrid.Styles>
           <Style Selector="TreeDataGrid TreeDataGridRow">
+            <Setter Property="MinHeight" Value="32" />
             <Setter Property="ContextMenu">
               <Setter.Value>
                 <ContextMenu>
@@ -75,9 +116,10 @@
                  Text="No DXF file loaded. Click 'Load DXF' to begin."
                  HorizontalAlignment="Center"
                  VerticalAlignment="Center"
+                 TextWrapping="Wrap"
+                 Margin="20"
                  IsVisible="{Binding !HasLoadedFile}" />
     </Grid>
-
   </DockPanel>
 
 </UserControl>
