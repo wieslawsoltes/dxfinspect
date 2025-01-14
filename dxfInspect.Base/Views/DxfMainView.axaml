@@ -83,7 +83,7 @@
                     Source="{Binding Source}">
         <TreeDataGrid.Styles>
           <Style Selector="TreeDataGrid TreeDataGridRow">
-            <Setter Property="MinHeight" Value="32" />
+            <Setter Property="MinHeight" Value="24" />
             <Setter Property="ContextMenu">
               <Setter.Value>
                 <ContextMenu>
