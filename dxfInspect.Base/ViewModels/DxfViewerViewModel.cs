@@ -17,16 +17,15 @@ public class DxfViewerViewModel : ReactiveObject
     private bool _cellSelection;
     private string _codeSearch = "";
     private string _dataSearch = "";
-    private string _typeFilter = "";
     private int _lineNumberStart;
     private int _lineNumberEnd = int.MaxValue;
     private List<DxfTreeNodeViewModel> _allNodes = [];
     private bool _hasLoadedFile;
     private bool _expandAll;
-    private readonly ICommand? _filterByLineRangeCommand;
-    private readonly ICommand? _filterByTypeCommand;
-    private readonly ICommand? _filterByDataCommand;
-    private readonly ICommand? _resetFiltersCommand;
+    private readonly ICommand _filterByLineRangeCommand;
+    private readonly ICommand _filterByDataCommand;
+    private readonly ICommand _filterByCodeCommand;
+    private readonly ICommand _resetFiltersCommand;
     private int _maxLineNumber = int.MaxValue;
 
     public DxfViewerViewModel()
@@ -36,17 +35,15 @@ public class DxfViewerViewModel : ReactiveObject
             Columns =
             {
                 new HierarchicalExpanderColumn<DxfTreeNodeViewModel>(
-                    new TextColumn<DxfTreeNodeViewModel, string>("Lines", x => x.LineNumberRange, new GridLength(100)),
+                    new TextColumn<DxfTreeNodeViewModel, string>("Lines", x => x.LineNumberRange, new GridLength(200)),
                     x => x.Children,
                     x => x.HasChildren,
-                    x => x.IsExpanded), // Bind to the model's IsExpanded property
+                    x => x.IsExpanded),
                 new TextColumn<DxfTreeNodeViewModel, string>("Code", x => x.Code, new GridLength(100)),
-                new TextColumn<DxfTreeNodeViewModel, string>("Type", x => x.Type, new GridLength(150)),
                 new TextColumn<DxfTreeNodeViewModel, string>("Data", x => x.Data, new GridLength(1, GridUnitType.Star))
             }
         };
 
-        // Subscribe to model changes to track expanded state
         _source.RowExpanded += (_, e) =>
         {
             if (e.Row.Model is { } model)
@@ -64,15 +61,15 @@ public class DxfViewerViewModel : ReactiveObject
         };
 
         _filterByLineRangeCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(FilterByLineRange);
-        _filterByTypeCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(FilterByType);
         _filterByDataCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(FilterByData);
+        _filterByCodeCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(FilterByCode);
         _resetFiltersCommand = ReactiveCommand.Create(ResetFilters);
     }
 
-    public ICommand FilterByLineRangeCommand => _filterByLineRangeCommand!;
-    public ICommand FilterByTypeCommand => _filterByTypeCommand!;
-    public ICommand FilterByDataCommand => _filterByDataCommand!;
-    public ICommand ResetFiltersCommand => _resetFiltersCommand!;
+    public ICommand FilterByLineRangeCommand => _filterByLineRangeCommand;
+    public ICommand FilterByDataCommand => _filterByDataCommand;
+    public ICommand FilterByCodeCommand => _filterByCodeCommand;
+    public ICommand ResetFiltersCommand => _resetFiltersCommand;
 
     public bool CellSelection
     {
@@ -107,16 +104,6 @@ public class DxfViewerViewModel : ReactiveObject
         set
         {
             this.RaiseAndSetIfChanged(ref _dataSearch, value);
-            ApplyFilters();
-        }
-    }
-
-    public string TypeFilter
-    {
-        get => _typeFilter;
-        set
-        {
-            this.RaiseAndSetIfChanged(ref _typeFilter, value);
             ApplyFilters();
         }
     }
@@ -192,7 +179,6 @@ public class DxfViewerViewModel : ReactiveObject
     {
         CodeSearch = "";
         DataSearch = "";
-        TypeFilter = "";
         LineNumberStart = 0;
         LineNumberEnd = _maxLineNumber;
     }
@@ -219,7 +205,6 @@ public class DxfViewerViewModel : ReactiveObject
             // Clear other filters
             CodeSearch = "";
             DataSearch = "";
-            TypeFilter = "";
         }
     }
 
@@ -239,14 +224,12 @@ public class DxfViewerViewModel : ReactiveObject
         }
     }
 
-    private void FilterByType(DxfTreeNodeViewModel? nodeView)
+    private void FilterByCode(DxfTreeNodeViewModel? nodeView)
     {
         if (nodeView != null)
         {
-            TypeFilter = nodeView.Type;
-            CodeSearch = "";
+            CodeSearch = nodeView.Code;
             DataSearch = "";
-            // Don't reset line range to int.MaxValue
             if (LineNumberEnd == _maxLineNumber)
             {
                 LineNumberEnd = _maxLineNumber;
@@ -259,9 +242,7 @@ public class DxfViewerViewModel : ReactiveObject
         if (nodeView != null)
         {
             DataSearch = nodeView.Data;
-            TypeFilter = "";
             CodeSearch = "";
-            // Don't reset line range to int.MaxValue
             if (LineNumberEnd == _maxLineNumber)
             {
                 LineNumberEnd = _maxLineNumber;
@@ -361,16 +342,13 @@ public class DxfViewerViewModel : ReactiveObject
         bool matchesLineRange = nodeView.StartLine >= LineNumberStart &&
                                 nodeView.EndLine <= (LineNumberEnd == 0 ? int.MaxValue : LineNumberEnd);
 
-        bool matchesType = string.IsNullOrWhiteSpace(TypeFilter) ||
-                           nodeView.Type.Contains(TypeFilter, StringComparison.OrdinalIgnoreCase);
-
         bool matchesCode = string.IsNullOrWhiteSpace(CodeSearch) ||
                            nodeView.Code.Equals(CodeSearch, StringComparison.OrdinalIgnoreCase);
 
         bool matchesData = string.IsNullOrWhiteSpace(DataSearch) ||
                            nodeView.Data.Contains(DataSearch, StringComparison.OrdinalIgnoreCase);
 
-        return matchesLineRange && matchesType && matchesCode && matchesData;
+        return matchesLineRange && matchesCode && matchesData;
     }
 
     private bool HasMatchingDescendant(List<DxfTreeNodeViewModel> nodes)

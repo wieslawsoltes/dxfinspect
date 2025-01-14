@@ -32,11 +32,6 @@
       </StackPanel>
 
       <StackPanel Orientation="Horizontal" Spacing="5">
-        <TextBlock Text="Type:" VerticalAlignment="Center" />
-        <TextBox Text="{Binding TypeFilter}" Width="150" />
-      </StackPanel>
-
-      <StackPanel Orientation="Horizontal" Spacing="5">
         <TextBlock Text="Data:" VerticalAlignment="Center" />
         <TextBox Text="{Binding DataSearch}" Width="200" />
       </StackPanel>
@@ -73,11 +68,11 @@
                 <MenuItem Header="Filter by Line Range"
                           Command="{Binding $parent[UserControl].((viewModels:DxfViewerViewModel)DataContext).FilterByLineRangeCommand}"
                           CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
-                <MenuItem Header="Filter by Type"
-                          Command="{Binding $parent[UserControl].((viewModels:DxfViewerViewModel)DataContext).FilterByTypeCommand}"
-                          CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
                 <MenuItem Header="Filter by Data"
                           Command="{Binding $parent[UserControl].((viewModels:DxfViewerViewModel)DataContext).FilterByDataCommand}"
+                          CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
+                <MenuItem Header="Filter by Code"
+                          Command="{Binding $parent[UserControl].((viewModels:DxfViewerViewModel)DataContext).FilterByCodeCommand}"
                           CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
                 <Separator />
                 <MenuItem Header="Reset All Filters"
