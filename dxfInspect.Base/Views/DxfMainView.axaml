@@ -27,7 +27,7 @@
         <Button Content="Collapse All"
                 Command="{Binding CollapseAllCommand}"
                 Padding="12,8"
-                Margin="8,0,8,0"
+                Margin="0,0,8,0"
                 HorizontalAlignment="Stretch"
                 HorizontalContentAlignment="Center"
                 MinWidth="100" />
