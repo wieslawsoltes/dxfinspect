@@ -11,6 +11,7 @@ using Avalonia.Controls.Models.TreeDataGrid;
 using Avalonia.Input.Platform;
 using Avalonia.VisualTree;
 using Dxf;
+using dxfInspect.Model;
 using ReactiveUI;
 
 namespace dxfInspect.ViewModels;
@@ -36,12 +37,36 @@ public class DxfViewerViewModel : ReactiveObject
             Columns =
             {
                 new HierarchicalExpanderColumn<DxfTreeNodeViewModel>(
-                    new TextColumn<DxfTreeNodeViewModel, string>("Lines", x => x.LineNumberRange, new GridLength(200)),
+                    new TextColumn<DxfTreeNodeViewModel, LineRange>(
+                        "Lines",
+                        x => x.LineRange,
+                        options: new()
+                        {
+                            CompareAscending = Sort<DxfTreeNodeViewModel>.Ascending(x => x.LineRange),
+                            CompareDescending = Sort<DxfTreeNodeViewModel>.Descending(x => x.LineRange)
+                        },
+                        width: new GridLength(200)),
                     x => x.Children,
                     x => x.HasChildren,
                     x => x.IsExpanded),
-                new TextColumn<DxfTreeNodeViewModel, string>("Code", x => x.Code, new GridLength(100)),
-                new TextColumn<DxfTreeNodeViewModel, string>("Data", x => x.Data, new GridLength(1, GridUnitType.Star))
+                new TextColumn<DxfTreeNodeViewModel, string>(
+                    "Code",
+                    x => x.CodeString,
+                    options: new()
+                    {
+                        CompareAscending = Sort<DxfTreeNodeViewModel>.Ascending(x => x.Code),
+                        CompareDescending = Sort<DxfTreeNodeViewModel>.Descending(x => x.Code)
+                    },
+                    width: new GridLength(100)),
+                new TextColumn<DxfTreeNodeViewModel, string>(
+                    "Data",
+                    x => x.Data,
+                    options: new()
+                    {
+                        CompareAscending = Sort<DxfTreeNodeViewModel>.Ascending(x => x.Data),
+                        CompareDescending = Sort<DxfTreeNodeViewModel>.Descending(x => x.Data)
+                    },
+                    width: new GridLength(1, GridUnitType.Star))
             }
         };
 
@@ -74,7 +99,7 @@ public class DxfViewerViewModel : ReactiveObject
     public ICommand ExpandAllCommand { get; }
 
     public ICommand CollapseAllCommand { get; }
-    
+
     public ICommand FilterByLineRangeCommand { get; }
 
     public ICommand FilterByDataCommand { get; }
@@ -152,7 +177,7 @@ public class DxfViewerViewModel : ReactiveObject
         HasLoadedFile = true;
         ApplyFilters();
     }
-    
+
     private async Task ExpandAllAsync(CancellationToken cancellationToken)
     {
         if (_isExpanding)
@@ -173,6 +198,7 @@ public class DxfViewerViewModel : ReactiveObject
                     {
                         return;
                     }
+
                     ExpandAllNodes([node]);
                 }
             }, cancellationToken);
@@ -184,7 +210,7 @@ public class DxfViewerViewModel : ReactiveObject
             _isExpanding = false;
         }
     }
-    
+
     private async Task CollapseAllAsync(CancellationToken cancellationToken)
     {
         if (_isCollapsing)
@@ -202,6 +228,7 @@ public class DxfViewerViewModel : ReactiveObject
                 {
                     return;
                 }
+
                 CollapseAllNodes(_allNodes);
             }, cancellationToken);
 
@@ -212,7 +239,7 @@ public class DxfViewerViewModel : ReactiveObject
             _isCollapsing = false;
         }
     }
-    
+
     private void ResetFilters()
     {
         CodeSearch = "";
@@ -311,7 +338,7 @@ public class DxfViewerViewModel : ReactiveObject
     {
         if (nodeView != null)
         {
-            CodeSearch = nodeView.Code;
+            CodeSearch = nodeView.Code.ToString();
             DataSearch = "";
             if (LineNumberEnd == _maxLineNumber)
             {
@@ -344,7 +371,7 @@ public class DxfViewerViewModel : ReactiveObject
         var result = new List<DxfTreeNodeViewModel>();
         foreach (var node in nodes)
         {
-            bool isTypeNode = node.Code == DxfParser.DxfCodeForType.ToString();
+            bool isTypeNode = node.Code == DxfParser.DxfCodeForType;
             bool nodeMatches = MatchesFilters(node);
             bool hasMatchingDescendant = node.HasChildren && HasMatchingDescendant(node.Children.ToList());
 
@@ -433,7 +460,7 @@ public class DxfViewerViewModel : ReactiveObject
                                 nodeView.EndLine <= (LineNumberEnd == 1 ? int.MaxValue : LineNumberEnd);
 
         bool matchesCode = string.IsNullOrWhiteSpace(CodeSearch) ||
-                           nodeView.Code.Equals(CodeSearch, StringComparison.OrdinalIgnoreCase);
+                           nodeView.CodeString.Equals(CodeSearch, StringComparison.OrdinalIgnoreCase);
 
         bool matchesData = string.IsNullOrWhiteSpace(DataSearch) ||
                            nodeView.Data.Contains(DataSearch, StringComparison.OrdinalIgnoreCase);
@@ -452,44 +479,9 @@ public class DxfViewerViewModel : ReactiveObject
         return false;
     }
 
-    private static List<DxfTreeNodeViewModel> ConvertToTreeNodes(IList<DxfRawTag> sections)
-    {
-        var nodes = new List<DxfTreeNodeViewModel>();
-        var lineNumber = 1;
-
-        foreach (var section in sections)
-        {
-            if (!section.IsEnabled)
-            {
-                continue;
-            }
-
-            var sectionNode = new DxfTreeNodeViewModel(
-                lineNumber,
-                lineNumber + 1,
-                section.GroupCode.ToString(),
-                section.DataElement ?? string.Empty,
-                "SECTION",
-                $"{lineNumber}:SECTION:{section.DataElement}",
-                section.OriginalGroupCodeLine,
-                section.OriginalDataLine,
-                section);
-
-            lineNumber += 2;
-
-            if (section.Children != null)
-            {
-                AddChildNodes(sectionNode, section.Children, ref lineNumber);
-            }
-
-            nodes.Add(sectionNode);
-        }
-
-        return nodes;
-    }
-
     private static void AddChildNodes(DxfTreeNodeViewModel parent, IList<DxfRawTag> children, ref int lineNumber)
     {
+        int startLine = lineNumber;
         foreach (var child in children.Where(c => c.IsEnabled))
         {
             string type = child.GroupCode == DxfParser.DxfCodeForType
@@ -499,7 +491,7 @@ public class DxfViewerViewModel : ReactiveObject
             var node = new DxfTreeNodeViewModel(
                 lineNumber,
                 lineNumber + 1,
-                child.GroupCode.ToString(),
+                child.GroupCode,
                 child.DataElement ?? string.Empty,
                 type,
                 $"{lineNumber}:{type}:{child.DataElement}",
@@ -516,6 +508,55 @@ public class DxfViewerViewModel : ReactiveObject
 
             parent.Children.Add(node);
         }
+
+        if (parent.Children.Any())
+        {
+            parent.EndLine = lineNumber - 1;
+            parent.UpdateLineRange(startLine, lineNumber - 1);
+        }
+    }
+
+    private static List<DxfTreeNodeViewModel> ConvertToTreeNodes(IList<DxfRawTag> sections)
+    {
+        var nodes = new List<DxfTreeNodeViewModel>();
+        var lineNumber = 1;
+
+        foreach (var section in sections)
+        {
+            if (!section.IsEnabled)
+            {
+                continue;
+            }
+
+            int sectionStart = lineNumber;
+            var sectionNode = new DxfTreeNodeViewModel(
+                lineNumber,
+                lineNumber + 1,
+                section.GroupCode,
+                section.DataElement ?? string.Empty,
+                "SECTION",
+                $"{lineNumber}:SECTION:{section.DataElement}",
+                section.OriginalGroupCodeLine,
+                section.OriginalDataLine,
+                section);
+
+            lineNumber += 2;
+
+            if (section.Children != null)
+            {
+                AddChildNodes(sectionNode, section.Children, ref lineNumber);
+            }
+
+            if (sectionNode.Children.Any())
+            {
+                sectionNode.EndLine = lineNumber - 1;
+                sectionNode.UpdateLineRange(sectionStart, lineNumber - 1);
+            }
+
+            nodes.Add(sectionNode);
+        }
+
+        return nodes;
     }
 
     private void ExpandAllNodes(List<DxfTreeNodeViewModel> nodes)

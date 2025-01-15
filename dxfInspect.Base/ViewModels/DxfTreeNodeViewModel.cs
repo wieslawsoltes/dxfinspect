@@ -1,77 +1,75 @@
 using System.Collections.ObjectModel;
-using System.Linq;
 using Dxf;
+using dxfInspect.Model;
 using ReactiveUI;
 
-namespace dxfInspect.ViewModels;
-
-public class DxfTreeNodeViewModel : ReactiveObject
+namespace dxfInspect.ViewModels
 {
-    private bool _isExpanded;
-
-    public DxfTreeNodeViewModel(
-        int startLine, 
-        int endLine, 
-        string code, 
-        string data, 
-        string type, 
-        string nodeKey,
-        string originalGroupCodeLine,
-        string originalDataLine,
-        DxfRawTag rawTag)
+    public class DxfTreeNodeViewModel : ReactiveObject
     {
-        StartLine = startLine;
-        EndLine = endLine;
-        Code = code;
-        Data = data;
-        Type = type;
-        NodeKey = nodeKey;
-        OriginalGroupCodeLine = originalGroupCodeLine;
-        OriginalDataLine = originalDataLine;
-        RawTag = rawTag;
-    }
+        private bool _isExpanded;
+        private LineRange _lineRange;
+        private int _endLine;
 
-    public int StartLine { get; }
-    public int EndLine { get; }
-    public string Code { get; }
-    public string Data { get; }
-    public string Type { get; }
-    public string NodeKey { get; }
-    public string OriginalGroupCodeLine { get; }
-    public string OriginalDataLine { get; }
-    public DxfRawTag RawTag { get; }
-    public ObservableCollection<DxfTreeNodeViewModel> Children { get; } = [];
-    public bool HasChildren => Children.Count > 0;
-
-    public string LineNumberRange
-    {
-        get
+        public DxfTreeNodeViewModel(
+            int startLine,
+            int endLine,
+            int code,
+            string data,
+            string type,
+            string nodeKey,
+            string originalGroupCodeLine,
+            string originalDataLine,
+            DxfRawTag rawTag)
         {
-            if (!HasChildren)
-            {
-                return $"{StartLine}-{EndLine}";
-            }
-            
-            int lastLine = GetLastLineNumber(this);
-            return $"{StartLine}-{lastLine}";
-        }
-    }
-
-    private int GetLastLineNumber(DxfTreeNodeViewModel node)
-    {
-        if (!node.HasChildren)
-        {
-            return node.EndLine;
+            StartLine = startLine;
+            _endLine = endLine;
+            _lineRange = new LineRange(startLine, endLine);
+            Code = code;
+            Data = data;
+            Type = type;
+            NodeKey = nodeKey;
+            OriginalGroupCodeLine = originalGroupCodeLine;
+            OriginalDataLine = originalDataLine;
+            RawTag = rawTag;
         }
 
-        return node.Children
-            .Select(child => GetLastLineNumber(child))
-            .Max();
-    }
+        public int StartLine { get; }
 
-    public bool IsExpanded
-    {
-        get => _isExpanded;
-        set => this.RaiseAndSetIfChanged(ref _isExpanded, value);
+        public int EndLine
+        {
+            get => _endLine;
+            set => this.RaiseAndSetIfChanged(ref _endLine, value);
+        }
+
+        public LineRange LineRange
+        {
+            get => _lineRange;
+            private set => this.RaiseAndSetIfChanged(ref _lineRange, value);
+        }
+
+        public void UpdateLineRange(int startLine, int endLine)
+        {
+            _lineRange = new LineRange(startLine, endLine);
+            this.RaisePropertyChanged(nameof(LineRange));
+        }
+
+        public int Code { get; }
+        public string Data { get; }
+        public string Type { get; }
+        public string NodeKey { get; }
+        public string OriginalGroupCodeLine { get; }
+        public string OriginalDataLine { get; }
+        public DxfRawTag RawTag { get; }
+        public ObservableCollection<DxfTreeNodeViewModel> Children { get; } = [];
+        public bool HasChildren => Children.Count > 0;
+
+        public bool IsExpanded
+        {
+            get => _isExpanded;
+            set => this.RaiseAndSetIfChanged(ref _isExpanded, value);
+        }
+
+        public string CodeString => Code.ToString();
     }
 }
