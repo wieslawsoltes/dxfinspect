@@ -3,43 +3,39 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:dxfInspect.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+             mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="800"
              x:Class="dxfInspect.Views.DxfMainView"
              x:CompileBindings="True" x:DataType="viewModels:DxfViewerViewModel">
 
   <DockPanel Margin="8">
 
-    <StackPanel Spacing="12" DockPanel.Dock="Top">
+    <StackPanel Spacing="4" DockPanel.Dock="Top">
 
       <UniformGrid Columns="4">
         <Button Name="LoadButton" Content="Load DXF"
-                Padding="12,8"
+                Padding="4"
                 HorizontalAlignment="Stretch"
-                HorizontalContentAlignment="Center"
-                MinWidth="100" />
+                HorizontalContentAlignment="Center" />
         <Button Content="Expand All"
                 Command="{Binding ExpandAllCommand}"
-                Padding="12,8"
-                Margin="8,0,8,0"
+                Padding="4"
+                Margin="4,0,4,0"
                 HorizontalAlignment="Stretch"
-                HorizontalContentAlignment="Center"
-                MinWidth="100" />
+                HorizontalContentAlignment="Center" />
         <Button Content="Collapse All"
                 Command="{Binding CollapseAllCommand}"
-                Padding="12,8"
-                Margin="0,0,8,0"
+                Padding="4"
+                Margin="0,0,4,0"
                 HorizontalAlignment="Stretch"
-                HorizontalContentAlignment="Center"
-                MinWidth="100" />
+                HorizontalContentAlignment="Center" />
         <Button Content="Reset Filters"
                 Command="{Binding ResetFiltersCommand}"
-                Padding="12,8"
+                Padding="4"
                 HorizontalAlignment="Stretch"
-                HorizontalContentAlignment="Center"
-                MinWidth="100" />
+                HorizontalContentAlignment="Center" />
       </UniformGrid>
 
-      <StackPanel Spacing="12">
+      <StackPanel Spacing="4">
 
         <StackPanel Spacing="4">
           <TextBlock Text="Code:" />
@@ -71,14 +67,14 @@
 
     </StackPanel>
 
-    <StackPanel Spacing="4" Margin="0,12,0,12" DockPanel.Dock="Top">
+    <StackPanel Spacing="4" Margin="0,8,0,8" DockPanel.Dock="Top">
       <TextBlock Text="File:" />
       <TextBlock Name="FileNameBlock"
                  Text="-"
                  TextWrapping="Wrap" />
     </StackPanel>
 
-    <Grid>
+    <Panel>
       <TreeDataGrid Name="DxfTree"
                     Source="{Binding Source}">
         <TreeDataGrid.Styles>
@@ -119,7 +115,8 @@
                  TextWrapping="Wrap"
                  Margin="20"
                  IsVisible="{Binding !HasLoadedFile}" />
-    </Grid>
+    </Panel>
+
   </DockPanel>
 
 </UserControl>
