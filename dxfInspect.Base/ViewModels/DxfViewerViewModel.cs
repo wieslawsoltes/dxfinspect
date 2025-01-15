@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -290,8 +291,59 @@ public class DxfViewerViewModel : ReactiveObject
             var clipboard = GetClipboard();
             if (clipboard != null)
             {
-                var text = nodeView.RawTag.GetOriginalTreeText();
+                var text = GetFilteredTreeText(nodeView);
                 await clipboard.SetTextAsync(text);
+            }
+        }
+    }
+
+    private string GetFilteredTreeText(DxfTreeNodeViewModel nodeView)
+    {
+        var sb = new StringBuilder();
+        BuildFilteredTreeText(nodeView, sb);
+        return sb.ToString();
+    }
+
+    private void BuildFilteredTreeText(DxfTreeNodeViewModel node, StringBuilder sb)
+    {
+        bool nodeMatches = MatchesFilters(node);
+        bool isTypeNode = node.Code == DxfParser.DxfCodeForType;
+        bool hasMatchingDescendant = node.HasChildren && HasMatchingDescendant(node.Children.ToList());
+
+        if (nodeMatches || hasMatchingDescendant)
+        {
+            if (nodeMatches)
+            {
+                sb.AppendLine(node.OriginalGroupCodeLine);
+                sb.AppendLine(node.OriginalDataLine);
+            }
+
+            if (node.HasChildren)
+            {
+                if (isTypeNode && nodeMatches)
+                {
+                    // For type nodes that match, include all children
+                    foreach (var child in node.Children)
+                    {
+                        sb.AppendLine(child.OriginalGroupCodeLine);
+                        sb.AppendLine(child.OriginalDataLine);
+                        if (child.HasChildren)
+                        {
+                            foreach (var grandChild in child.Children)
+                            {
+                                BuildFilteredTreeText(grandChild, sb);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // For other nodes, recursively check filters
+                    foreach (var child in node.Children)
+                    {
+                        BuildFilteredTreeText(child, sb);
+                    }
+                }
             }
         }
     }
