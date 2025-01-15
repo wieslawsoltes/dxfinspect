@@ -58,7 +58,7 @@ public class DxfViewerViewModel : ReactiveObject
                         CompareAscending = Sort<DxfTreeNodeViewModel>.Ascending(x => x.Code),
                         CompareDescending = Sort<DxfTreeNodeViewModel>.Descending(x => x.Code)
                     },
-                    width: new GridLength(100)),
+                    width: new GridLength(80)),
                 new TextColumn<DxfTreeNodeViewModel, string>(
                     "Data",
                     x => x.Data,
@@ -67,7 +67,25 @@ public class DxfViewerViewModel : ReactiveObject
                         CompareAscending = Sort<DxfTreeNodeViewModel>.Ascending(x => x.Data),
                         CompareDescending = Sort<DxfTreeNodeViewModel>.Descending(x => x.Data)
                     },
-                    width: new GridLength(1, GridUnitType.Star))
+                    width: new GridLength(2, GridUnitType.Star)),
+                new TextColumn<DxfTreeNodeViewModel, string>(
+                    "Value Type",
+                    x => x.GroupCodeValueType,
+                    options: new()
+                    {
+                        CompareAscending = Sort<DxfTreeNodeViewModel>.Ascending(x => x.GroupCodeValueType),
+                        CompareDescending = Sort<DxfTreeNodeViewModel>.Descending(x => x.GroupCodeValueType)
+                    },
+                    width: new GridLength(1, GridUnitType.Star)),
+                new TextColumn<DxfTreeNodeViewModel, string>(
+                    "Description",
+                    x => x.GroupCodeDescription,
+                    options: new()
+                    {
+                        CompareAscending = Sort<DxfTreeNodeViewModel>.Ascending(x => x.GroupCodeDescription),
+                        CompareDescending = Sort<DxfTreeNodeViewModel>.Descending(x => x.GroupCodeDescription)
+                    },
+                    width: new GridLength(2, GridUnitType.Star)),
             }
         };
 

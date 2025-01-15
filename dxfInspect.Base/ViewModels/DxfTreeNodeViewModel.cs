@@ -71,5 +71,9 @@ namespace dxfInspect.ViewModels
         }
 
         public string CodeString => Code.ToString();
+
+        public string GroupCodeDescription => DxfGroupCodeInfo.GetDescription(Code);
+
+        public string GroupCodeValueType => DxfGroupCodeInfo.GetValueType(Code);
     }
 }
