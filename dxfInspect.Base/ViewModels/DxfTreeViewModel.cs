@@ -17,7 +17,7 @@ using ReactiveUI;
 
 namespace dxfInspect.ViewModels;
 
-public class DxfViewerViewModel : ReactiveObject
+public class DxfTreeViewModel : ReactiveObject
 {
     private readonly HierarchicalTreeDataGridSource<DxfTreeNodeViewModel> _source;
     private bool _isExpanding;
@@ -29,9 +29,9 @@ public class DxfViewerViewModel : ReactiveObject
     private int _lineNumberEnd = int.MaxValue;
     private List<DxfTreeNodeViewModel> _allNodes = [];
     private bool _hasLoadedFile;
-    private int _maxLineNumber = int.MaxValue;
+    private string _fileName = "-";
 
-    public DxfViewerViewModel()
+    public DxfTreeViewModel()
     {
         _source = new HierarchicalTreeDataGridSource<DxfTreeNodeViewModel>(Array.Empty<DxfTreeNodeViewModel>())
         {
@@ -145,7 +145,11 @@ public class DxfViewerViewModel : ReactiveObject
     public ICommand CopyCodeAndDataCommand { get; }
 
     public ICommand CopyObjectTreeCommand { get; }
-
+    
+    public int OriginalStartLine { get; set; } = 1;
+    
+    public int OriginalEndLine { get; set; } = int.MaxValue;
+    
     public string CodeSearch
     {
         get => _codeSearch;
@@ -192,10 +196,83 @@ public class DxfViewerViewModel : ReactiveObject
         private set => this.RaiseAndSetIfChanged(ref _hasLoadedFile, value);
     }
 
-    public ITreeDataGridSource<DxfTreeNodeViewModel> Source => _source;
-
-    public void LoadDxfData(IList<DxfRawTag> sections)
+    public string FileName
     {
+        get => _fileName;
+        set => this.RaiseAndSetIfChanged(ref _fileName, value);
+    }
+    
+    public ITreeDataGridSource<DxfTreeNodeViewModel> Source => _source;
+    
+    public DxfTreeViewModel CreateFilteredView(DxfTreeNodeViewModel selectedNode)
+    {
+        var filteredViewModel = new DxfTreeViewModel();
+        filteredViewModel.FileName = this.FileName;  // Propagate filename
+        filteredViewModel.HasLoadedFile = true;
+        var rawTags = new List<DxfRawTag>();
+
+        if (selectedNode.RawTag != null)
+        {
+            var rootTag = new DxfRawTag
+            {
+                GroupCode = selectedNode.RawTag.GroupCode,
+                DataElement = selectedNode.RawTag.DataElement,
+                IsEnabled = selectedNode.RawTag.IsEnabled,
+                OriginalGroupCodeLine = selectedNode.RawTag.OriginalGroupCodeLine,
+                OriginalDataLine = selectedNode.RawTag.OriginalDataLine,
+                Children = new List<DxfRawTag>()
+            };
+
+            if (selectedNode.RawTag.Children != null)
+            {
+                foreach (var child in selectedNode.RawTag.Children)
+                {
+                    CopyRawTagStructure(child, rootTag);
+                }
+            }
+
+            rawTags.Add(rootTag);
+        }
+
+        // Pass the original start line to maintain line numbering
+        filteredViewModel._allNodes = ConvertToTreeNodes(rawTags, selectedNode.StartLine);
+        // Store original line range
+        filteredViewModel.OriginalStartLine = selectedNode.StartLine;
+        filteredViewModel.OriginalEndLine = selectedNode.EndLine;
+        filteredViewModel.LineNumberStart = selectedNode.StartLine;
+        filteredViewModel.LineNumberEnd = selectedNode.EndLine;
+        filteredViewModel.ApplyFilters();
+
+        return filteredViewModel;
+    }
+
+    private void CopyRawTagStructure(DxfRawTag source, DxfRawTag parent)
+    {
+        var copy = new DxfRawTag
+        {
+            GroupCode = source.GroupCode,
+            DataElement = source.DataElement,
+            IsEnabled = source.IsEnabled,
+            OriginalGroupCodeLine = source.OriginalGroupCodeLine,
+            OriginalDataLine = source.OriginalDataLine,
+            Parent = parent,
+            Children = new List<DxfRawTag>()
+        };
+
+        parent.Children?.Add(copy);
+
+        if (source.Children != null)
+        {
+            foreach (var child in source.Children)
+            {
+                CopyRawTagStructure(child, copy);
+            }
+        }
+    }
+
+    public void LoadDxfData(IList<DxfRawTag> sections, string fileName)
+    {
+        FileName = fileName;
         _expandedNodes.Clear();
 
         _allNodes = ConvertToTreeNodes(sections);
@@ -203,8 +280,9 @@ public class DxfViewerViewModel : ReactiveObject
         if (_allNodes.Any())
         {
             var allNodes = _allNodes.SelectMany(GetAllNodes).ToList();
-            _maxLineNumber = allNodes.Max(n => n.EndLine);
-            LineNumberEnd = _maxLineNumber;
+            OriginalEndLine = allNodes.Max(n => n.EndLine);
+            LineNumberEnd = OriginalEndLine;
+            OriginalStartLine = 1;
             LineNumberStart = 1;
         }
 
@@ -298,12 +376,12 @@ public class DxfViewerViewModel : ReactiveObject
     
     private void ResetLineNumberStart()
     {
-        LineNumberStart = 1;
+        LineNumberStart = OriginalStartLine;
     }
 
     private void ResetLineNumberEnd()
     {
-        LineNumberEnd = _maxLineNumber;
+        LineNumberEnd = OriginalEndLine;
     }
 
     private IClipboard? GetClipboard()
@@ -449,9 +527,9 @@ public class DxfViewerViewModel : ReactiveObject
         {
             CodeSearch = nodeView.Code.ToString();
 
-            if (LineNumberEnd == _maxLineNumber)
+            if (LineNumberEnd == OriginalEndLine)
             {
-                LineNumberEnd = _maxLineNumber;
+                LineNumberEnd = OriginalEndLine;
             }
         }
     }
@@ -462,9 +540,9 @@ public class DxfViewerViewModel : ReactiveObject
         {
             DataSearch = nodeView.Data;
 
-            if (LineNumberEnd == _maxLineNumber)
+            if (LineNumberEnd == OriginalEndLine)
             {
-                LineNumberEnd = _maxLineNumber;
+                LineNumberEnd = OriginalEndLine;
             }
         }
     }
@@ -625,10 +703,10 @@ public class DxfViewerViewModel : ReactiveObject
         }
     }
 
-    private static List<DxfTreeNodeViewModel> ConvertToTreeNodes(IList<DxfRawTag> sections)
+    private static List<DxfTreeNodeViewModel> ConvertToTreeNodes(IList<DxfRawTag> sections, int startLineNumber = 1)
     {
         var nodes = new List<DxfTreeNodeViewModel>();
-        var lineNumber = 1;
+        var lineNumber = startLineNumber;
 
         foreach (var section in sections)
         {
