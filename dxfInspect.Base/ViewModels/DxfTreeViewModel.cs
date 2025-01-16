@@ -197,14 +197,10 @@ public class DxfTreeViewModel : ReactiveObject
     public DxfTreeViewModel CreateFilteredView(DxfTreeNodeViewModel selectedNode)
     {
         var filteredViewModel = new DxfTreeViewModel();
-        
-        // Create a list to hold the raw DXF tags
         var rawTags = new List<DxfRawTag>();
 
-        // Get the root raw tag and all its children
         if (selectedNode.RawTag != null)
         {
-            // Create a copy of the tag to avoid modifying the original
             var rootTag = new DxfRawTag
             {
                 GroupCode = selectedNode.RawTag.GroupCode,
@@ -215,7 +211,6 @@ public class DxfTreeViewModel : ReactiveObject
                 Children = new List<DxfRawTag>()
             };
 
-            // If the node has children, recursively copy them
             if (selectedNode.RawTag.Children != null)
             {
                 foreach (var child in selectedNode.RawTag.Children)
@@ -227,8 +222,14 @@ public class DxfTreeViewModel : ReactiveObject
             rawTags.Add(rootTag);
         }
 
-        // Load the data into the new view model
-        filteredViewModel.LoadDxfData(rawTags);
+        // Pass the original start line to maintain line numbering
+        filteredViewModel._allNodes = ConvertToTreeNodes(rawTags, selectedNode.StartLine);
+        filteredViewModel.ApplyFilters();
+    
+        // Set the line range to match the selected node
+        filteredViewModel.LineNumberStart = selectedNode.StartLine;
+        filteredViewModel.LineNumberEnd = selectedNode.EndLine;
+
         return filteredViewModel;
     }
 
@@ -687,10 +688,10 @@ public class DxfTreeViewModel : ReactiveObject
         }
     }
 
-    private static List<DxfTreeNodeViewModel> ConvertToTreeNodes(IList<DxfRawTag> sections)
+    private static List<DxfTreeNodeViewModel> ConvertToTreeNodes(IList<DxfRawTag> sections, int startLineNumber = 1)
     {
         var nodes = new List<DxfTreeNodeViewModel>();
-        var lineNumber = 1;
+        var lineNumber = startLineNumber;
 
         foreach (var section in sections)
         {
