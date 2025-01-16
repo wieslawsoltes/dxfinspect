@@ -10,21 +10,18 @@ using dxfInspect.ViewModels;
 
 namespace dxfInspect.Views;
 
-public class DxfMainView : UserControl
+public partial class DxfMainView : UserControl
 {
-    private readonly TextBlock? _fileNameBlock;
-    private readonly DxfViewerViewModel _viewModel;
+    private readonly MainViewModel _viewModel;
 
     public DxfMainView()
     {
         InitializeComponent();
 
-        _viewModel = new DxfViewerViewModel();
-        
+        _viewModel = new MainViewModel();
         DataContext = _viewModel;
 
         var loadButton = this.FindControl<Button>("LoadButton");
-        _fileNameBlock = this.FindControl<TextBlock>("FileNameBlock");
         if (loadButton != null)
         {
             loadButton.Click += LoadButton_Click;
@@ -49,7 +46,7 @@ public class DxfMainView : UserControl
             var files = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
                 Title = "Select DXF File",
-                AllowMultiple = false,
+                AllowMultiple = true,
                 FileTypeFilter =
                 [
                     new FilePickerFileType("DXF Files") { Patterns = ["*.dxf"] },
@@ -59,16 +56,13 @@ public class DxfMainView : UserControl
 
             if (files.Count > 0)
             {
-                var file = files[0];
-                if (_fileNameBlock != null) 
+                foreach (var file in files)
                 {
-                    _fileNameBlock.Text = file.Name;
+                    await using var stream = await file.OpenReadAsync();
+                    var text = await new StreamReader(stream).ReadToEndAsync();
+                    var sections = DxfParser.Parse(text);
+                    _viewModel.AddNewFileTab(sections, file.Name);
                 }
-
-                await using var stream = await file.OpenReadAsync();
-                var text = await new StreamReader(stream).ReadToEndAsync();
-                var sections = DxfParser.Parse(text);
-                _viewModel.LoadDxfData(sections);
             }
         }
         catch (Exception ex)
@@ -78,4 +72,3 @@ public class DxfMainView : UserControl
         }
     }
 }
-

@@ -1,0 +1,182 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:dxfInspect.ViewModels"
+             xmlns:views="clr-namespace:dxfInspect.Views"
+             mc:Ignorable="d" d:DesignWidth="460" d:DesignHeight="800"
+             x:Class="dxfInspect.Views.DxfTreeView"
+             x:CompileBindings="True" x:DataType="vm:DxfTreeViewModel">
+
+  <DockPanel Margin="8">
+
+    <StackPanel Spacing="4" DockPanel.Dock="Top">
+
+      <UniformGrid Columns="3">
+        <Button Content="Expand All"
+                Command="{Binding ExpandAllCommand}"
+                Padding="4"
+                Margin="4,0,4,0"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Center" />
+        <Button Content="Collapse All"
+                Command="{Binding CollapseAllCommand}"
+                Padding="4"
+                Margin="0,0,4,0"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Center" />
+        <Button Content="Reset Filters"
+                Command="{Binding ResetFiltersCommand}"
+                Padding="4"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Center" />
+      </UniformGrid>
+
+      <StackPanel Spacing="4">
+        
+        <StackPanel Spacing="4">
+          <TextBlock Text="Code:" />
+          <TextBox Text="{Binding CodeSearch}">
+            <TextBox.InnerRightContent>
+              <Button Content="X"
+                      Command="{Binding ResetCodeCommand}"
+                      Margin="0,0,0,0"
+                      Padding="8,0,8,0"
+                      HorizontalAlignment="Stretch"
+                      HorizontalContentAlignment="Center"
+                      VerticalAlignment="Stretch"
+                      VerticalContentAlignment="Center"
+                      Background="Transparent"/>
+            </TextBox.InnerRightContent>
+          </TextBox>
+        </StackPanel>
+        
+        <StackPanel Spacing="4">
+          <TextBlock Text="Data:" />
+          <TextBox Text="{Binding DataSearch}">
+            <TextBox.InnerRightContent>
+              <Button Content="X"
+                      Command="{Binding ResetDataCommand}"
+                      Margin="0,0,0,0"
+                      Padding="8,0,8,0"
+                      HorizontalAlignment="Stretch"
+                      HorizontalContentAlignment="Center"
+                      VerticalAlignment="Stretch"
+                      VerticalContentAlignment="Center"
+                      Background="Transparent"/>
+            </TextBox.InnerRightContent>
+          </TextBox>
+        </StackPanel>
+
+        <StackPanel Spacing="4">
+          <TextBlock Text="Line Range:" />
+          <Grid ColumnDefinitions="*,Auto,*,Auto">
+            <NumericUpDown Grid.Column="0"
+                           Value="{Binding LineNumberStart}"
+                           Minimum="1">
+              <NumericUpDown.InnerRightContent>
+                <Button Content="X"
+                        Command="{Binding ReseLineNumberStartCommand}"
+                        Margin="0,0,0,0"
+                        Padding="8,0,8,0"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        VerticalAlignment="Stretch"
+                        VerticalContentAlignment="Center"
+                        Background="Transparent"/>
+              </NumericUpDown.InnerRightContent>
+            </NumericUpDown>
+            <TextBlock Grid.Column="1"
+                       Text="-"
+                       VerticalAlignment="Center"
+                       Margin="8,0" />
+            <NumericUpDown Grid.Column="2"
+                           Value="{Binding LineNumberEnd}"
+                           Minimum="1">
+              <NumericUpDown.InnerRightContent>
+                <Button Content="X"
+                        Command="{Binding ResetLineNumberEndCommand}"
+                        Margin="0,0,0,0"
+                        Padding="8,0,8,0"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        VerticalAlignment="Stretch"
+                        VerticalContentAlignment="Center"
+                        Background="Transparent"/>
+              </NumericUpDown.InnerRightContent>
+            </NumericUpDown>
+            <Button Grid.Column="3" 
+                    Content="X"
+                    Command="{Binding ResetLineRangeCommand}"
+                    Margin="8,0,0,0"
+                    Padding="8,0,8,0"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    VerticalAlignment="Stretch"
+                    VerticalContentAlignment="Center" />
+          </Grid>
+        </StackPanel>
+
+      </StackPanel>
+
+    </StackPanel>
+
+    <StackPanel Spacing="4" Margin="0,8,0,8" DockPanel.Dock="Top">
+      <TextBlock Text="File:" />
+      <TextBlock Name="FileNameBlock"
+                 Text="-"
+                 TextWrapping="Wrap" />
+    </StackPanel>
+
+    <Panel>
+      <TreeDataGrid Name="DxfTree"
+                    Source="{Binding Source}">
+        <TreeDataGrid.Styles>
+          <Style Selector="TreeDataGrid TreeDataGridRow">
+            <Setter Property="MinHeight" Value="24" />
+            <Setter Property="ContextMenu">
+              <Setter.Value>
+                <ContextMenu>
+                  <MenuItem Header="Filter by Line Range"
+                            Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).FilterByLineRangeCommand}"
+                            CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
+                  <MenuItem Header="Filter by Data"
+                            Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).FilterByDataCommand}"
+                            CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
+                  <MenuItem Header="Filter by Code"
+                            Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).FilterByCodeCommand}"
+                            CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
+                  <Separator />
+                  <MenuItem Header="Reset Filters"
+                            Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).ResetFiltersCommand}" />
+                  <MenuItem Header="Reset Line Range"
+                            Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).ResetLineRangeCommand}" />
+                  <Separator />
+                  <MenuItem Header="Copy Code + Data"
+                            Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).CopyCodeAndDataCommand}"
+                            CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
+                  <MenuItem Header="Copy Object Tree"
+                            Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).CopyObjectTreeCommand}"
+                            CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
+                  <Separator />
+                  <MenuItem Header="Open in New Tab"
+                            Command="{Binding $parent[views:DxfMainView].((vm:MainViewModel)DataContext).OpenInNewTabCommand}"
+                            CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
+                </ContextMenu>
+              </Setter.Value>
+            </Setter>
+          </Style>
+        </TreeDataGrid.Styles>
+      </TreeDataGrid>
+      <TextBlock Name="PlaceholderText"
+                 Text="No DXF file loaded. Click 'Load DXF' to begin."
+                 HorizontalAlignment="Center"
+                 VerticalAlignment="Center"
+                 TextWrapping="Wrap"
+                 Margin="20"
+                 IsVisible="{Binding !HasLoadedFile}" />
+    </Panel>
+
+  </DockPanel>
+
+</UserControl>

@@ -17,7 +17,7 @@ using ReactiveUI;
 
 namespace dxfInspect.ViewModels;
 
-public class DxfViewerViewModel : ReactiveObject
+public class DxfTreeViewModel : ReactiveObject
 {
     private readonly HierarchicalTreeDataGridSource<DxfTreeNodeViewModel> _source;
     private bool _isExpanding;
@@ -31,7 +31,7 @@ public class DxfViewerViewModel : ReactiveObject
     private bool _hasLoadedFile;
     private int _maxLineNumber = int.MaxValue;
 
-    public DxfViewerViewModel()
+    public DxfTreeViewModel()
     {
         _source = new HierarchicalTreeDataGridSource<DxfTreeNodeViewModel>(Array.Empty<DxfTreeNodeViewModel>())
         {
@@ -193,6 +193,68 @@ public class DxfViewerViewModel : ReactiveObject
     }
 
     public ITreeDataGridSource<DxfTreeNodeViewModel> Source => _source;
+    
+    public DxfTreeViewModel CreateFilteredView(DxfTreeNodeViewModel selectedNode)
+    {
+        var filteredViewModel = new DxfTreeViewModel();
+        
+        // Create a list to hold the raw DXF tags
+        var rawTags = new List<DxfRawTag>();
+
+        // Get the root raw tag and all its children
+        if (selectedNode.RawTag != null)
+        {
+            // Create a copy of the tag to avoid modifying the original
+            var rootTag = new DxfRawTag
+            {
+                GroupCode = selectedNode.RawTag.GroupCode,
+                DataElement = selectedNode.RawTag.DataElement,
+                IsEnabled = selectedNode.RawTag.IsEnabled,
+                OriginalGroupCodeLine = selectedNode.RawTag.OriginalGroupCodeLine,
+                OriginalDataLine = selectedNode.RawTag.OriginalDataLine,
+                Children = new List<DxfRawTag>()
+            };
+
+            // If the node has children, recursively copy them
+            if (selectedNode.RawTag.Children != null)
+            {
+                foreach (var child in selectedNode.RawTag.Children)
+                {
+                    CopyRawTagStructure(child, rootTag);
+                }
+            }
+
+            rawTags.Add(rootTag);
+        }
+
+        // Load the data into the new view model
+        filteredViewModel.LoadDxfData(rawTags);
+        return filteredViewModel;
+    }
+
+    private void CopyRawTagStructure(DxfRawTag source, DxfRawTag parent)
+    {
+        var copy = new DxfRawTag
+        {
+            GroupCode = source.GroupCode,
+            DataElement = source.DataElement,
+            IsEnabled = source.IsEnabled,
+            OriginalGroupCodeLine = source.OriginalGroupCodeLine,
+            OriginalDataLine = source.OriginalDataLine,
+            Parent = parent,
+            Children = new List<DxfRawTag>()
+        };
+
+        parent.Children?.Add(copy);
+
+        if (source.Children != null)
+        {
+            foreach (var child in source.Children)
+            {
+                CopyRawTagStructure(child, copy);
+            }
+        }
+    }
 
     public void LoadDxfData(IList<DxfRawTag> sections)
     {
