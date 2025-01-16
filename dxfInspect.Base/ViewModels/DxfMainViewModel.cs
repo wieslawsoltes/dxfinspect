@@ -38,7 +38,7 @@ public class MainViewModel : ReactiveObject
     public void AddNewFileTab(IList<DxfRawTag> sections, string fileName)
     {
         var treeViewModel = new DxfTreeViewModel();
-        treeViewModel.LoadDxfData(sections);
+        treeViewModel.LoadDxfData(sections, fileName);
         
         var tab = new DxfTabViewModel(fileName, treeViewModel);
         Tabs.Add(tab);

@@ -29,6 +29,7 @@ public class DxfTreeViewModel : ReactiveObject
     private int _lineNumberEnd = int.MaxValue;
     private List<DxfTreeNodeViewModel> _allNodes = [];
     private bool _hasLoadedFile;
+    private string _fileName = "-";
 
     public DxfTreeViewModel()
     {
@@ -195,11 +196,19 @@ public class DxfTreeViewModel : ReactiveObject
         private set => this.RaiseAndSetIfChanged(ref _hasLoadedFile, value);
     }
 
+    public string FileName
+    {
+        get => _fileName;
+        set => this.RaiseAndSetIfChanged(ref _fileName, value);
+    }
+    
     public ITreeDataGridSource<DxfTreeNodeViewModel> Source => _source;
     
     public DxfTreeViewModel CreateFilteredView(DxfTreeNodeViewModel selectedNode)
     {
         var filteredViewModel = new DxfTreeViewModel();
+        filteredViewModel.FileName = this.FileName;  // Propagate filename
+        filteredViewModel.HasLoadedFile = true;
         var rawTags = new List<DxfRawTag>();
 
         if (selectedNode.RawTag != null)
@@ -261,8 +270,9 @@ public class DxfTreeViewModel : ReactiveObject
         }
     }
 
-    public void LoadDxfData(IList<DxfRawTag> sections)
+    public void LoadDxfData(IList<DxfRawTag> sections, string fileName)
     {
+        FileName = fileName;
         _expandedNodes.Clear();
 
         _allNodes = ConvertToTreeNodes(sections);
