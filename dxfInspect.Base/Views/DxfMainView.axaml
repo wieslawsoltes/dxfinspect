@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:dxfInspect.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="800"
+             mc:Ignorable="d" d:DesignWidth="460" d:DesignHeight="800"
              x:Class="dxfInspect.Views.DxfMainView"
              x:CompileBindings="True" x:DataType="viewModels:DxfViewerViewModel">
 
@@ -31,21 +31,44 @@
         <Button Content="Reset Filters"
                 Command="{Binding ResetFiltersCommand}"
                 Padding="4"
-                Margin="0,0,4,0"
                 HorizontalAlignment="Stretch"
                 HorizontalContentAlignment="Center" />
       </UniformGrid>
 
       <StackPanel Spacing="4">
-
+        
         <StackPanel Spacing="4">
           <TextBlock Text="Code:" />
-          <TextBox Text="{Binding CodeSearch}" />
+          <TextBox Text="{Binding CodeSearch}">
+            <TextBox.InnerRightContent>
+              <Button Content="X"
+                      Command="{Binding ResetCodeCommand}"
+                      Margin="0,0,0,0"
+                      Padding="8,0,8,0"
+                      HorizontalAlignment="Stretch"
+                      HorizontalContentAlignment="Center"
+                      VerticalAlignment="Stretch"
+                      VerticalContentAlignment="Center"
+                      Background="Transparent"/>
+            </TextBox.InnerRightContent>
+          </TextBox>
         </StackPanel>
-
+        
         <StackPanel Spacing="4">
           <TextBlock Text="Data:" />
-          <TextBox Text="{Binding DataSearch}" />
+          <TextBox Text="{Binding DataSearch}">
+            <TextBox.InnerRightContent>
+              <Button Content="X"
+                      Command="{Binding ResetDataCommand}"
+                      Margin="0,0,0,0"
+                      Padding="8,0,8,0"
+                      HorizontalAlignment="Stretch"
+                      HorizontalContentAlignment="Center"
+                      VerticalAlignment="Stretch"
+                      VerticalContentAlignment="Center"
+                      Background="Transparent"/>
+            </TextBox.InnerRightContent>
+          </TextBox>
         </StackPanel>
 
         <StackPanel Spacing="4">
@@ -53,19 +76,43 @@
           <Grid ColumnDefinitions="*,Auto,*,Auto">
             <NumericUpDown Grid.Column="0"
                            Value="{Binding LineNumberStart}"
-                           Minimum="1" />
+                           Minimum="1">
+              <NumericUpDown.InnerRightContent>
+                <Button Content="X"
+                        Command="{Binding ReseLineNumberStartCommand}"
+                        Margin="0,0,0,0"
+                        Padding="8,0,8,0"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        VerticalAlignment="Stretch"
+                        VerticalContentAlignment="Center"
+                        Background="Transparent"/>
+              </NumericUpDown.InnerRightContent>
+            </NumericUpDown>
             <TextBlock Grid.Column="1"
                        Text="-"
                        VerticalAlignment="Center"
                        Margin="8,0" />
             <NumericUpDown Grid.Column="2"
                            Value="{Binding LineNumberEnd}"
-                           Minimum="1" />
-            <Button Grid.Column="3"
-                    Content="Reset"
+                           Minimum="1">
+              <NumericUpDown.InnerRightContent>
+                <Button Content="X"
+                        Command="{Binding ResetLineNumberEndCommand}"
+                        Margin="0,0,0,0"
+                        Padding="8,0,8,0"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        VerticalAlignment="Stretch"
+                        VerticalContentAlignment="Center"
+                        Background="Transparent"/>
+              </NumericUpDown.InnerRightContent>
+            </NumericUpDown>
+            <Button Grid.Column="3" 
+                    Content="X"
                     Command="{Binding ResetLineRangeCommand}"
                     Margin="8,0,0,0"
-                    Padding="4,0,4,0"
+                    Padding="8,0,8,0"
                     HorizontalAlignment="Stretch"
                     HorizontalContentAlignment="Center"
                     VerticalAlignment="Stretch"

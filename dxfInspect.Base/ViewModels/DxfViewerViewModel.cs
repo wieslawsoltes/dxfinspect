@@ -111,6 +111,10 @@ public class DxfViewerViewModel : ReactiveObject
         FilterByDataCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(FilterByData);
         FilterByCodeCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(FilterByCode);
         ResetFiltersCommand = ReactiveCommand.Create(ResetFilters);
+        ResetCodeCommand = ReactiveCommand.Create(ResetCode);
+        ResetDataCommand = ReactiveCommand.Create(ResetData);
+        ReseLineNumberStartCommand = ReactiveCommand.Create(ResetLineNumberStart);
+        ResetLineNumberEndCommand = ReactiveCommand.Create(ResetLineNumberEnd);
         ResetLineRangeCommand = ReactiveCommand.Create(ResetLineRange);
         CopyCodeAndDataCommand = ReactiveCommand.CreateFromTask<DxfTreeNodeViewModel>(CopyCodeAndData);
         CopyObjectTreeCommand = ReactiveCommand.CreateFromTask<DxfTreeNodeViewModel>(CopyObjectTree);
@@ -127,7 +131,15 @@ public class DxfViewerViewModel : ReactiveObject
     public ICommand FilterByCodeCommand { get; }
 
     public ICommand ResetFiltersCommand { get; }
+      
+    public ICommand ResetCodeCommand { get; }
+     
+    public ICommand ResetDataCommand { get; }
+
+    public ICommand ReseLineNumberStartCommand { get; }
     
+    public ICommand ResetLineNumberEndCommand { get; }
+
     public ICommand ResetLineRangeCommand { get; }
     
     public ICommand CopyCodeAndDataCommand { get; }
@@ -264,13 +276,33 @@ public class DxfViewerViewModel : ReactiveObject
 
     private void ResetFilters()
     {
-        CodeSearch = "";
-        DataSearch = "";
+        ResetCode();
+        ResetData();
     }
 
+    private void ResetCode()
+    {
+        CodeSearch = "";
+    }
+
+    private void ResetData()
+    {
+        DataSearch = "";
+    }
+    
     private void ResetLineRange()
     {
+        ResetLineNumberStart();
+        ResetLineNumberEnd();
+    }
+    
+    private void ResetLineNumberStart()
+    {
         LineNumberStart = 1;
+    }
+
+    private void ResetLineNumberEnd()
+    {
         LineNumberEnd = _maxLineNumber;
     }
 
@@ -390,8 +422,8 @@ public class DxfViewerViewModel : ReactiveObject
             LineNumberStart = startLine;
             LineNumberEnd = endLine;
 
-            CodeSearch = "";
-            DataSearch = "";
+            ResetCode();
+            ResetData();
         }
     }
 
