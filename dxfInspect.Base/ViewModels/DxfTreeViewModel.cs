@@ -29,7 +29,6 @@ public class DxfTreeViewModel : ReactiveObject
     private int _lineNumberEnd = int.MaxValue;
     private List<DxfTreeNodeViewModel> _allNodes = [];
     private bool _hasLoadedFile;
-    private int _maxLineNumber = int.MaxValue;
 
     public DxfTreeViewModel()
     {
@@ -145,7 +144,11 @@ public class DxfTreeViewModel : ReactiveObject
     public ICommand CopyCodeAndDataCommand { get; }
 
     public ICommand CopyObjectTreeCommand { get; }
-
+    
+    public int OriginalStartLine { get; set; } = 1;
+    
+    public int OriginalEndLine { get; set; } = int.MaxValue;
+    
     public string CodeSearch
     {
         get => _codeSearch;
@@ -224,11 +227,12 @@ public class DxfTreeViewModel : ReactiveObject
 
         // Pass the original start line to maintain line numbering
         filteredViewModel._allNodes = ConvertToTreeNodes(rawTags, selectedNode.StartLine);
-        filteredViewModel.ApplyFilters();
-    
-        // Set the line range to match the selected node
+        // Store original line range
+        filteredViewModel.OriginalStartLine = selectedNode.StartLine;
+        filteredViewModel.OriginalEndLine = selectedNode.EndLine;
         filteredViewModel.LineNumberStart = selectedNode.StartLine;
         filteredViewModel.LineNumberEnd = selectedNode.EndLine;
+        filteredViewModel.ApplyFilters();
 
         return filteredViewModel;
     }
@@ -266,8 +270,9 @@ public class DxfTreeViewModel : ReactiveObject
         if (_allNodes.Any())
         {
             var allNodes = _allNodes.SelectMany(GetAllNodes).ToList();
-            _maxLineNumber = allNodes.Max(n => n.EndLine);
-            LineNumberEnd = _maxLineNumber;
+            OriginalEndLine = allNodes.Max(n => n.EndLine);
+            LineNumberEnd = OriginalEndLine;
+            OriginalStartLine = 1;
             LineNumberStart = 1;
         }
 
@@ -361,12 +366,12 @@ public class DxfTreeViewModel : ReactiveObject
     
     private void ResetLineNumberStart()
     {
-        LineNumberStart = 1;
+        LineNumberStart = OriginalStartLine;
     }
 
     private void ResetLineNumberEnd()
     {
-        LineNumberEnd = _maxLineNumber;
+        LineNumberEnd = OriginalEndLine;
     }
 
     private IClipboard? GetClipboard()
@@ -512,9 +517,9 @@ public class DxfTreeViewModel : ReactiveObject
         {
             CodeSearch = nodeView.Code.ToString();
 
-            if (LineNumberEnd == _maxLineNumber)
+            if (LineNumberEnd == OriginalEndLine)
             {
-                LineNumberEnd = _maxLineNumber;
+                LineNumberEnd = OriginalEndLine;
             }
         }
     }
@@ -525,9 +530,9 @@ public class DxfTreeViewModel : ReactiveObject
         {
             DataSearch = nodeView.Data;
 
-            if (LineNumberEnd == _maxLineNumber)
+            if (LineNumberEnd == OriginalEndLine)
             {
-                LineNumberEnd = _maxLineNumber;
+                LineNumberEnd = OriginalEndLine;
             }
         }
     }
