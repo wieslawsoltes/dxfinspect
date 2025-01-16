@@ -111,6 +111,7 @@ public class DxfViewerViewModel : ReactiveObject
         FilterByDataCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(FilterByData);
         FilterByCodeCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(FilterByCode);
         ResetFiltersCommand = ReactiveCommand.Create(ResetFilters);
+        ResetLineRangeCommand = ReactiveCommand.Create(ResetLineRange);
         CopyCodeAndDataCommand = ReactiveCommand.CreateFromTask<DxfTreeNodeViewModel>(CopyCodeAndData);
         CopyObjectTreeCommand = ReactiveCommand.CreateFromTask<DxfTreeNodeViewModel>(CopyObjectTree);
     }
@@ -126,7 +127,9 @@ public class DxfViewerViewModel : ReactiveObject
     public ICommand FilterByCodeCommand { get; }
 
     public ICommand ResetFiltersCommand { get; }
-
+    
+    public ICommand ResetLineRangeCommand { get; }
+    
     public ICommand CopyCodeAndDataCommand { get; }
 
     public ICommand CopyObjectTreeCommand { get; }
@@ -263,6 +266,10 @@ public class DxfViewerViewModel : ReactiveObject
     {
         CodeSearch = "";
         DataSearch = "";
+    }
+
+    private void ResetLineRange()
+    {
         LineNumberStart = 1;
         LineNumberEnd = _maxLineNumber;
     }
@@ -409,7 +416,7 @@ public class DxfViewerViewModel : ReactiveObject
         if (nodeView != null)
         {
             CodeSearch = nodeView.Code.ToString();
-            DataSearch = "";
+
             if (LineNumberEnd == _maxLineNumber)
             {
                 LineNumberEnd = _maxLineNumber;
@@ -422,7 +429,7 @@ public class DxfViewerViewModel : ReactiveObject
         if (nodeView != null)
         {
             DataSearch = nodeView.Data;
-            CodeSearch = "";
+
             if (LineNumberEnd == _maxLineNumber)
             {
                 LineNumberEnd = _maxLineNumber;

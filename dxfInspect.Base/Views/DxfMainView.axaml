@@ -31,6 +31,7 @@
         <Button Content="Reset Filters"
                 Command="{Binding ResetFiltersCommand}"
                 Padding="4"
+                Margin="0,0,4,0"
                 HorizontalAlignment="Stretch"
                 HorizontalContentAlignment="Center" />
       </UniformGrid>
@@ -49,7 +50,7 @@
 
         <StackPanel Spacing="4">
           <TextBlock Text="Line Range:" />
-          <Grid ColumnDefinitions="*,Auto,*">
+          <Grid ColumnDefinitions="*,Auto,*,Auto">
             <NumericUpDown Grid.Column="0"
                            Value="{Binding LineNumberStart}"
                            Minimum="1" />
@@ -60,6 +61,15 @@
             <NumericUpDown Grid.Column="2"
                            Value="{Binding LineNumberEnd}"
                            Minimum="1" />
+            <Button Grid.Column="3"
+                    Content="Reset"
+                    Command="{Binding ResetLineRangeCommand}"
+                    Margin="8,0,0,0"
+                    Padding="4,0,4,0"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    VerticalAlignment="Stretch"
+                    VerticalContentAlignment="Center" />
           </Grid>
         </StackPanel>
 
@@ -93,8 +103,10 @@
                             Command="{Binding $parent[UserControl].((viewModels:DxfViewerViewModel)DataContext).FilterByCodeCommand}"
                             CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
                   <Separator />
-                  <MenuItem Header="Reset All Filters"
+                  <MenuItem Header="Reset Filters"
                             Command="{Binding $parent[UserControl].((viewModels:DxfViewerViewModel)DataContext).ResetFiltersCommand}" />
+                  <MenuItem Header="Reset Line Range"
+                            Command="{Binding $parent[UserControl].((viewModels:DxfViewerViewModel)DataContext).ResetLineRangeCommand}" />
                   <Separator />
                   <MenuItem Header="Copy Code + Data"
                             Command="{Binding $parent[UserControl].((viewModels:DxfViewerViewModel)DataContext).CopyCodeAndDataCommand}"
