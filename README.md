@@ -2,6 +2,9 @@
 
 A cross-platform DXF file viewer and inspector built with [Avalonia UI](https://avaloniaui.net/). DXF Inspect allows you to explore and analyze DXF (Drawing Exchange Format) files with an intuitive tree-based interface.
 
+[![CI](https://github.com/wieslawsoltes/dxfinspect/actions/workflows/build.yml/badge.svg)](https://github.com/wieslawsoltes/dxfinspect/actions/workflows/build.yml)
+[![Deploy to GitHub Pages](https://github.com/wieslawsoltes/dxfinspect/actions/workflows/pages.yml/badge.svg)](https://github.com/wieslawsoltes/dxfinspect/actions/workflows/pages.yml)
+
 ![MIT License](https://img.shields.io/github/license/wieslawsoltes/dxfinspect)
 
 ## Features
@@ -135,12 +138,3 @@ Right-click on any element to access additional options:
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.TXT) file for details.
-
-## Acknowledgments
-
-- [Avalonia UI](https://avaloniaui.net/) for the cross-platform UI framework
-- [ReactiveUI](https://reactiveui.net/) for the MVVM framework
-
-## Author
-
-Wiesław Šoltés
