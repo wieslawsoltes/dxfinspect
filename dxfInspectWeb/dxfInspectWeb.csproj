@@ -7,8 +7,13 @@
     <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
     <WasmMainJSPath>wwwroot\main.js</WasmMainJSPath>
     <IsPackable>False</IsPackable>
+    <RootNamespace>dxfInspect.Web</RootNamespace>
   </PropertyGroup>
-  
+
+  <PropertyGroup>
+    <WasmEnableThreads>true</WasmEnableThreads>
+  </PropertyGroup>
+
   <ItemGroup>
     <WasmExtraFilesToDeploy Include="wwwroot\**" />
   </ItemGroup>
@@ -18,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\dxfInspect.Base\dxfInspect.Base.csproj" />
+    <ProjectReference Include="..\dxfInspect\dxfInspect.csproj" />
   </ItemGroup>
 
 </Project>

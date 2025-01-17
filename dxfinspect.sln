@@ -8,11 +8,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{AD98E2D6
 		NuGet.Config = NuGet.Config
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dxfInspect.Desktop", "dxfInspect.Desktop\dxfInspect.Desktop.csproj", "{F9268335-9AA3-44A5-BEE4-C7EFF8660F32}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dxfInspectDesktop", "dxfInspectDesktop\dxfInspectDesktop.csproj", "{F9268335-9AA3-44A5-BEE4-C7EFF8660F32}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dxfInspect.Base", "dxfInspect.Base\dxfInspect.Base.csproj", "{FA805819-B51A-4AD4-8846-489E171BF242}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dxfInspect", "dxfInspect\dxfInspect.csproj", "{FA805819-B51A-4AD4-8846-489E171BF242}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dxfInspect.Web", "dxfInspect.Web\dxfInspect.Web.csproj", "{24E93D5A-43F6-4BA8-A137-13B6E193C79F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dxfInspectWeb", "dxfInspectWeb\dxfInspectWeb.csproj", "{24E93D5A-43F6-4BA8-A137-13B6E193C79F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

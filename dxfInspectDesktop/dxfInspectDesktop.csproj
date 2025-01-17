@@ -5,6 +5,11 @@
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <RootNamespace>dxfInspect.Desktop</RootNamespace>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <PublishAot>true</PublishAot>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,6 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\dxfInspect.Base\dxfInspect.Base.csproj" />
+    <ProjectReference Include="..\dxfInspect\dxfInspect.csproj" />
   </ItemGroup>
 </Project>
