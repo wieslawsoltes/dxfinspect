@@ -1,6 +1,8 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Collections.Generic;
+using System.Text.RegularExpressions;
+using dxfInspect.Model;
 
-namespace Dxf;
+namespace dxfInspect.Dxf;
 
 /// <summary>
 /// Parser for DXF (Drawing Exchange Format) files.

@@ -19,8 +19,4 @@
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.2.2"/>
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\dxf\dxf.csproj"/>
-  </ItemGroup>
-
 </Project>

@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using Dxf;
 using dxfInspect.Model;
 using ReactiveUI;
 
@@ -8,7 +7,7 @@ namespace dxfInspect.ViewModels
     public class DxfTreeNodeViewModel : ReactiveObject
     {
         private bool _isExpanded;
-        private LineRange _lineRange;
+        private DxfLineRange _lineRange;
         private int _endLine;
 
         public DxfTreeNodeViewModel(
@@ -24,7 +23,7 @@ namespace dxfInspect.ViewModels
         {
             StartLine = startLine;
             _endLine = endLine;
-            _lineRange = new LineRange(startLine, endLine);
+            _lineRange = new DxfLineRange(startLine, endLine);
             Code = code;
             Data = data;
             Type = type;
@@ -42,7 +41,7 @@ namespace dxfInspect.ViewModels
             set => this.RaiseAndSetIfChanged(ref _endLine, value);
         }
 
-        public LineRange LineRange
+        public DxfLineRange LineRange
         {
             get => _lineRange;
             private set => this.RaiseAndSetIfChanged(ref _lineRange, value);
@@ -50,7 +49,7 @@ namespace dxfInspect.ViewModels
 
         public void UpdateLineRange(int startLine, int endLine)
         {
-            _lineRange = new LineRange(startLine, endLine);
+            _lineRange = new DxfLineRange(startLine, endLine);
             this.RaisePropertyChanged(nameof(LineRange));
         }
 

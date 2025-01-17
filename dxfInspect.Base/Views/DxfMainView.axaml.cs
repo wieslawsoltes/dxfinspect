@@ -3,9 +3,9 @@ using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using System;
 using System.IO;
-using Dxf;
 using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
+using dxfInspect.Dxf;
 using dxfInspect.ViewModels;
 
 namespace dxfInspect.Views;

@@ -11,7 +11,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Models.TreeDataGrid;
 using Avalonia.Input.Platform;
 using Avalonia.VisualTree;
-using Dxf;
+using dxfInspect.Dxf;
 using dxfInspect.Model;
 using ReactiveUI;
 
@@ -38,7 +38,7 @@ public class DxfTreeViewModel : ReactiveObject
             Columns =
             {
                 new HierarchicalExpanderColumn<DxfTreeNodeViewModel>(
-                    new TextColumn<DxfTreeNodeViewModel, LineRange>(
+                    new TextColumn<DxfTreeNodeViewModel, DxfLineRange>(
                         "Lines",
                         x => x.LineRange,
                         options: new()

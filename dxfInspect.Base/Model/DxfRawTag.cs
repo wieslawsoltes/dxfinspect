@@ -1,6 +1,8 @@
-﻿using System.Text;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
-namespace Dxf;
+namespace dxfInspect.Model;
 
 public class DxfRawTag
 {
