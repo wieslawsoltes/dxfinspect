@@ -118,6 +118,8 @@ public class DxfTreeViewModel : ReactiveObject
         ResetLineRangeCommand = ReactiveCommand.Create(ResetLineRange);
         CopyCodeAndDataCommand = ReactiveCommand.CreateFromTask<DxfTreeNodeViewModel>(CopyCodeAndData);
         CopyObjectTreeCommand = ReactiveCommand.CreateFromTask<DxfTreeNodeViewModel>(CopyObjectTree);
+        CopyCodeCommand = ReactiveCommand.CreateFromTask<DxfTreeNodeViewModel>(CopyCode);
+        CopyDataCommand = ReactiveCommand.CreateFromTask<DxfTreeNodeViewModel>(CopyData);
     }
 
     public ICommand ExpandAllCommand { get; }
@@ -131,25 +133,29 @@ public class DxfTreeViewModel : ReactiveObject
     public ICommand FilterByCodeCommand { get; }
 
     public ICommand ResetFiltersCommand { get; }
-      
+
     public ICommand ResetCodeCommand { get; }
-     
+
     public ICommand ResetDataCommand { get; }
 
     public ICommand ReseLineNumberStartCommand { get; }
-    
+
     public ICommand ResetLineNumberEndCommand { get; }
 
     public ICommand ResetLineRangeCommand { get; }
-    
+
     public ICommand CopyCodeAndDataCommand { get; }
 
     public ICommand CopyObjectTreeCommand { get; }
-    
+
+    public ICommand CopyCodeCommand { get; }
+
+    public ICommand CopyDataCommand { get; }
+
     public int OriginalStartLine { get; set; } = 1;
-    
+
     public int OriginalEndLine { get; set; } = int.MaxValue;
-    
+
     public string CodeSearch
     {
         get => _codeSearch;
@@ -201,13 +207,13 @@ public class DxfTreeViewModel : ReactiveObject
         get => _fileName;
         set => this.RaiseAndSetIfChanged(ref _fileName, value);
     }
-    
+
     public ITreeDataGridSource<DxfTreeNodeViewModel> Source => _source;
-    
+
     public DxfTreeViewModel CreateFilteredView(DxfTreeNodeViewModel selectedNode)
     {
         var filteredViewModel = new DxfTreeViewModel();
-        filteredViewModel.FileName = this.FileName;  // Propagate filename
+        filteredViewModel.FileName = this.FileName; // Propagate filename
         filteredViewModel.HasLoadedFile = true;
         var rawTags = new List<DxfRawTag>();
 
@@ -367,13 +373,13 @@ public class DxfTreeViewModel : ReactiveObject
     {
         DataSearch = "";
     }
-    
+
     private void ResetLineRange()
     {
         ResetLineNumberStart();
         ResetLineNumberEnd();
     }
-    
+
     private void ResetLineNumberStart()
     {
         LineNumberStart = OriginalStartLine;
@@ -382,6 +388,30 @@ public class DxfTreeViewModel : ReactiveObject
     private void ResetLineNumberEnd()
     {
         LineNumberEnd = OriginalEndLine;
+    }
+
+    private async Task CopyCode(DxfTreeNodeViewModel? nodeView)
+    {
+        if (nodeView != null)
+        {
+            var clipboard = GetClipboard();
+            if (clipboard != null)
+            {
+                await clipboard.SetTextAsync(nodeView.CodeString);
+            }
+        }
+    }
+
+    private async Task CopyData(DxfTreeNodeViewModel? nodeView)
+    {
+        if (nodeView != null)
+        {
+            var clipboard = GetClipboard();
+            if (clipboard != null)
+            {
+                await clipboard.SetTextAsync(nodeView.Data);
+            }
+        }
     }
 
     private IClipboard? GetClipboard()

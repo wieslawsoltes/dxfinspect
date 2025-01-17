@@ -138,30 +138,36 @@
               <Setter.Value>
                 <ContextMenu>
                   <MenuItem Header="Filter by Line Range"
-                            Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).FilterByLineRangeCommand}"
-                            CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
+                           Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).FilterByLineRangeCommand}"
+                           CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
                   <MenuItem Header="Filter by Data"
-                            Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).FilterByDataCommand}"
-                            CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
+                           Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).FilterByDataCommand}"
+                           CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
                   <MenuItem Header="Filter by Code"
-                            Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).FilterByCodeCommand}"
-                            CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
+                           Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).FilterByCodeCommand}"
+                           CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
                   <Separator />
                   <MenuItem Header="Reset Filters"
-                            Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).ResetFiltersCommand}" />
+                           Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).ResetFiltersCommand}" />
                   <MenuItem Header="Reset Line Range"
-                            Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).ResetLineRangeCommand}" />
+                           Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).ResetLineRangeCommand}" />
                   <Separator />
+                  <MenuItem Header="Copy Code"
+                           Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).CopyCodeCommand}"
+                           CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
+                  <MenuItem Header="Copy Data"
+                           Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).CopyDataCommand}"
+                           CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
                   <MenuItem Header="Copy Code + Data"
-                            Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).CopyCodeAndDataCommand}"
-                            CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
+                           Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).CopyCodeAndDataCommand}"
+                           CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
                   <MenuItem Header="Copy Object Tree"
-                            Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).CopyObjectTreeCommand}"
-                            CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
+                           Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).CopyObjectTreeCommand}"
+                           CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
                   <Separator />
                   <MenuItem Header="Open in New Tab"
-                            Command="{Binding $parent[views:DxfMainView].((vm:MainViewModel)DataContext).OpenInNewTabCommand}"
-                            CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
+                           Command="{Binding $parent[views:DxfMainView].((vm:MainViewModel)DataContext).OpenInNewTabCommand}"
+                           CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
                 </ContextMenu>
               </Setter.Value>
             </Setter>
