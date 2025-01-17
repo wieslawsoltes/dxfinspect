@@ -2,7 +2,7 @@
 using System.Text.RegularExpressions;
 using dxfInspect.Model;
 
-namespace dxfInspect.Dxf;
+namespace dxfInspect.Services;
 
 /// <summary>
 /// Parser for DXF (Drawing Exchange Format) files.

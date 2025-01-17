@@ -5,7 +5,7 @@ using System;
 using System.IO;
 using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
-using dxfInspect.Dxf;
+using dxfInspect.Services;
 using dxfInspect.ViewModels;
 
 namespace dxfInspect.Views;

@@ -11,7 +11,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Models.TreeDataGrid;
 using Avalonia.Input.Platform;
 using Avalonia.VisualTree;
-using dxfInspect.Dxf;
+using dxfInspect.Services;
 using dxfInspect.Model;
 using ReactiveUI;
 
