@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 env:
     PROJECT_PATH: dxfInspect.Web/dxfInspect.Web.csproj
-    OUTPUT_PATH: dxfInspect.Web/bin/Release/net8.0-browser/browser-wasm/AppBundle
+    OUTPUT_PATH: dxfInspect.Web/bin/Release/net9.0-browser/browser-wasm/AppBundle
 on:
   push:
     branches: [ main ]
