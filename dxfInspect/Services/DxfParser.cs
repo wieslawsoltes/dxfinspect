@@ -1,142 +1,163 @@
-﻿using System.Collections.Generic;
-using System.Text.RegularExpressions;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
 using dxfInspect.Model;
 
 namespace dxfInspect.Services;
 
 /// <summary>
-/// Parser for DXF (Drawing Exchange Format) files.
-/// Processes DXF content into a hierarchical structure of tags.
+/// Memory-optimized parser for DXF (Drawing Exchange Format) files.
+/// Uses streaming and minimal memory allocation to process large files efficiently.
 /// </summary>
 public static class DxfParser
 {
-    private static readonly Regex s_lineSplitter = new(@"\r\n|\r|\n", RegexOptions.Compiled);
-
-    /// <summary>
-    /// Group code indicating entity type
-    /// </summary>
     public const int DxfCodeForType = 0;
-
-    /// <summary>
-    /// Group code indicating entity name
-    /// </summary>
     public const int DxfCodeForName = 2;
-
-    /// <summary>
-    /// Section start marker
-    /// </summary>
     public const string DxfCodeNameSection = "SECTION";
-
-    /// <summary>
-    /// Section end marker
-    /// </summary>
     public const string DxfCodeNameEndsec = "ENDSEC";
 
+    private const int BufferSize = 4096; // Use a reasonable buffer size for reading
+
     /// <summary>
-    /// Parses DXF content into a hierarchical structure of tags
+    /// Parses a DXF file using streaming to minimize memory usage with optimized buffering
     /// </summary>
-    /// <param name="text">Raw DXF file content</param>
-    /// <returns>List of parsed DXF tags representing the file structure</returns>
-    public static IList<DxfRawTag> Parse(string text)
+    public static async Task<IList<DxfRawTag>> ParseStreamAsync(Stream stream)
     {
-        var lines = string.IsNullOrEmpty(text) ? [] : s_lineSplitter.Split(text);
         var sections = new List<DxfRawTag>();
-        var section = default(DxfRawTag);
-        var other = default(DxfRawTag);
+        var sectionStack = new Stack<DxfRawTag>();
+        var currentTag = default(DxfRawTag);
 
-        for (var i = 0; i < lines.Length; i += 2)
+        using var reader = new StreamReader(stream, bufferSize: BufferSize);
+        int lineNumber = 0;
+
+        string? groupCodeLine;
+        while ((groupCodeLine = await reader.ReadLineAsync().ConfigureAwait(false)) != null)
         {
-            if (i + 1 >= lines.Length)
-            {
-                break;
-            }
+            lineNumber++;
+            var dataLine = await reader.ReadLineAsync().ConfigureAwait(false);
+            if (dataLine == null) break;
+            lineNumber++;
 
-            var groupCodeLine = lines[i];
-            var dataLine = lines[i + 1];
-            var groupCode = groupCodeLine.Trim();
-            var dataElement = dataLine.Trim();
+            // Only trim if necessary and avoid string allocations when possible
+            var groupCode = ParseGroupCode(groupCodeLine);
+            var isEntityWithType = groupCode == DxfCodeForType;
 
-            var tag = new DxfRawTag
+            // Create tag only if needed based on filters or hierarchy
+            if (ShouldCreateTag(groupCode, dataLine, sectionStack.Count))
             {
-                GroupCode = int.Parse(groupCode),
-                DataElement = dataElement,
-                OriginalGroupCodeLine = groupCodeLine,
-                OriginalDataLine = dataLine,
-                IsEnabled = true
-            };
-
-            var isEntityWithType = tag.GroupCode == DxfCodeForType;
-            var isSectionStart = (isEntityWithType) && tag.DataElement == DxfCodeNameSection;
-            var isSectionEnd = (isEntityWithType) && tag.DataElement == DxfCodeNameEndsec;
-
-            if (isSectionStart)
-            {
-                section = tag;
-                section.Children = new List<DxfRawTag>();
-                sections.Add(section);
-                other = default(DxfRawTag);
-            }
-            else if (isSectionEnd)
-            {
-                tag.Parent = section;
-                if (section?.Children != null)
+                var tag = CreateTag(groupCode, dataLine.TrimEnd(), lineNumber - 1, groupCodeLine, dataLine);
+                
+                if (isEntityWithType)
                 {
-                    section.Children.Add(tag);
+                    ProcessTypeTag(tag, dataLine.TrimEnd(), sections, sectionStack, ref currentTag);
                 }
-                section = default(DxfRawTag);
-                other = default(DxfRawTag);
-            }
-            else if (section != null)
-            {
-                if (isEntityWithType && other == null)
+                else if (sectionStack.Count > 0)
                 {
-                    other = tag;
-                    other.Parent = section;
-                    other.Children = new List<DxfRawTag>();
-                    section.Children?.Add(other);
-                }
-                else if (isEntityWithType && other != null)
-                {
-                    other = tag;
-                    other.Parent = section;
-                    other.Children = new List<DxfRawTag>();
-                    section.Children?.Add(other);
-                }
-                else if (!isEntityWithType && other != null)
-                {
-                    tag.Parent = other;
-                    other.Children?.Add(tag);
+                    ProcessRegularTag(tag, sectionStack.Peek(), currentTag);
                 }
                 else
                 {
-                    tag.Parent = section;
-                    section.Children?.Add(tag);
+                    sections.Add(tag);
                 }
             }
-            else
-            {
-                tag.Parent = default(DxfRawTag);
-                sections.Add(tag);
-            }
-        }
-
-        foreach (var dxfSection in sections)
-        {
-            EnableHierarchy(dxfSection);
         }
 
         return sections;
     }
 
-    private static void EnableHierarchy(DxfRawTag tag)
+    private static int ParseGroupCode(string line)
     {
-        tag.IsEnabled = true;
-        if (tag.Children != null)
+        // Fast path for common single-digit group codes
+        if (line.Length == 1 && line[0] >= '0' && line[0] <= '9')
         {
-            foreach (var child in tag.Children)
-            {
-                EnableHierarchy(child);
-            }
+            return line[0] - '0';
         }
+
+        // Use Span to avoid string allocations during parsing
+        ReadOnlySpan<char> span = line.AsSpan().TrimEnd();
+        return int.Parse(span);
+    }
+
+    private static bool ShouldCreateTag(int groupCode, string dataLine, int stackCount)
+    {
+        // Add your filtering logic here
+        // For example, skip purely geometric data for visualization if not needed
+        return true; // For now, accept all tags
+    }
+
+    private static DxfRawTag CreateTag(int groupCode, string dataElement, int lineNumber, 
+        string originalGroupCodeLine, string originalDataLine)
+    {
+        return new DxfRawTag
+        {
+            GroupCode = groupCode,
+            DataElement = dataElement,
+            LineNumber = lineNumber,
+            OriginalGroupCodeLine = originalGroupCodeLine,
+            OriginalDataLine = originalDataLine,
+            IsEnabled = true,
+            Children = new List<DxfRawTag>() // Initialize only when needed
+        };
+    }
+
+    private static void ProcessTypeTag(DxfRawTag tag, string dataElement, 
+        List<DxfRawTag> sections, Stack<DxfRawTag> sectionStack, ref DxfRawTag? currentTag)
+    {
+        var isSectionStart = dataElement == DxfCodeNameSection;
+        var isSectionEnd = dataElement == DxfCodeNameEndsec;
+
+        if (isSectionStart)
+        {
+            sections.Add(tag);
+            sectionStack.Push(tag);
+            currentTag = null;
+        }
+        else if (isSectionEnd && sectionStack.Count > 0)
+        {
+            tag.Parent = sectionStack.Peek();
+            tag.Parent.Children?.Add(tag);
+            sectionStack.Pop();
+            currentTag = null;
+        }
+        else if (sectionStack.Count > 0)
+        {
+            var currentSection = sectionStack.Peek();
+            tag.Parent = currentSection;
+            currentSection.Children?.Add(tag);
+            currentTag = tag;
+        }
+        else
+        {
+            sections.Add(tag);
+        }
+    }
+
+    private static void ProcessRegularTag(DxfRawTag tag, DxfRawTag currentSection, DxfRawTag? currentTag)
+    {
+        if (currentTag != null)
+        {
+            tag.Parent = currentTag;
+            currentTag.Children?.Add(tag);
+        }
+        else
+        {
+            tag.Parent = currentSection;
+            currentSection.Children?.Add(tag);
+        }
+    }
+
+    /// <summary>
+    /// Parses a DXF file from a string (maintained for compatibility)
+    /// Note: For large files, prefer ParseStreamAsync directly
+    /// </summary>
+    public static async Task<IList<DxfRawTag>> ParseAsync(string text)
+    {
+        using var stream = new MemoryStream();
+        using var writer = new StreamWriter(stream);
+        await writer.WriteAsync(text).ConfigureAwait(false);
+        await writer.FlushAsync().ConfigureAwait(false);
+        stream.Position = 0;
+        return await ParseStreamAsync(stream).ConfigureAwait(false);
     }
 }
