@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "dxfInspectWeb.dll",
   "resources": {
-    "hash": "sha256-WP8zP6FijBeuFoUS7LgYaKDd761q3dOmvxZ+wf8X+LU=",
+    "hash": "sha256-dQny8E8G4dldp+QMQOZ4e013KUtafXKRga+ZNHcdqJc=",
     "jsModuleNative": {
       "dotnet.native.js": "sha256-bNPuqe+Q5Pdi/MB/jgvCs0kSZAOA4X61tdIQel6F+f8="
     },
@@ -36,8 +36,8 @@
       "Avalonia.OpenGL.wasm": "sha256-LM9kljWbhpggNnyPYtbx2i8rRRxI5Fe2/tKrVhnOyJE=",
       "Avalonia.Skia.wasm": "sha256-BF4ONNev3OECIdp9yUOsl3jdKYFqnuGO7D6EwjQGewA=",
       "Avalonia.Vulkan.wasm": "sha256-ieRDwObyb+7bJBMBF1R0BwZ9OyNkcJYVlIG6nZXMSUg=",
-      "dxfInspect.wasm": "sha256-G2iZAUX3IIX4E4UlId/gnrGJxwG/jL1hD3yzaDYTSNM=",
-      "dxfInspectWeb.wasm": "sha256-u1jBFPy7wnUntNxAEeHQ3ulJicqdb2WcgYjTt4UixCE=",
+      "dxfInspect.wasm": "sha256-R69EzWXXExQRD0fx0Uc5C3IjH1nOsaauLPPuQJI8LkE=",
+      "dxfInspectWeb.wasm": "sha256-vEZdL9wEcXkQgN3X907cF9GMi9Mc9ATUhFTM8xGQLhU=",
       "HarfBuzzSharp.wasm": "sha256-0zIlPKg6RDaxWftK9ugwZrU9c1b6Juj2TVKyBwe/EWw=",
       "ReactiveUI.wasm": "sha256-j28P9hbhnErLUq9PL+s1e0sckbEYkT8BtlB9FlLh2qo=",
       "Semi.Avalonia.wasm": "sha256-Fp6HwmckMeDNiuccsX3ZlxxI6q3HecihwrkU55S5ngI=",
