@@ -6,8 +6,9 @@ namespace dxfInspect.Model;
 
 public class DxfRawTag
 {
+    // Store line number and original content
+    public int LineNumber { get; set; }
     public string OriginalGroupCodeLine { get; set; } = string.Empty;
-
     public string OriginalDataLine { get; set; } = string.Empty;
 
     /// <summary>
