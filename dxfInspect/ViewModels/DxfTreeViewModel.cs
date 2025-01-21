@@ -24,8 +24,6 @@ public class DxfTreeViewModel : ReactiveObject
     private bool _isExpanding;
     private bool _isCollapsing;
     private readonly HashSet<string> _expandedNodes = [];
-    private string _codeSearch = "";
-    private string _dataSearch = "";
     private int _lineNumberStart = 1;
     private int _lineNumberEnd = int.MaxValue;
     private List<DxfTreeNodeViewModel> _allNodes = [];
@@ -187,26 +185,6 @@ public class DxfTreeViewModel : ReactiveObject
     public int OriginalStartLine { get; set; } = 1;
 
     public int OriginalEndLine { get; set; } = int.MaxValue;
-
-    public string CodeSearch
-    {
-        get => _codeSearch;
-        set
-        {
-            this.RaiseAndSetIfChanged(ref _codeSearch, value);
-            ApplyFilters();
-        }
-    }
-
-    public string DataSearch
-    {
-        get => _dataSearch;
-        set
-        {
-            this.RaiseAndSetIfChanged(ref _dataSearch, value);
-            ApplyFilters();
-        }
-    }
 
     public int LineNumberStart
     {
