@@ -76,6 +76,15 @@ public class DxfTreeViewModel : ReactiveObject
                     },
                     width: new GridLength(2, GridUnitType.Star)),
                 new TextColumn<DxfTreeNodeViewModel, string>(
+                    "Size",
+                    x => x.FormattedDataSize,
+                    options: new()
+                    {
+                        CompareAscending = Sort<DxfTreeNodeViewModel>.Ascending(x => x.TotalDataSize),
+                        CompareDescending = Sort<DxfTreeNodeViewModel>.Descending(x => x.TotalDataSize)
+                    },
+                    width: new GridLength(100)),
+                new TextColumn<DxfTreeNodeViewModel, string>(
                     "Value Type",
                     x => x.GroupCodeValueType,
                     options: new()
@@ -111,7 +120,7 @@ public class DxfTreeViewModel : ReactiveObject
                 _expandedNodes.Remove(model.NodeKey);
             }
         };
-        
+
         _codeTags = new ObservableCollection<TagModel>();
         _dataTags = new ObservableCollection<TagModel>();
         _codeFilterOptions = new FilterOptions(useExactMatch: true, ignoreCase: true);
@@ -175,15 +184,15 @@ public class DxfTreeViewModel : ReactiveObject
     public ICommand CopyCodeCommand { get; }
 
     public ICommand CopyDataCommand { get; }
-    
+
     public ICommand AddCodeTagCommand { get; }
-    
+
     public ICommand RemoveCodeTagCommand { get; }
-    
+
     public ICommand AddDataTagCommand { get; }
-    
+
     public ICommand RemoveDataTagCommand { get; }
-    
+
     public int OriginalStartLine { get; set; } = 1;
 
     public int OriginalEndLine { get; set; } = int.MaxValue;
@@ -219,7 +228,7 @@ public class DxfTreeViewModel : ReactiveObject
         get => _fileName;
         set => this.RaiseAndSetIfChanged(ref _fileName, value);
     }
-    
+
     public ObservableCollection<TagModel> CodeTags
     {
         get => _codeTags;
@@ -243,7 +252,7 @@ public class DxfTreeViewModel : ReactiveObject
         get => _newDataTag;
         set => this.RaiseAndSetIfChanged(ref _newDataTag, value);
     }
-    
+
     public FilterOptions CodeFilterOptions
     {
         get => _codeFilterOptions;
@@ -255,7 +264,7 @@ public class DxfTreeViewModel : ReactiveObject
         get => _dataFilterOptions;
         set => this.RaiseAndSetIfChanged(ref _dataFilterOptions, value);
     }
-    
+
     public ObservableCollection<string> UniqueCodeValues
     {
         get => _uniqueCodeValues;
@@ -354,7 +363,7 @@ public class DxfTreeViewModel : ReactiveObject
             // Populate unique values
             var codes = new HashSet<string>();
             var data = new HashSet<string>();
-        
+
             foreach (var node in allNodes)
             {
                 codes.Add(node.CodeString);
@@ -466,7 +475,7 @@ public class DxfTreeViewModel : ReactiveObject
     {
         LineNumberEnd = OriginalEndLine;
     }
-    
+
     public void ResetCodeFilterOptions()
     {
         CodeFilterOptions.UseExactMatch = true;
@@ -478,7 +487,7 @@ public class DxfTreeViewModel : ReactiveObject
         DataFilterOptions.UseExactMatch = false;
         DataFilterOptions.IgnoreCase = true;
     }
-    
+
     private async Task CopyCode(DxfTreeNodeViewModel? nodeView)
     {
         if (nodeView != null)
@@ -502,7 +511,7 @@ public class DxfTreeViewModel : ReactiveObject
             }
         }
     }
-    
+
     private void AddCodeTag()
     {
         if (!string.IsNullOrWhiteSpace(NewCodeTag))
@@ -538,7 +547,7 @@ public class DxfTreeViewModel : ReactiveObject
             ApplyFilters();
         }
     }
-    
+
     private IClipboard? GetClipboard()
     {
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime
@@ -753,6 +762,7 @@ public class DxfTreeViewModel : ReactiveObject
                                 AddAllDescendants(child, childNode);
                             }
 
+                            childNode.UpdateTotalDataSize(); // Calculate size after children are added
                             filteredNode.Children.Add(childNode);
                         }
                     }
@@ -766,6 +776,7 @@ public class DxfTreeViewModel : ReactiveObject
                     }
                 }
 
+                filteredNode.UpdateTotalDataSize(); // Calculate size after all children are added
                 result.Add(filteredNode);
             }
         }
@@ -793,6 +804,7 @@ public class DxfTreeViewModel : ReactiveObject
                 AddAllDescendants(child, childNode);
             }
 
+            childNode.UpdateTotalDataSize(); // Calculate size after descendants are added
             target.Children.Add(childNode);
         }
     }
@@ -802,7 +814,7 @@ public class DxfTreeViewModel : ReactiveObject
         bool matchesLineRange = nodeView.StartLine >= LineNumberStart &&
                                 nodeView.EndLine <= (LineNumberEnd == 1 ? int.MaxValue : LineNumberEnd);
 
-        bool matchesCode = CodeTags.Count == 0 || 
+        bool matchesCode = CodeTags.Count == 0 ||
                            CodeTags.Any(tag => MatchesFilter(nodeView.CodeString, tag.Value, CodeFilterOptions));
 
         bool matchesData = DataTags.Count == 0 ||
@@ -816,13 +828,9 @@ public class DxfTreeViewModel : ReactiveObject
         if (string.IsNullOrEmpty(filter))
             return true;
 
-        var comparison = options.IgnoreCase ? 
-            StringComparison.OrdinalIgnoreCase : 
-            StringComparison.Ordinal;
+        var comparison = options.IgnoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 
-        return options.UseExactMatch ? 
-            value.Equals(filter, comparison) : 
-            value.Contains(filter, comparison);
+        return options.UseExactMatch ? value.Equals(filter, comparison) : value.Contains(filter, comparison);
     }
 
     private bool HasMatchingDescendant(List<DxfTreeNodeViewModel> nodes)
@@ -863,6 +871,7 @@ public class DxfTreeViewModel : ReactiveObject
                 AddChildNodes(node, child.Children, ref lineNumber);
             }
 
+            node.UpdateTotalDataSize(); // Calculate size after children are added
             parent.Children.Add(node);
         }
 
@@ -910,6 +919,7 @@ public class DxfTreeViewModel : ReactiveObject
                 sectionNode.UpdateLineRange(sectionStart, lineNumber - 1);
             }
 
+            sectionNode.UpdateTotalDataSize(); // Calculate size after all children are added
             nodes.Add(sectionNode);
         }
 

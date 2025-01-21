@@ -9,6 +9,8 @@ namespace dxfInspect.ViewModels
         private bool _isExpanded;
         private DxfLineRange _lineRange;
         private int _endLine;
+        private long _dataSize;
+        private long _totalDataSize;
 
         public DxfTreeNodeViewModel(
             int startLine,
@@ -31,6 +33,8 @@ namespace dxfInspect.ViewModels
             OriginalGroupCodeLine = originalGroupCodeLine;
             OriginalDataLine = originalDataLine;
             RawTag = rawTag;
+            _dataSize = System.Text.Encoding.UTF8.GetByteCount(Data);
+            _totalDataSize = _dataSize; // Initially set to own data size
         }
 
         public int StartLine { get; }
@@ -45,6 +49,43 @@ namespace dxfInspect.ViewModels
         {
             get => _lineRange;
             private set => this.RaiseAndSetIfChanged(ref _lineRange, value);
+        }
+
+        public void UpdateTotalDataSize()
+        {
+            var newTotal = _dataSize;
+            if (HasChildren)
+            {
+                foreach (var child in Children)
+                {
+                    child.UpdateTotalDataSize();
+                    newTotal += child._totalDataSize;
+                }
+            }
+
+            this.RaiseAndSetIfChanged(ref _totalDataSize, newTotal, nameof(TotalDataSize));
+            this.RaisePropertyChanged(nameof(FormattedDataSize));
+        }
+
+        public long TotalDataSize => _totalDataSize;
+
+        public string FormattedDataSize
+        {
+            get
+            {
+                var size = _totalDataSize;
+                string[] sizes = { "B", "KB", "MB", "GB" };
+                int order = 0;
+                double calculatedSize = size;
+
+                while (calculatedSize >= 1024 && order < sizes.Length - 1)
+                {
+                    order++;
+                    calculatedSize /= 1024;
+                }
+
+                return $"{calculatedSize:0.##} {sizes[order]}";
+            }
         }
 
         public void UpdateLineRange(int startLine, int endLine)
@@ -70,9 +111,7 @@ namespace dxfInspect.ViewModels
         }
 
         public string CodeString => Code.ToString();
-
         public string GroupCodeDescription => DxfGroupCodeInfo.GetDescription(Code);
-
         public string GroupCodeValueType => DxfGroupCodeInfo.GetValueType(Code);
     }
 }
