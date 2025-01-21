@@ -37,14 +37,16 @@
         <StackPanel Spacing="4">
           <TextBlock Text="Code Filters:" />
           <Grid ColumnDefinitions="*,Auto,Auto">
-            <TextBox Grid.Column="0" 
-                     Text="{Binding NewCodeTag}"
-                     Watermark="Enter code filter">
-              <TextBox.KeyBindings>
+            <AutoCompleteBox Grid.Column="0"
+                             Text="{Binding NewCodeTag}"
+                             ItemsSource="{Binding UniqueCodeValues}"
+                             Watermark="Enter code filter"
+                             FilterMode="ContainsOrdinal">
+              <AutoCompleteBox.KeyBindings>
                 <KeyBinding Gesture="Enter"
                             Command="{Binding AddCodeTagCommand}"/>
-              </TextBox.KeyBindings>
-            </TextBox>
+              </AutoCompleteBox.KeyBindings>
+            </AutoCompleteBox>
             <Button Grid.Column="1"
                     Content="Add"
                     Command="{Binding AddCodeTagCommand}"
@@ -97,14 +99,16 @@
         <StackPanel Spacing="4">
           <TextBlock Text="Data Filters:" />
           <Grid ColumnDefinitions="*,Auto,Auto">
-            <TextBox Grid.Column="0" 
-                     Text="{Binding NewDataTag}"
-                     Watermark="Enter data filter">
-              <TextBox.KeyBindings>
+            <AutoCompleteBox Grid.Column="0"
+                             Text="{Binding NewDataTag}"
+                             ItemsSource="{Binding UniqueDataValues}"
+                             Watermark="Enter data filter"
+                             FilterMode="ContainsOrdinal">
+              <AutoCompleteBox.KeyBindings>
                 <KeyBinding Gesture="Enter"
                             Command="{Binding AddDataTagCommand}"/>
-              </TextBox.KeyBindings>
-            </TextBox>
+              </AutoCompleteBox.KeyBindings>
+            </AutoCompleteBox>
             <Button Grid.Column="1"
                     Content="Add"
                     Command="{Binding AddDataTagCommand}"

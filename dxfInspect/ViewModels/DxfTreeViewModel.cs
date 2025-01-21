@@ -35,6 +35,8 @@ public class DxfTreeViewModel : ReactiveObject
     private string _newDataTag = "";
     private FilterOptions _codeFilterOptions;
     private FilterOptions _dataFilterOptions;
+    private ObservableCollection<string> _uniqueCodeValues = new();
+    private ObservableCollection<string> _uniqueDataValues = new();
 
     public DxfTreeViewModel()
     {
@@ -254,6 +256,18 @@ public class DxfTreeViewModel : ReactiveObject
         set => this.RaiseAndSetIfChanged(ref _dataFilterOptions, value);
     }
     
+    public ObservableCollection<string> UniqueCodeValues
+    {
+        get => _uniqueCodeValues;
+        private set => this.RaiseAndSetIfChanged(ref _uniqueCodeValues, value);
+    }
+
+    public ObservableCollection<string> UniqueDataValues
+    {
+        get => _uniqueDataValues;
+        private set => this.RaiseAndSetIfChanged(ref _uniqueDataValues, value);
+    }
+
     public ITreeDataGridSource<DxfTreeNodeViewModel> Source => _source;
 
     public DxfTreeViewModel CreateFilteredView(DxfTreeNodeViewModel selectedNode)
@@ -336,6 +350,19 @@ public class DxfTreeViewModel : ReactiveObject
             LineNumberEnd = OriginalEndLine;
             OriginalStartLine = 1;
             LineNumberStart = 1;
+
+            // Populate unique values
+            var codes = new HashSet<string>();
+            var data = new HashSet<string>();
+        
+            foreach (var node in allNodes)
+            {
+                codes.Add(node.CodeString);
+                data.Add(node.Data);
+            }
+
+            UniqueCodeValues = new ObservableCollection<string>(codes.OrderBy(x => x));
+            UniqueDataValues = new ObservableCollection<string>(data.OrderBy(x => x));
         }
 
         HasLoadedFile = true;
