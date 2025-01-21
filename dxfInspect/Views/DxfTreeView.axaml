@@ -36,7 +36,7 @@
 
         <StackPanel Spacing="4">
           <TextBlock Text="Code Filters:" />
-          <Grid ColumnDefinitions="*,Auto">
+          <Grid ColumnDefinitions="*,Auto,Auto">
             <TextBox Grid.Column="0" 
                      Text="{Binding NewCodeTag}"
                      Watermark="Enter code filter">
@@ -49,6 +49,15 @@
                     Content="Add"
                     Command="{Binding AddCodeTagCommand}"
                     Margin="4,0,0,0"/>
+            <Button Grid.Column="2"
+                    Content="X"
+                    Command="{Binding ResetCodeCommand}"
+                    Margin="8,0,0,0"
+                    Padding="8,0,8,0"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    VerticalAlignment="Stretch"
+                    VerticalContentAlignment="Center" />
           </Grid>
           <ItemsControl ItemsSource="{Binding CodeTags}">
             <ItemsControl.ItemsPanel>
@@ -61,7 +70,7 @@
                 <Border Background="{DynamicResource SemiColorPrimary}"
                         CornerRadius="4"
                         Padding="8,4"
-                        Margin="0,2,4,2">
+                        Margin="4,2,4,2">
                   <StackPanel Orientation="Horizontal" Spacing="8">
                     <TextBlock Text="{Binding Value}" 
                                Foreground="White"
@@ -69,7 +78,7 @@
                     <Button Content="×"
                             Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).RemoveCodeTagCommand}"
                             CommandParameter="{Binding}"
-                            Padding="0"
+                            Padding="4"
                             Background="Transparent"
                             Foreground="White"/>
                   </StackPanel>
@@ -87,7 +96,7 @@
 
         <StackPanel Spacing="4">
           <TextBlock Text="Data Filters:" />
-          <Grid ColumnDefinitions="*,Auto">
+          <Grid ColumnDefinitions="*,Auto,Auto">
             <TextBox Grid.Column="0" 
                      Text="{Binding NewDataTag}"
                      Watermark="Enter data filter">
@@ -100,6 +109,15 @@
                     Content="Add"
                     Command="{Binding AddDataTagCommand}"
                     Margin="4,0,0,0"/>
+            <Button Grid.Column="2"
+                    Content="X"
+                    Command="{Binding ResetDataCommand}"
+                    Margin="8,0,0,0"
+                    Padding="8,0,8,0"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    VerticalAlignment="Stretch"
+                    VerticalContentAlignment="Center" />
           </Grid>
           <ItemsControl ItemsSource="{Binding DataTags}">
             <ItemsControl.ItemsPanel>
@@ -112,7 +130,7 @@
                 <Border Background="{DynamicResource SemiColorSecondary}"
                         CornerRadius="4"
                         Padding="8,4"
-                        Margin="0,2,4,2">
+                        Margin="4,2,4,2">
                   <StackPanel Orientation="Horizontal" Spacing="8">
                     <TextBlock Text="{Binding Value}" 
                                Foreground="White"
@@ -120,7 +138,7 @@
                     <Button Content="×"
                             Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).RemoveDataTagCommand}"
                             CommandParameter="{Binding}"
-                            Padding="0"
+                            Padding="4"
                             Background="Transparent"
                             Foreground="White"/>
                   </StackPanel>
