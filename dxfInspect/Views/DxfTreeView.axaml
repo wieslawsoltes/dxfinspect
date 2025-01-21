@@ -33,41 +33,109 @@
       </UniformGrid>
 
       <StackPanel Spacing="4">
-        
+
         <StackPanel Spacing="4">
-          <TextBlock Text="Code:" />
-          <TextBox Text="{Binding CodeSearch}">
-            <TextBox.InnerRightContent>
-              <Button Content="X"
-                      Command="{Binding ResetCodeCommand}"
-                      Margin="0,0,0,0"
-                      Padding="8,0,8,0"
-                      HorizontalAlignment="Stretch"
-                      HorizontalContentAlignment="Center"
-                      VerticalAlignment="Stretch"
-                      VerticalContentAlignment="Center"
-                      Background="Transparent"/>
-            </TextBox.InnerRightContent>
-          </TextBox>
-        </StackPanel>
-        
-        <StackPanel Spacing="4">
-          <TextBlock Text="Data:" />
-          <TextBox Text="{Binding DataSearch}">
-            <TextBox.InnerRightContent>
-              <Button Content="X"
-                      Command="{Binding ResetDataCommand}"
-                      Margin="0,0,0,0"
-                      Padding="8,0,8,0"
-                      HorizontalAlignment="Stretch"
-                      HorizontalContentAlignment="Center"
-                      VerticalAlignment="Stretch"
-                      VerticalContentAlignment="Center"
-                      Background="Transparent"/>
-            </TextBox.InnerRightContent>
-          </TextBox>
+          <TextBlock Text="Code Filters:" />
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBox Grid.Column="0" 
+                     Text="{Binding NewCodeTag}"
+                     Watermark="Enter code filter">
+              <TextBox.KeyBindings>
+                <KeyBinding Gesture="Enter"
+                            Command="{Binding AddCodeTagCommand}"/>
+              </TextBox.KeyBindings>
+            </TextBox>
+            <Button Grid.Column="1"
+                    Content="Add"
+                    Command="{Binding AddCodeTagCommand}"
+                    Margin="4,0,0,0"/>
+          </Grid>
+          <ItemsControl ItemsSource="{Binding CodeTags}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <WrapPanel />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border Background="{DynamicResource SemiColorPrimary}"
+                        CornerRadius="4"
+                        Padding="8,4"
+                        Margin="0,2,4,2">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="{Binding Value}" 
+                               Foreground="White"
+                               VerticalAlignment="Center"/>
+                    <Button Content="×"
+                            Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).RemoveCodeTagCommand}"
+                            CommandParameter="{Binding}"
+                            Padding="0"
+                            Background="Transparent"
+                            Foreground="White"/>
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,4,0,4">
+            <CheckBox Content="Exact Match" 
+                      IsChecked="{Binding CodeFilterOptions.UseExactMatch}"/>
+            <CheckBox Content="Ignore Case" 
+                      IsChecked="{Binding CodeFilterOptions.IgnoreCase}"/>
+          </StackPanel>
         </StackPanel>
 
+        <StackPanel Spacing="4">
+          <TextBlock Text="Data Filters:" />
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBox Grid.Column="0" 
+                     Text="{Binding NewDataTag}"
+                     Watermark="Enter data filter">
+              <TextBox.KeyBindings>
+                <KeyBinding Gesture="Enter"
+                            Command="{Binding AddDataTagCommand}"/>
+              </TextBox.KeyBindings>
+            </TextBox>
+            <Button Grid.Column="1"
+                    Content="Add"
+                    Command="{Binding AddDataTagCommand}"
+                    Margin="4,0,0,0"/>
+          </Grid>
+          <ItemsControl ItemsSource="{Binding DataTags}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <WrapPanel />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border Background="{DynamicResource SemiColorSecondary}"
+                        CornerRadius="4"
+                        Padding="8,4"
+                        Margin="0,2,4,2">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="{Binding Value}" 
+                               Foreground="White"
+                               VerticalAlignment="Center"/>
+                    <Button Content="×"
+                            Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).RemoveDataTagCommand}"
+                            CommandParameter="{Binding}"
+                            Padding="0"
+                            Background="Transparent"
+                            Foreground="White"/>
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,4,0,4">
+            <CheckBox Content="Exact Match" 
+                      IsChecked="{Binding DataFilterOptions.UseExactMatch}"/>
+            <CheckBox Content="Ignore Case" 
+                      IsChecked="{Binding DataFilterOptions.IgnoreCase}"/>
+          </StackPanel>
+        </StackPanel>
+        
         <StackPanel Spacing="4">
           <TextBlock Text="Line Range:" />
           <Grid ColumnDefinitions="*,Auto,*,Auto">
