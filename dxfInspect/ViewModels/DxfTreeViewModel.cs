@@ -35,6 +35,8 @@ public class DxfTreeViewModel : ReactiveObject
     private ObservableCollection<TagModel> _dataTags;
     private string _newCodeTag = "";
     private string _newDataTag = "";
+    private FilterOptions _codeFilterOptions;
+    private FilterOptions _dataFilterOptions;
 
     public DxfTreeViewModel()
     {
@@ -112,6 +114,16 @@ public class DxfTreeViewModel : ReactiveObject
         
         _codeTags = new ObservableCollection<TagModel>();
         _dataTags = new ObservableCollection<TagModel>();
+        _codeFilterOptions = new FilterOptions(useExactMatch: true, ignoreCase: true);
+        _dataFilterOptions = new FilterOptions(useExactMatch: false, ignoreCase: true);
+
+        this.WhenAnyValue(x => x.CodeFilterOptions.UseExactMatch,
+                x => x.CodeFilterOptions.IgnoreCase)
+            .Subscribe(_ => ApplyFilters());
+
+        this.WhenAnyValue(x => x.DataFilterOptions.UseExactMatch,
+                x => x.DataFilterOptions.IgnoreCase)
+            .Subscribe(_ => ApplyFilters());
 
         ExpandAllCommand = ReactiveCommand.CreateFromTask(ExpandAllAsync);
         CollapseAllCommand = ReactiveCommand.CreateFromTask(CollapseAllAsync);
@@ -251,7 +263,19 @@ public class DxfTreeViewModel : ReactiveObject
         get => _newDataTag;
         set => this.RaiseAndSetIfChanged(ref _newDataTag, value);
     }
+    
+    public FilterOptions CodeFilterOptions
+    {
+        get => _codeFilterOptions;
+        set => this.RaiseAndSetIfChanged(ref _codeFilterOptions, value);
+    }
 
+    public FilterOptions DataFilterOptions
+    {
+        get => _dataFilterOptions;
+        set => this.RaiseAndSetIfChanged(ref _dataFilterOptions, value);
+    }
+    
     public ITreeDataGridSource<DxfTreeNodeViewModel> Source => _source;
 
     public DxfTreeViewModel CreateFilteredView(DxfTreeNodeViewModel selectedNode)
@@ -405,7 +429,9 @@ public class DxfTreeViewModel : ReactiveObject
     private void ResetFilters()
     {
         ResetCode();
+        ResetCodeFilterOptions();
         ResetData();
+        ResetDataFilterOptions();
     }
 
     private void ResetCode()
@@ -435,7 +461,19 @@ public class DxfTreeViewModel : ReactiveObject
     {
         LineNumberEnd = OriginalEndLine;
     }
+    
+    public void ResetCodeFilterOptions()
+    {
+        CodeFilterOptions.UseExactMatch = true;
+        CodeFilterOptions.IgnoreCase = true;
+    }
 
+    public void ResetDataFilterOptions()
+    {
+        DataFilterOptions.UseExactMatch = false;
+        DataFilterOptions.IgnoreCase = true;
+    }
+    
     private async Task CopyCode(DxfTreeNodeViewModel? nodeView)
     {
         if (nodeView != null)
@@ -612,8 +650,9 @@ public class DxfTreeViewModel : ReactiveObject
             LineNumberStart = startLine;
             LineNumberEnd = endLine;
 
-            ResetCode();
-            ResetData();
+            // TODO:
+            // ResetCode();
+            // ResetData();
         }
     }
 
@@ -759,12 +798,26 @@ public class DxfTreeViewModel : ReactiveObject
                                 nodeView.EndLine <= (LineNumberEnd == 1 ? int.MaxValue : LineNumberEnd);
 
         bool matchesCode = CodeTags.Count == 0 || 
-                           CodeTags.Any(tag => nodeView.CodeString.Equals(tag.Value, StringComparison.OrdinalIgnoreCase));
+                           CodeTags.Any(tag => MatchesFilter(nodeView.CodeString, tag.Value, CodeFilterOptions));
 
         bool matchesData = DataTags.Count == 0 ||
-                           DataTags.Any(tag => nodeView.Data.Contains(tag.Value, StringComparison.OrdinalIgnoreCase));
+                           DataTags.Any(tag => MatchesFilter(nodeView.Data, tag.Value, DataFilterOptions));
 
         return matchesLineRange && matchesCode && matchesData;
+    }
+
+    private static bool MatchesFilter(string value, string filter, FilterOptions options)
+    {
+        if (string.IsNullOrEmpty(filter))
+            return true;
+
+        var comparison = options.IgnoreCase ? 
+            StringComparison.OrdinalIgnoreCase : 
+            StringComparison.Ordinal;
+
+        return options.UseExactMatch ? 
+            value.Equals(filter, comparison) : 
+            value.Contains(filter, comparison);
     }
 
     private bool HasMatchingDescendant(List<DxfTreeNodeViewModel> nodes)

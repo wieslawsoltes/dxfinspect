@@ -77,6 +77,12 @@
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
+          <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,4,0,4">
+            <CheckBox Content="Exact Match" 
+                      IsChecked="{Binding CodeFilterOptions.UseExactMatch}"/>
+            <CheckBox Content="Ignore Case" 
+                      IsChecked="{Binding CodeFilterOptions.IgnoreCase}"/>
+          </StackPanel>
         </StackPanel>
 
         <StackPanel Spacing="4">
@@ -122,6 +128,12 @@
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
+          <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,4,0,4">
+            <CheckBox Content="Exact Match" 
+                      IsChecked="{Binding DataFilterOptions.UseExactMatch}"/>
+            <CheckBox Content="Ignore Case" 
+                      IsChecked="{Binding DataFilterOptions.IgnoreCase}"/>
+          </StackPanel>
         </StackPanel>
         
         <StackPanel Spacing="4">
