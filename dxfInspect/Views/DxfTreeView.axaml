@@ -41,11 +41,21 @@
                              Text="{Binding NewCodeTag}"
                              ItemsSource="{Binding UniqueCodeValues}"
                              Watermark="Enter code filter"
-                             FilterMode="ContainsOrdinal">
+                             FilterMode="ContainsOrdinal"
+                             IsTextCompletionEnabled="True"
+                             MinimumPrefixLength="0">
               <AutoCompleteBox.KeyBindings>
                 <KeyBinding Gesture="Enter"
                             Command="{Binding AddCodeTagCommand}"/>
               </AutoCompleteBox.KeyBindings>
+              <AutoCompleteBox.Styles>
+                <Style Selector="AutoCompleteBox">
+                  <Setter Property="MaxDropDownHeight" Value="320"/>
+                </Style>
+                <Style Selector="AutoCompleteBox:focus-within">
+                  <Setter Property="IsDropDownOpen" Value="True"/>
+                </Style>
+              </AutoCompleteBox.Styles>
             </AutoCompleteBox>
             <Button Grid.Column="1"
                     Content="Add"
@@ -103,11 +113,21 @@
                              Text="{Binding NewDataTag}"
                              ItemsSource="{Binding UniqueDataValues}"
                              Watermark="Enter data filter"
-                             FilterMode="ContainsOrdinal">
+                             FilterMode="ContainsOrdinal"
+                             IsTextCompletionEnabled="True"
+                             MinimumPrefixLength="0">
               <AutoCompleteBox.KeyBindings>
                 <KeyBinding Gesture="Enter"
                             Command="{Binding AddDataTagCommand}"/>
               </AutoCompleteBox.KeyBindings>
+              <AutoCompleteBox.Styles>
+                <Style Selector="AutoCompleteBox">
+                  <Setter Property="MaxDropDownHeight" Value="320"/>
+                </Style>
+                <Style Selector="AutoCompleteBox:focus-within">
+                  <Setter Property="IsDropDownOpen" Value="True"/>
+                </Style>
+              </AutoCompleteBox.Styles>
             </AutoCompleteBox>
             <Button Grid.Column="1"
                     Content="Add"
