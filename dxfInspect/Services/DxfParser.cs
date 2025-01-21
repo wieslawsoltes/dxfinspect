@@ -146,18 +146,4 @@ public static class DxfParser
             currentSection.Children?.Add(tag);
         }
     }
-
-    /// <summary>
-    /// Parses a DXF file from a string (maintained for compatibility)
-    /// Note: For large files, prefer ParseStreamAsync directly
-    /// </summary>
-    public static async Task<IList<DxfRawTag>> ParseAsync(string text)
-    {
-        using var stream = new MemoryStream();
-        using var writer = new StreamWriter(stream);
-        await writer.WriteAsync(text).ConfigureAwait(false);
-        await writer.FlushAsync().ConfigureAwait(false);
-        stream.Position = 0;
-        return await ParseStreamAsync(stream).ConfigureAwait(false);
-    }
 }
