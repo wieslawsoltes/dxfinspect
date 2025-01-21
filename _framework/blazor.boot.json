@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "dxfInspectWeb.dll",
   "resources": {
-    "hash": "sha256-RqQ2fnxxHYrDxMLcFSk1RmXNauknaJTheX6IWF584gY=",
+    "hash": "sha256-WP8zP6FijBeuFoUS7LgYaKDd761q3dOmvxZ+wf8X+LU=",
     "jsModuleNative": {
       "dotnet.native.js": "sha256-bNPuqe+Q5Pdi/MB/jgvCs0kSZAOA4X61tdIQel6F+f8="
     },
@@ -9,7 +9,7 @@
       "dotnet.runtime.js": "sha256-gypqZnsxxUh4y4EJmawvOCaX4hoTaesVGwIgWXwZcNw="
     },
     "wasmNative": {
-      "dotnet.native.wasm": "sha256-G/1Oag7V/W2L15Kqse9iHsFl6TV/STJcaLiy7gZVYqg="
+      "dotnet.native.wasm": "sha256-ZUbArKYpDhck+tifzR/ItH6+EY8I9D7K8ZBsQUpTm58="
     },
     "wasmSymbols": {
       "dotnet.native.js.symbols": "sha256-owZRsHNjimLNi1Uspq14Ze0rwxvbu/SlGDIH4DYL+c8="
@@ -20,7 +20,7 @@
       "icudt_no_CJK.dat": "sha256-L7sV7NEYP37/Qr2FPCePo5cJqRgTXRwGHuwF5Q+0Nfs="
     },
     "coreAssembly": {
-      "System.Private.CoreLib.wasm": "sha256-nMNB2zBLE53eD4mOnDs3quBXm0gXEr+9Uyji9FJQd8Y=",
+      "System.Private.CoreLib.wasm": "sha256-DbM2W8Y/LL1rqsoZ2uY8yWjF1TcpeGM3CVRSFpl+xqU=",
       "System.Runtime.InteropServices.JavaScript.wasm": "sha256-Ec2+eLiRn9w7Mmvl+xX35w5MyAYUnCOlXS6ZJ6LtCzc="
     },
     "assembly": {
@@ -36,8 +36,8 @@
       "Avalonia.OpenGL.wasm": "sha256-LM9kljWbhpggNnyPYtbx2i8rRRxI5Fe2/tKrVhnOyJE=",
       "Avalonia.Skia.wasm": "sha256-BF4ONNev3OECIdp9yUOsl3jdKYFqnuGO7D6EwjQGewA=",
       "Avalonia.Vulkan.wasm": "sha256-ieRDwObyb+7bJBMBF1R0BwZ9OyNkcJYVlIG6nZXMSUg=",
-      "dxfInspect.wasm": "sha256-hPGzOUq6daiUrc/j3531uYuEetS5mGo7WH242RorPUc=",
-      "dxfInspectWeb.wasm": "sha256-Vb/PZ6NwmL4O1+0rFJA0GnfuY19BUgx2jGjWem2hePU=",
+      "dxfInspect.wasm": "sha256-G2iZAUX3IIX4E4UlId/gnrGJxwG/jL1hD3yzaDYTSNM=",
+      "dxfInspectWeb.wasm": "sha256-u1jBFPy7wnUntNxAEeHQ3ulJicqdb2WcgYjTt4UixCE=",
       "HarfBuzzSharp.wasm": "sha256-0zIlPKg6RDaxWftK9ugwZrU9c1b6Juj2TVKyBwe/EWw=",
       "ReactiveUI.wasm": "sha256-j28P9hbhnErLUq9PL+s1e0sckbEYkT8BtlB9FlLh2qo=",
       "Semi.Avalonia.wasm": "sha256-Fp6HwmckMeDNiuccsX3ZlxxI6q3HecihwrkU55S5ngI=",
