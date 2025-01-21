@@ -11,7 +11,6 @@ public class MainViewModel : ReactiveObject
 {
     private ObservableCollection<DxfTabViewModel> _tabs;
     private DxfTabViewModel? _selectedTab;
-    private int _newTabCounter = 1;
 
     public MainViewModel()
     {
