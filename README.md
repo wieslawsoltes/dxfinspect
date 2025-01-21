@@ -7,7 +7,10 @@ A cross-platform DXF file viewer and inspector built with [Avalonia UI](https://
 
 ![MIT License](https://img.shields.io/github/license/wieslawsoltes/dxfinspect)
 
-![image](https://github.com/user-attachments/assets/80e61429-964c-4701-8167-e77547b67b62)
+![image](https://github.com/user-attachments/assets/6886a6c5-b5d6-490c-aef1-42e8f6156534)
+![image](https://github.com/user-attachments/assets/7587620e-58f5-4552-928e-f8837030a6d9)
+![image](https://github.com/user-attachments/assets/60070e6d-9839-4b6d-ba09-34f49548cda3)
+![image](https://github.com/user-attachments/assets/c23a000e-cd81-42c4-8f1c-6716efa5f161)
 
 ## Features
 
