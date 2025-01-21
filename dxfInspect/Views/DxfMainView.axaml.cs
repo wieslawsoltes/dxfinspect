@@ -59,8 +59,16 @@ public partial class DxfMainView : UserControl
                 foreach (var file in files)
                 {
                     await using var stream = await file.OpenReadAsync();
+                
+                    var parseStopwatch = System.Diagnostics.Stopwatch.StartNew();
                     var sections = await DxfParser.ParseStreamAsync(stream);
+                    parseStopwatch.Stop();
+                    Console.WriteLine($"ParseStreamAsync for {file.Name} took {parseStopwatch.ElapsedMilliseconds}ms");
+
+                    var addTabStopwatch = System.Diagnostics.Stopwatch.StartNew();
                     _viewModel.AddNewFileTab(sections, file.Name);
+                    addTabStopwatch.Stop();
+                    Console.WriteLine($"AddNewFileTab for {file.Name} took {addTabStopwatch.ElapsedMilliseconds}ms");
                 }
             }
         }
