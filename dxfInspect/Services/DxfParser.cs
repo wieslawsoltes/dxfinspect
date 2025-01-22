@@ -1,7 +1,8 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 using dxfInspect.Model;
 
 namespace dxfInspect.Services;
@@ -22,7 +23,7 @@ public static class DxfParser
         var currentTag = default(DxfRawTag);
 
         using var reader = new StreamReader(stream, bufferSize: BufferSize);
-        int lineNumber = 0;
+        var lineNumber = 0;
 
         string? groupCodeLine;
         while ((groupCodeLine = reader.ReadLine()) != null)
@@ -33,23 +34,24 @@ public static class DxfParser
             lineNumber++;
 
             // Store original lines before any trimming
-            string originalGroupCodeLine = groupCodeLine;
-            string originalDataLine = dataLine;
+            var originalGroupCodeLine = groupCodeLine;
+            var originalDataLine = dataLine;
 
-            // Fully trim both group code and data lines
-            groupCodeLine = groupCodeLine.Trim();
-            dataLine = dataLine.Trim(); // Trim both ends as DXF doesn't use significant whitespace
+            // Use spans for processing to avoid allocations
+            var groupCodeSpan = groupCodeLine.AsSpan().Trim();
+            var dataSpan = dataLine.AsSpan().Trim();
 
-            var groupCode = ParseGroupCode(groupCodeLine);
+            var groupCode = ParseGroupCode(groupCodeSpan);
             var isEntityWithType = groupCode == DxfCodeForType;
 
-            if (ShouldCreateTag(groupCode, dataLine, sectionStack.Count))
+            if (ShouldCreateTag(groupCode, dataSpan))
             {
-                var tag = CreateTag(groupCode, dataLine, lineNumber - 1, originalGroupCodeLine, originalDataLine);
-                
+                var tag = CreateTag(groupCode, dataSpan.ToString(), lineNumber - 1, 
+                    originalGroupCodeLine, originalDataLine);
+
                 if (isEntityWithType)
                 {
-                    ProcessTypeTag(tag, dataLine, sections, sectionStack, ref currentTag);
+                    ProcessTypeTag(tag, dataSpan, sections, sectionStack, ref currentTag);
                 }
                 else if (sectionStack.Count > 0)
                 {
@@ -65,44 +67,34 @@ public static class DxfParser
         return sections;
     }
 
-    private static int ParseGroupCode(string line)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int ParseGroupCode(ReadOnlySpan<char> span)
     {
         // Fast path for common single-digit group codes
-        if (line.Length == 1 && line[0] >= '0' && line[0] <= '9')
+        if (span.Length == 1 && span[0] >= '0' && span[0] <= '9')
         {
-            return line[0] - '0';
+            return span[0] - '0';
         }
 
-        // Use Span to avoid string allocations during parsing
-        ReadOnlySpan<char> span = line.AsSpan().Trim();
         return int.Parse(span);
     }
 
-    private static bool ShouldCreateTag(int groupCode, string dataLine, int stackCount)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool ShouldCreateTag(int groupCode, ReadOnlySpan<char> dataLine)
     {
         return true; // Accept all tags for now
     }
 
-    private static DxfRawTag CreateTag(int groupCode, string dataElement, int lineNumber, 
-        string originalGroupCodeLine, string originalDataLine)
+    private static bool MatchesSpan(ReadOnlySpan<char> span, string value)
     {
-        return new DxfRawTag
-        {
-            GroupCode = groupCode,
-            DataElement = dataElement, // Fully trimmed
-            LineNumber = lineNumber,
-            OriginalGroupCodeLine = originalGroupCodeLine,
-            OriginalDataLine = originalDataLine,
-            IsEnabled = true,
-            Children = new List<DxfRawTag>()
-        };
+        return span.Equals(value.AsSpan(), StringComparison.Ordinal);
     }
 
-    private static void ProcessTypeTag(DxfRawTag tag, string dataElement, 
+    private static void ProcessTypeTag(DxfRawTag tag, ReadOnlySpan<char> dataElement,
         List<DxfRawTag> sections, Stack<DxfRawTag> sectionStack, ref DxfRawTag? currentTag)
     {
-        var isSectionStart = dataElement == DxfCodeNameSection;
-        var isSectionEnd = dataElement == DxfCodeNameEndsec;
+        var isSectionStart = MatchesSpan(dataElement, DxfCodeNameSection);
+        var isSectionEnd = MatchesSpan(dataElement, DxfCodeNameEndsec);
 
         if (isSectionStart)
         {
@@ -130,6 +122,7 @@ public static class DxfParser
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void ProcessRegularTag(DxfRawTag tag, DxfRawTag currentSection, DxfRawTag? currentTag)
     {
         if (currentTag != null)
@@ -142,5 +135,21 @@ public static class DxfParser
             tag.Parent = currentSection;
             currentSection.Children?.Add(tag);
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static DxfRawTag CreateTag(int groupCode, string dataElement, int lineNumber,
+        string originalGroupCodeLine, string originalDataLine)
+    {
+        return new DxfRawTag
+        {
+            GroupCode = groupCode,
+            DataElement = dataElement,
+            LineNumber = lineNumber,
+            OriginalGroupCodeLine = originalGroupCodeLine,
+            OriginalDataLine = originalDataLine,
+            IsEnabled = true,
+            Children = new List<DxfRawTag>()
+        };
     }
 }
