@@ -141,9 +141,7 @@ public class DxfTreeViewModel : ReactiveObject
                 x => x.LineNumberStart,
                 x => x.LineNumberEnd,
                 x => x._shouldApplyFilters)
-            .Throttle(TimeSpan.FromMilliseconds(100))
             .Where(_ => _shouldApplyFilters)
-            .ObserveOn(RxApp.MainThreadScheduler)
             .Subscribe(_ => ApplyFilters());
 
         // Monitor code tags collection changes
