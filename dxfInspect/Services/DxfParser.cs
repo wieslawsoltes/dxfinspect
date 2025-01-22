@@ -6,10 +6,6 @@ using dxfInspect.Model;
 
 namespace dxfInspect.Services;
 
-/// <summary>
-/// Memory-optimized parser for DXF (Drawing Exchange Format) files.
-/// Uses streaming and minimal memory allocation to process large files efficiently.
-/// </summary>
 public static class DxfParser
 {
     public const int DxfCodeForType = 0;
@@ -17,11 +13,8 @@ public static class DxfParser
     public const string DxfCodeNameSection = "SECTION";
     public const string DxfCodeNameEndsec = "ENDSEC";
 
-    private const int BufferSize = 4096; // Use a reasonable buffer size for reading
+    private const int BufferSize = 4096;
 
-    /// <summary>
-    /// Parses a DXF file using streaming to minimize memory usage with optimized buffering
-    /// </summary>
     public static async Task<IList<DxfRawTag>> ParseStreamAsync(Stream stream)
     {
         var sections = new List<DxfRawTag>();
@@ -39,18 +32,24 @@ public static class DxfParser
             if (dataLine == null) break;
             lineNumber++;
 
-            // Only trim if necessary and avoid string allocations when possible
+            // Store original lines before any trimming
+            string originalGroupCodeLine = groupCodeLine;
+            string originalDataLine = dataLine;
+
+            // Fully trim both group code and data lines
+            groupCodeLine = groupCodeLine.Trim();
+            dataLine = dataLine.Trim(); // Trim both ends as DXF doesn't use significant whitespace
+
             var groupCode = ParseGroupCode(groupCodeLine);
             var isEntityWithType = groupCode == DxfCodeForType;
 
-            // Create tag only if needed based on filters or hierarchy
             if (ShouldCreateTag(groupCode, dataLine, sectionStack.Count))
             {
-                var tag = CreateTag(groupCode, dataLine.TrimEnd(), lineNumber - 1, groupCodeLine, dataLine);
+                var tag = CreateTag(groupCode, dataLine, lineNumber - 1, originalGroupCodeLine, originalDataLine);
                 
                 if (isEntityWithType)
                 {
-                    ProcessTypeTag(tag, dataLine.TrimEnd(), sections, sectionStack, ref currentTag);
+                    ProcessTypeTag(tag, dataLine, sections, sectionStack, ref currentTag);
                 }
                 else if (sectionStack.Count > 0)
                 {
@@ -75,15 +74,13 @@ public static class DxfParser
         }
 
         // Use Span to avoid string allocations during parsing
-        ReadOnlySpan<char> span = line.AsSpan().TrimEnd();
+        ReadOnlySpan<char> span = line.AsSpan().Trim();
         return int.Parse(span);
     }
 
     private static bool ShouldCreateTag(int groupCode, string dataLine, int stackCount)
     {
-        // Add your filtering logic here
-        // For example, skip purely geometric data for visualization if not needed
-        return true; // For now, accept all tags
+        return true; // Accept all tags for now
     }
 
     private static DxfRawTag CreateTag(int groupCode, string dataElement, int lineNumber, 
@@ -92,12 +89,12 @@ public static class DxfParser
         return new DxfRawTag
         {
             GroupCode = groupCode,
-            DataElement = dataElement,
+            DataElement = dataElement, // Fully trimmed
             LineNumber = lineNumber,
             OriginalGroupCodeLine = originalGroupCodeLine,
             OriginalDataLine = originalDataLine,
             IsEnabled = true,
-            Children = new List<DxfRawTag>() // Initialize only when needed
+            Children = new List<DxfRawTag>()
         };
     }
 
