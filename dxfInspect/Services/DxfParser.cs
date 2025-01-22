@@ -15,52 +15,79 @@ public static class DxfParser
 
     private const int BufferSize = 4096;
 
-    public static async Task<IList<DxfRawTag>> ParseStreamAsync(Stream stream)
+    public class ParsingProgress
+    {
+        public long CurrentPosition { get; set; }
+        public long TotalSize { get; set; }
+        public double ProgressPercentage => TotalSize == 0 ? 0 : (double)CurrentPosition / TotalSize * 100;
+        public string CurrentSection { get; set; } = string.Empty;
+        public Exception? Error { get; set; }
+    }
+
+    public static async Task<IList<DxfRawTag>> ParseStreamAsync(Stream stream, IProgress<ParsingProgress>? progress = null)
     {
         var sections = new List<DxfRawTag>();
         var sectionStack = new Stack<DxfRawTag>();
         var currentTag = default(DxfRawTag);
+        var parsingProgress = new ParsingProgress { TotalSize = stream.Length };
 
-        using var reader = new StreamReader(stream, bufferSize: BufferSize);
-        var lineNumber = 0;
-
-        string? groupCodeLine;
-        while ((groupCodeLine = await reader.ReadLineAsync()) != null)
+        try
         {
-            lineNumber++;
-            var dataLine = await reader.ReadLineAsync();
-            if (dataLine == null) break;
-            lineNumber++;
+            using var reader = new StreamReader(stream, bufferSize: BufferSize);
+            var lineNumber = 0;
 
-            // Store original lines before any trimming
-            var originalGroupCodeLine = groupCodeLine;
-            var originalDataLine = dataLine;
-
-            // Use spans for processing to avoid allocations
-            var groupCodeSpan = groupCodeLine.AsSpan().Trim();
-            var dataSpan = dataLine.AsSpan().Trim();
-
-            var groupCode = ParseGroupCode(groupCodeSpan);
-            var isEntityWithType = groupCode == DxfCodeForType;
-
-            var tag = CreateTag(groupCode, dataSpan.ToString(), lineNumber - 1, 
-                originalGroupCodeLine, originalDataLine);
-
-            if (isEntityWithType)
+            string? groupCodeLine;
+            while ((groupCodeLine = await reader.ReadLineAsync()) != null)
             {
-                ProcessTypeTag(tag, dataSpan, sections, sectionStack, ref currentTag);
+                lineNumber++;
+                var dataLine = await reader.ReadLineAsync();
+                if (dataLine == null) break;
+                lineNumber++;
+
+                // Update progress
+                parsingProgress.CurrentPosition = stream.Position;
+                if (sectionStack.Count > 0 && sectionStack.Peek().DataElement != null)
+                {
+                    parsingProgress.CurrentSection = sectionStack.Peek().DataElement;
+                }
+                progress?.Report(parsingProgress);
+
+                // Store original lines before any trimming
+                var originalGroupCodeLine = groupCodeLine;
+                var originalDataLine = dataLine;
+
+                // Use spans for processing to avoid allocations
+                var groupCodeSpan = groupCodeLine.AsSpan().Trim();
+                var dataSpan = dataLine.AsSpan().Trim();
+
+                var groupCode = ParseGroupCode(groupCodeSpan);
+                var isEntityWithType = groupCode == DxfCodeForType;
+
+                var tag = CreateTag(groupCode, dataSpan.ToString(), lineNumber - 1, 
+                    originalGroupCodeLine, originalDataLine);
+
+                if (isEntityWithType)
+                {
+                    ProcessTypeTag(tag, dataSpan, sections, sectionStack, ref currentTag);
+                }
+                else if (sectionStack.Count > 0)
+                {
+                    ProcessRegularTag(tag, sectionStack.Peek(), currentTag);
+                }
+                else
+                {
+                    sections.Add(tag);
+                }
             }
-            else if (sectionStack.Count > 0)
-            {
-                ProcessRegularTag(tag, sectionStack.Peek(), currentTag);
-            }
-            else
-            {
-                sections.Add(tag);
-            }
+
+            return sections;
         }
-
-        return sections;
+        catch (Exception ex)
+        {
+            parsingProgress.Error = ex;
+            progress?.Report(parsingProgress);
+            throw;
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
