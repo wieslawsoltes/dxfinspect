@@ -76,6 +76,10 @@ public class MainViewModel : ReactiveObject
         LoadingProgress = 0;
         CurrentSection = string.Empty;
 
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        var parsingTime = TimeSpan.Zero;
+        var viewModelTime = TimeSpan.Zero;
+
         try
         {
             await using var stream = await file.OpenReadAsync();
@@ -90,14 +94,21 @@ public class MainViewModel : ReactiveObject
                 }
             });
 
+            var parsingStopwatch = System.Diagnostics.Stopwatch.StartNew();
             var sections = await DxfParser.ParseStreamAsync(stream, progress);
+            parsingStopwatch.Stop();
+            parsingTime = parsingStopwatch.Elapsed;
 
             CurrentSection = "Creating view model";
             LoadingProgress = ParsingWeight * 100; // Parsing complete
 
             // Increment reference count when adding new tab
             DxfRawTagCache.Instance.IncrementReferenceCount();
+
+            var vmStopwatch = System.Diagnostics.Stopwatch.StartNew();
             await AddNewFileTabAsync(sections, file.Name);
+            vmStopwatch.Stop();
+            viewModelTime = vmStopwatch.Elapsed;
         }
         catch (Exception ex)
         {
@@ -107,6 +118,12 @@ public class MainViewModel : ReactiveObject
         }
         finally
         {
+            sw.Stop();
+            Console.WriteLine($"Performance Report for {file.Name}:");
+            Console.WriteLine($"  Total time: {sw.Elapsed.TotalMilliseconds:F0}ms");
+            Console.WriteLine($"  Parsing time: {parsingTime.TotalMilliseconds:F0}ms");
+            Console.WriteLine($"  ViewModel creation time: {viewModelTime.TotalMilliseconds:F0}ms");
+
             LoadingProgress = 100;
             IsLoading = false;
         }
