@@ -303,7 +303,7 @@ public class DxfTreeViewModel : ReactiveObject
     public DxfTreeViewModel CreateFilteredView(DxfTreeNodeViewModel selectedNode)
     {
         var filteredViewModel = new DxfTreeViewModel();
-        filteredViewModel.FileName = this.FileName; // Propagate filename
+        filteredViewModel.FileName = this.FileName;
         filteredViewModel.HasLoadedFile = true;
         var rawTags = new List<DxfRawTag>();
 
@@ -314,11 +314,13 @@ public class DxfTreeViewModel : ReactiveObject
                 GroupCode = selectedNode.RawTag.GroupCode,
                 DataElement = selectedNode.RawTag.DataElement,
                 IsEnabled = selectedNode.RawTag.IsEnabled,
+                LineNumber = selectedNode.StartLine,
                 OriginalGroupCodeLine = selectedNode.RawTag.OriginalGroupCodeLine,
                 OriginalDataLine = selectedNode.RawTag.OriginalDataLine,
                 Children = new List<DxfRawTag>()
             };
 
+            // Deep copy all children while preserving line numbers
             if (selectedNode.RawTag.Children != null)
             {
                 foreach (var child in selectedNode.RawTag.Children)
@@ -328,16 +330,39 @@ public class DxfTreeViewModel : ReactiveObject
             }
 
             rawTags.Add(rootTag);
-        }
 
-        // Pass the original start line to maintain line numbering
-        filteredViewModel._allNodes = ConvertToTreeNodes(rawTags, selectedNode.StartLine);
-        // Store original line range
-        filteredViewModel.OriginalStartLine = selectedNode.StartLine;
-        filteredViewModel.OriginalEndLine = selectedNode.EndLine;
-        filteredViewModel.LineNumberStart = selectedNode.StartLine;
-        filteredViewModel.LineNumberEnd = selectedNode.EndLine;
-        filteredViewModel.ApplyFilters();
+            // Store original line range
+            filteredViewModel.OriginalStartLine = selectedNode.StartLine;
+            filteredViewModel.OriginalEndLine = selectedNode.EndLine;
+            filteredViewModel.LineNumberStart = selectedNode.StartLine;
+            filteredViewModel.LineNumberEnd = selectedNode.EndLine;
+
+            // Convert to tree nodes with correct line numbers
+            filteredViewModel._allNodes = ConvertToTreeNodes(rawTags, selectedNode.StartLine);
+            
+            // Important: Initialize the source items AFTER setting up _allNodes
+            filteredViewModel._shouldApplyFilters = true;
+            filteredViewModel.ApplyFilters();
+            
+            // Copy any existing filters if needed
+            if (CodeTags.Any() || DataTags.Any())
+            {
+                foreach (var tag in CodeTags)
+                {
+                    filteredViewModel.CodeTags.Add(new TagModel(tag.Value));
+                }
+                foreach (var tag in DataTags)
+                {
+                    filteredViewModel.DataTags.Add(new TagModel(tag.Value));
+                }
+                
+                // Copy filter options
+                filteredViewModel.CodeFilterOptions.UseExactMatch = CodeFilterOptions.UseExactMatch;
+                filteredViewModel.CodeFilterOptions.IgnoreCase = CodeFilterOptions.IgnoreCase;
+                filteredViewModel.DataFilterOptions.UseExactMatch = DataFilterOptions.UseExactMatch;
+                filteredViewModel.DataFilterOptions.IgnoreCase = DataFilterOptions.IgnoreCase;
+            }
+        }
 
         return filteredViewModel;
     }
@@ -349,6 +374,7 @@ public class DxfTreeViewModel : ReactiveObject
             GroupCode = source.GroupCode,
             DataElement = source.DataElement,
             IsEnabled = source.IsEnabled,
+            LineNumber = source.LineNumber, // Preserve line number
             OriginalGroupCodeLine = source.OriginalGroupCodeLine,
             OriginalDataLine = source.OriginalDataLine,
             Parent = parent,

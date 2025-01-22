@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
 using dxfInspect.Model;
+using dxfInspect.Services;
 using ReactiveUI;
 
 namespace dxfInspect.ViewModels;
@@ -50,19 +51,13 @@ public class MainViewModel : ReactiveObject
         if (filteredViewModel != null && SelectedTab != null)
         {
             // Get the base filename without path
-            string baseFileName = System.IO.Path.GetFileName(SelectedTab.Title);
+            string baseFileName = System.IO.Path.GetFileName(SelectedTab.Title.Split(" - ")[0]);
             
-            // Create suffix using DATA value and line range
-            string objectData = node.Data;
+            // Create suffix using entity type and line range
+            string entityType = node.Code == DxfParser.DxfCodeForType ? node.Data : $"Code {node.Code}";
             string lineRange = $"[{node.LineRange}]";
             
-            // Truncate data if too long (e.g., over 20 chars)
-            if (objectData.Length > 20)
-            {
-                objectData = objectData.Substring(0, 17) + "...";
-            }
-            
-            var newTitle = $"{baseFileName} - {objectData} {lineRange}";
+            var newTitle = $"{baseFileName} - {entityType} {lineRange}";
             var newTab = new DxfTabViewModel(newTitle, filteredViewModel);
             Tabs.Add(newTab);
             SelectedTab = newTab;
