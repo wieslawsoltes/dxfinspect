@@ -3,6 +3,7 @@ using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
 using dxfInspect.Services;
@@ -61,7 +62,7 @@ public partial class DxfMainView : UserControl
                     await using var stream = await file.OpenReadAsync();
                 
                     var parseStopwatch = System.Diagnostics.Stopwatch.StartNew();
-                    var sections = await DxfParser.ParseStreamAsync(stream);
+                    var sections = await Task.Run(() => DxfParser.ParseStream(stream));
                     parseStopwatch.Stop();
                     Console.WriteLine($"ParseStreamAsync for {file.Name} took {parseStopwatch.ElapsedMilliseconds}ms");
 

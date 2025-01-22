@@ -15,7 +15,7 @@ public static class DxfParser
 
     private const int BufferSize = 4096;
 
-    public static async Task<IList<DxfRawTag>> ParseStreamAsync(Stream stream)
+    public static IList<DxfRawTag> ParseStream(Stream stream)
     {
         var sections = new List<DxfRawTag>();
         var sectionStack = new Stack<DxfRawTag>();
@@ -25,10 +25,10 @@ public static class DxfParser
         int lineNumber = 0;
 
         string? groupCodeLine;
-        while ((groupCodeLine = await reader.ReadLineAsync().ConfigureAwait(false)) != null)
+        while ((groupCodeLine = reader.ReadLine()) != null)
         {
             lineNumber++;
-            var dataLine = await reader.ReadLineAsync().ConfigureAwait(false);
+            var dataLine = reader.ReadLine();
             if (dataLine == null) break;
             lineNumber++;
 
