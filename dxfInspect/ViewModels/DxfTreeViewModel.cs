@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -37,6 +38,7 @@ public class DxfTreeViewModel : ReactiveObject
     private FilterOptions _dataFilterOptions;
     private ObservableCollection<string> _uniqueCodeValues = new();
     private ObservableCollection<string> _uniqueDataValues = new();
+    private bool _shouldApplyFilters;
 
     public DxfTreeViewModel()
     {
@@ -134,6 +136,35 @@ public class DxfTreeViewModel : ReactiveObject
                 x => x.DataFilterOptions.IgnoreCase)
             .Subscribe(_ => ApplyFilters());
 
+        // Set up reactive properties to trigger filter application
+        this.WhenAnyValue(
+                x => x.LineNumberStart,
+                x => x.LineNumberEnd,
+                x => x._shouldApplyFilters)
+            .Throttle(TimeSpan.FromMilliseconds(100))
+            .Where(_ => _shouldApplyFilters)
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(_ => ApplyFilters());
+
+        // Monitor code tags collection changes
+        this.WhenAnyValue(x => x.CodeTags.Count)
+            .Where(_ => _shouldApplyFilters)
+            .Subscribe(_ => ApplyFilters());
+
+        // Monitor data tags collection changes
+        this.WhenAnyValue(x => x.DataTags.Count)
+            .Where(_ => _shouldApplyFilters)
+            .Subscribe(_ => ApplyFilters());
+
+        // Set up filter options monitoring
+        this.WhenAnyValue(
+                x => x.CodeFilterOptions.UseExactMatch,
+                x => x.CodeFilterOptions.IgnoreCase,
+                x => x.DataFilterOptions.UseExactMatch,
+                x => x.DataFilterOptions.IgnoreCase)
+            .Where(_ => _shouldApplyFilters)
+            .Subscribe(_ => ApplyFilters());
+        
         ExpandAllCommand = ReactiveCommand.CreateFromTask(ExpandAllAsync);
         CollapseAllCommand = ReactiveCommand.CreateFromTask(CollapseAllAsync);
         FilterByLineRangeCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(FilterByLineRange);
@@ -200,21 +231,13 @@ public class DxfTreeViewModel : ReactiveObject
     public int LineNumberStart
     {
         get => _lineNumberStart;
-        set
-        {
-            this.RaiseAndSetIfChanged(ref _lineNumberStart, value);
-            ApplyFilters();
-        }
+        set => this.RaiseAndSetIfChanged(ref _lineNumberStart, value);
     }
 
     public int LineNumberEnd
     {
         get => _lineNumberEnd;
-        set
-        {
-            this.RaiseAndSetIfChanged(ref _lineNumberEnd, value);
-            ApplyFilters();
-        }
+        set => this.RaiseAndSetIfChanged(ref _lineNumberEnd, value);
     }
 
     public bool HasLoadedFile
@@ -347,35 +370,44 @@ public class DxfTreeViewModel : ReactiveObject
 
     public void LoadDxfData(IList<DxfRawTag> sections, string fileName)
     {
-        FileName = fileName;
-        _expandedNodes.Clear();
-
-        _allNodes = ConvertToTreeNodes(sections);
-
-        if (_allNodes.Any())
+        _shouldApplyFilters = false;
+        try 
         {
-            var allNodes = _allNodes.SelectMany(GetAllNodes).ToList();
-            OriginalEndLine = allNodes.Max(n => n.EndLine);
-            LineNumberEnd = OriginalEndLine;
-            OriginalStartLine = 1;
-            LineNumberStart = 1;
+            FileName = fileName;
+            _expandedNodes.Clear();
 
-            // Populate unique values
-            var codes = new HashSet<string>();
-            var data = new HashSet<string>();
+            _allNodes = ConvertToTreeNodes(sections);
 
-            foreach (var node in allNodes)
+            if (_allNodes.Any())
             {
-                codes.Add(node.CodeString);
-                data.Add(node.Data);
+                var allNodes = _allNodes.SelectMany(GetAllNodes).ToList();
+                OriginalEndLine = allNodes.Max(n => n.EndLine);
+                LineNumberEnd = OriginalEndLine;
+                OriginalStartLine = 1;
+                LineNumberStart = 1;
+
+                // Populate unique values
+                var codes = new HashSet<string>();
+                var data = new HashSet<string>();
+
+                foreach (var node in allNodes)
+                {
+                    codes.Add(node.CodeString);
+                    data.Add(node.Data);
+                }
+
+                UniqueCodeValues = new ObservableCollection<string>(codes.OrderBy(x => x));
+                UniqueDataValues = new ObservableCollection<string>(data.OrderBy(x => x));
             }
 
-            UniqueCodeValues = new ObservableCollection<string>(codes.OrderBy(x => x));
-            UniqueDataValues = new ObservableCollection<string>(data.OrderBy(x => x));
+            HasLoadedFile = true;
+            _shouldApplyFilters = true;
+            ApplyFilters();
         }
-
-        HasLoadedFile = true;
-        ApplyFilters();
+        finally 
+        {
+            _shouldApplyFilters = true;
+        }
     }
 
     private async Task ExpandAllAsync(CancellationToken cancellationToken)
@@ -442,11 +474,21 @@ public class DxfTreeViewModel : ReactiveObject
 
     private void ResetFilters()
     {
-        ResetCode();
-        ResetCodeFilterOptions();
-        ResetData();
-        ResetDataFilterOptions();
+        _shouldApplyFilters = false;
+        try 
+        {
+            ResetCode();
+            ResetCodeFilterOptions();
+            ResetData();
+            ResetDataFilterOptions();
+        }
+        finally 
+        {
+            _shouldApplyFilters = true;
+            ApplyFilters();
+        }
     }
+
 
     private void ResetCode()
     {
@@ -459,11 +501,20 @@ public class DxfTreeViewModel : ReactiveObject
         DataTags.Clear();
         NewDataTag = "";
     }
-
+    
     private void ResetLineRange()
     {
-        ResetLineNumberStart();
-        ResetLineNumberEnd();
+        _shouldApplyFilters = false;
+        try 
+        {
+            ResetLineNumberStart();
+            ResetLineNumberEnd();
+        }
+        finally 
+        {
+            _shouldApplyFilters = true;
+            ApplyFilters();
+        }
     }
 
     private void ResetLineNumberStart()
@@ -516,9 +567,17 @@ public class DxfTreeViewModel : ReactiveObject
     {
         if (!string.IsNullOrWhiteSpace(NewCodeTag))
         {
-            CodeTags.Add(new TagModel(NewCodeTag));
-            NewCodeTag = "";
-            ApplyFilters();
+            _shouldApplyFilters = false;
+            try 
+            {
+                CodeTags.Add(new TagModel(NewCodeTag));
+                NewCodeTag = "";
+            }
+            finally 
+            {
+                _shouldApplyFilters = true;
+                ApplyFilters();
+            }
         }
     }
 
@@ -534,9 +593,17 @@ public class DxfTreeViewModel : ReactiveObject
     {
         if (!string.IsNullOrWhiteSpace(NewDataTag))
         {
-            DataTags.Add(new TagModel(NewDataTag));
-            NewDataTag = "";
-            ApplyFilters();
+            _shouldApplyFilters = false;
+            try 
+            {
+                DataTags.Add(new TagModel(NewDataTag));
+                NewDataTag = "";
+            }
+            finally 
+            {
+                _shouldApplyFilters = true;
+                ApplyFilters();
+            }
         }
     }
 
@@ -714,6 +781,11 @@ public class DxfTreeViewModel : ReactiveObject
 
     private void ApplyFilters()
     {
+        if (!_shouldApplyFilters || !HasLoadedFile)
+        {
+            return;
+        }
+
         var filteredNodes = FilterNodes(_allNodes);
         _source.Items = filteredNodes;
     }
