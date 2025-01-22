@@ -62,7 +62,7 @@ public partial class DxfMainView : UserControl
                     await using var stream = await file.OpenReadAsync();
                 
                     var parseStopwatch = System.Diagnostics.Stopwatch.StartNew();
-                    var sections = await Task.Run(() => DxfParser.ParseStream(stream));
+                    var sections = await DxfParser.ParseStreamAsync(stream);
                     parseStopwatch.Stop();
                     Console.WriteLine($"ParseStreamAsync for {file.Name} took {parseStopwatch.ElapsedMilliseconds}ms");
 

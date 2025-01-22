@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using dxfInspect.Model;
 
 namespace dxfInspect.Services;
@@ -10,13 +10,12 @@ namespace dxfInspect.Services;
 public static class DxfParser
 {
     public const int DxfCodeForType = 0;
-    public const int DxfCodeForName = 2;
     public const string DxfCodeNameSection = "SECTION";
     public const string DxfCodeNameEndsec = "ENDSEC";
 
     private const int BufferSize = 4096;
 
-    public static IList<DxfRawTag> ParseStream(Stream stream)
+    public static async Task<IList<DxfRawTag>> ParseStreamAsync(Stream stream)
     {
         var sections = new List<DxfRawTag>();
         var sectionStack = new Stack<DxfRawTag>();
@@ -26,10 +25,10 @@ public static class DxfParser
         var lineNumber = 0;
 
         string? groupCodeLine;
-        while ((groupCodeLine = reader.ReadLine()) != null)
+        while ((groupCodeLine = await reader.ReadLineAsync()) != null)
         {
             lineNumber++;
-            var dataLine = reader.ReadLine();
+            var dataLine = await reader.ReadLineAsync();
             if (dataLine == null) break;
             lineNumber++;
 
@@ -44,23 +43,20 @@ public static class DxfParser
             var groupCode = ParseGroupCode(groupCodeSpan);
             var isEntityWithType = groupCode == DxfCodeForType;
 
-            if (ShouldCreateTag(groupCode, dataSpan))
-            {
-                var tag = CreateTag(groupCode, dataSpan.ToString(), lineNumber - 1, 
-                    originalGroupCodeLine, originalDataLine);
+            var tag = CreateTag(groupCode, dataSpan.ToString(), lineNumber - 1, 
+                originalGroupCodeLine, originalDataLine);
 
-                if (isEntityWithType)
-                {
-                    ProcessTypeTag(tag, dataSpan, sections, sectionStack, ref currentTag);
-                }
-                else if (sectionStack.Count > 0)
-                {
-                    ProcessRegularTag(tag, sectionStack.Peek(), currentTag);
-                }
-                else
-                {
-                    sections.Add(tag);
-                }
+            if (isEntityWithType)
+            {
+                ProcessTypeTag(tag, dataSpan, sections, sectionStack, ref currentTag);
+            }
+            else if (sectionStack.Count > 0)
+            {
+                ProcessRegularTag(tag, sectionStack.Peek(), currentTag);
+            }
+            else
+            {
+                sections.Add(tag);
             }
         }
 
@@ -77,12 +73,6 @@ public static class DxfParser
         }
 
         return int.Parse(span);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool ShouldCreateTag(int groupCode, ReadOnlySpan<char> dataLine)
-    {
-        return true; // Accept all tags for now
     }
 
     private static bool MatchesSpan(ReadOnlySpan<char> span, string value)
