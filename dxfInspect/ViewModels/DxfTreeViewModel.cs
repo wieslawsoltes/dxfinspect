@@ -300,7 +300,7 @@ public class DxfTreeViewModel : ReactiveObject
     }
 
     public ITreeDataGridSource<DxfTreeNodeViewModel> Source => _source;
-
+    
     public DxfTreeViewModel CreateFilteredView(DxfTreeNodeViewModel selectedNode)
     {
         var filteredViewModel = new DxfTreeViewModel();
@@ -310,38 +310,18 @@ public class DxfTreeViewModel : ReactiveObject
 
         if (selectedNode.RawTag != null)
         {
-            var rootTag = new DxfRawTag
-            {
-                GroupCode = selectedNode.RawTag.GroupCode,
-                DataElement = selectedNode.RawTag.DataElement,
-                IsEnabled = selectedNode.RawTag.IsEnabled,
-                LineNumber = selectedNode.StartLine,
-                OriginalGroupCodeLine = selectedNode.RawTag.OriginalGroupCodeLine,
-                OriginalDataLine = selectedNode.RawTag.OriginalDataLine,
-                Children = new List<DxfRawTag>()
-            };
-
-            // Deep copy all children while preserving line numbers
-            if (selectedNode.RawTag.Children != null)
-            {
-                foreach (var child in selectedNode.RawTag.Children)
-                {
-                    CopyRawTagStructure(child, rootTag);
-                }
-            }
-
+            // Use the cache to get the raw tag - no need to copy
+            var rootTag = DxfRawTagCache.Instance.GetOrCreate(selectedNode.RawTag);
             rawTags.Add(rootTag);
 
-            // Store original line range
+            // Rest of the initialization code...
             filteredViewModel.OriginalStartLine = selectedNode.StartLine;
             filteredViewModel.OriginalEndLine = selectedNode.EndLine;
             filteredViewModel.LineNumberStart = selectedNode.StartLine;
             filteredViewModel.LineNumberEnd = selectedNode.EndLine;
 
-            // Convert to tree nodes with correct line numbers
             filteredViewModel._allNodes = ConvertToTreeNodes(rawTags, selectedNode.StartLine);
 
-            // Initialize node cache with all nodes
             foreach (var node in filteredViewModel._allNodes.SelectMany(n => GetAllNodes(n)))
             {
                 filteredViewModel._nodeCache[node.NodeKey] = node;
@@ -357,7 +337,6 @@ public class DxfTreeViewModel : ReactiveObject
                 uniqueData.Add(node.Data);
             }
 
-            // Update the suggestions lists
             filteredViewModel.UniqueCodeValues = new ObservableCollection<string>(uniqueCodes.OrderBy(x => x));
             filteredViewModel.UniqueDataValues = new ObservableCollection<string>(uniqueData.OrderBy(x => x));
 
@@ -373,44 +352,17 @@ public class DxfTreeViewModel : ReactiveObject
                     filteredViewModel.DataTags.Add(new TagModel(tag.Value));
                 }
 
-                // Copy filter options
                 filteredViewModel.CodeFilterOptions.UseExactMatch = CodeFilterOptions.UseExactMatch;
                 filteredViewModel.CodeFilterOptions.IgnoreCase = CodeFilterOptions.IgnoreCase;
                 filteredViewModel.DataFilterOptions.UseExactMatch = DataFilterOptions.UseExactMatch;
                 filteredViewModel.DataFilterOptions.IgnoreCase = DataFilterOptions.IgnoreCase;
             }
 
-            // Set up filtering
             filteredViewModel._shouldApplyFilters = true;
             filteredViewModel.ApplyFilters();
         }
 
         return filteredViewModel;
-    }
-
-    private void CopyRawTagStructure(DxfRawTag source, DxfRawTag parent)
-    {
-        var copy = new DxfRawTag
-        {
-            GroupCode = source.GroupCode,
-            DataElement = source.DataElement,
-            IsEnabled = source.IsEnabled,
-            LineNumber = source.LineNumber,
-            OriginalGroupCodeLine = source.OriginalGroupCodeLine,
-            OriginalDataLine = source.OriginalDataLine,
-            Parent = parent,
-            Children = new List<DxfRawTag>()
-        };
-
-        parent.Children?.Add(copy);
-
-        if (source.Children != null)
-        {
-            foreach (var child in source.Children)
-            {
-                CopyRawTagStructure(child, copy);
-            }
-        }
     }
 
     public void LoadDxfData(IList<DxfRawTag> sections, string fileName, Action<int>? progressCallback = null)
@@ -422,13 +374,22 @@ public class DxfTreeViewModel : ReactiveObject
             _expandedNodes.Clear();
             _nodeCache.Clear();
 
+            // Cache all raw tags without clearing existing cache
+            var cachedSections = new List<DxfRawTag>();
+            foreach (var section in sections)
+            {
+                var cachedSection = DxfRawTagCache.Instance.GetOrCreate(section);
+                cachedSections.Add(cachedSection);
+            }
+
             var processedNodes = 0;
-            _allNodes = ConvertToTreeNodes(sections, 1, () =>
+            _allNodes = ConvertToTreeNodes(cachedSections, 1, () =>
             {
                 processedNodes++;
                 progressCallback?.Invoke(processedNodes);
             });
 
+            // Rest of the initialization code...
             if (_allNodes.Any())
             {
                 var allNodes = _allNodes.SelectMany(GetAllNodes).ToList();
@@ -437,13 +398,11 @@ public class DxfTreeViewModel : ReactiveObject
                 OriginalStartLine = 1;
                 LineNumberStart = 1;
 
-                // Initialize cache with all nodes
                 foreach (var node in allNodes)
                 {
                     _nodeCache[node.NodeKey] = node;
                 }
 
-                // Populate unique values
                 var codes = new HashSet<string>();
                 var data = new HashSet<string>();
 
@@ -465,6 +424,9 @@ public class DxfTreeViewModel : ReactiveObject
         {
             _shouldApplyFilters = true;
         }
+
+        // Optionally run garbage collection on the cache
+        DxfRawTagCache.Instance.CollectGarbage();
     }
 
     private async Task ExpandAllAsync(CancellationToken cancellationToken)
