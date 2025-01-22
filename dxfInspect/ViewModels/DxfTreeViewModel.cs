@@ -341,18 +341,33 @@ public class DxfTreeViewModel : ReactiveObject
             // Convert to tree nodes with correct line numbers
             filteredViewModel._allNodes = ConvertToTreeNodes(rawTags, selectedNode.StartLine);
 
-            // Important: Initialize the source items AFTER setting up _allNodes
-            filteredViewModel._shouldApplyFilters = true;
-            filteredViewModel.ApplyFilters();
+            // Initialize node cache with all nodes
+            foreach (var node in filteredViewModel._allNodes.SelectMany(n => GetAllNodes(n)))
+            {
+                filteredViewModel._nodeCache[node.NodeKey] = node;
+            }
 
-            // Copy any existing filters if needed
+            // Build unique values for filtering
+            var uniqueCodes = new HashSet<string>();
+            var uniqueData = new HashSet<string>();
+
+            foreach (var node in filteredViewModel._allNodes.SelectMany(n => GetAllNodes(n)))
+            {
+                uniqueCodes.Add(node.CodeString);
+                uniqueData.Add(node.Data);
+            }
+
+            // Update the suggestions lists
+            filteredViewModel.UniqueCodeValues = new ObservableCollection<string>(uniqueCodes.OrderBy(x => x));
+            filteredViewModel.UniqueDataValues = new ObservableCollection<string>(uniqueData.OrderBy(x => x));
+
+            // Copy existing filters if any
             if (CodeTags.Any() || DataTags.Any())
             {
                 foreach (var tag in CodeTags)
                 {
                     filteredViewModel.CodeTags.Add(new TagModel(tag.Value));
                 }
-
                 foreach (var tag in DataTags)
                 {
                     filteredViewModel.DataTags.Add(new TagModel(tag.Value));
@@ -364,6 +379,10 @@ public class DxfTreeViewModel : ReactiveObject
                 filteredViewModel.DataFilterOptions.UseExactMatch = DataFilterOptions.UseExactMatch;
                 filteredViewModel.DataFilterOptions.IgnoreCase = DataFilterOptions.IgnoreCase;
             }
+
+            // Set up filtering
+            filteredViewModel._shouldApplyFilters = true;
+            filteredViewModel.ApplyFilters();
         }
 
         return filteredViewModel;
@@ -376,7 +395,7 @@ public class DxfTreeViewModel : ReactiveObject
             GroupCode = source.GroupCode,
             DataElement = source.DataElement,
             IsEnabled = source.IsEnabled,
-            LineNumber = source.LineNumber, // Preserve line number
+            LineNumber = source.LineNumber,
             OriginalGroupCodeLine = source.OriginalGroupCodeLine,
             OriginalDataLine = source.OriginalDataLine,
             Parent = parent,
