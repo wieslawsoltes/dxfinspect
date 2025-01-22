@@ -36,7 +36,9 @@ namespace dxfInspect.ViewModels
             _dataSize = System.Text.Encoding.UTF8.GetByteCount(Data);
             _totalDataSize = _dataSize; // Initially set to own data size
         }
-
+        
+        public DxfTreeNodeViewModel? Parent { get; set; }
+        
         public int StartLine { get; }
 
         public int EndLine

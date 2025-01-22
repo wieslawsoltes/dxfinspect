@@ -880,7 +880,10 @@ public class DxfTreeViewModel : ReactiveObject
             originalNode.NodeKey,
             originalNode.OriginalGroupCodeLine,
             originalNode.OriginalDataLine,
-            originalNode.RawTag) { IsExpanded = _expandedNodes.Contains(originalNode.NodeKey) };
+            originalNode.RawTag) 
+        { 
+            IsExpanded = _expandedNodes.Contains(originalNode.NodeKey)
+        };
 
         // Add visible children
         if (originalNode.HasChildren)
@@ -889,7 +892,9 @@ public class DxfTreeViewModel : ReactiveObject
             {
                 if (visibleNodes.Contains(child.NodeKey))
                 {
-                    newNode.Children.Add(CreateFilteredNode(child, visibleNodes));
+                    var newChild = CreateFilteredNode(child, visibleNodes);
+                    newChild.Parent = newNode;  // Set parent reference
+                    newNode.Children.Add(newChild);
                 }
             }
         }
@@ -897,23 +902,56 @@ public class DxfTreeViewModel : ReactiveObject
         newNode.UpdateTotalDataSize();
         return newNode;
     }
-
+    
     private bool MatchesFilters(DxfTreeNodeViewModel nodeView)
     {
-        // Line range filter
+        // Line range filter - this is always required
         bool matchesLineRange = nodeView.StartLine >= LineNumberStart &&
                                 nodeView.EndLine <= (LineNumberEnd == 1 ? int.MaxValue : LineNumberEnd);
         if (!matchesLineRange) return false;
 
-        // Code filter
-        bool matchesCode = CodeTags.Count == 0 ||
-                           CodeTags.Any(tag => MatchesFilter(nodeView.CodeString, tag.Value, CodeFilterOptions));
+        // If no filters are active, show everything within line range
+        if (CodeTags.Count == 0 && DataTags.Count == 0)
+        {
+            return true;
+        }
 
-        // Data filter
-        bool matchesData = DataTags.Count == 0 ||
-                           DataTags.Any(tag => MatchesFilter(nodeView.Data, tag.Value, DataFilterOptions));
+        // If we have a Data filter
+        if (DataTags.Count > 0)
+        {
+            bool matchesData = DataTags.Any(tag => MatchesFilter(nodeView.Data, tag.Value, DataFilterOptions));
 
-        return matchesCode && matchesData;
+            // Direct match with Data filter
+            if (matchesData)
+            {
+                // If we also have Code filters and this isn't a group element,
+                // it must also match a Code filter
+                if (CodeTags.Count > 0 && nodeView.Code != DxfParser.DxfCodeForType)
+                {
+                    return CodeTags.Any(tag => MatchesFilter(nodeView.CodeString, tag.Value, CodeFilterOptions));
+                }
+                return true;
+            }
+
+            // For children of matching Code 0 elements
+            if (nodeView.Parent?.Code == DxfParser.DxfCodeForType && 
+                DataTags.Any(tag => MatchesFilter(nodeView.Parent.Data, tag.Value, DataFilterOptions)))
+            {
+                // If we have Code filters, only show matching children
+                if (CodeTags.Count > 0)
+                {
+                    return CodeTags.Any(tag => MatchesFilter(nodeView.CodeString, tag.Value, CodeFilterOptions));
+                }
+                // If no Code filters, show all children of matching Data groups
+                return true;
+            }
+
+            // Hide everything else when we have a Data filter
+            return false;
+        }
+
+        // If we only have Code filters, show matching elements
+        return CodeTags.Any(tag => MatchesFilter(nodeView.CodeString, tag.Value, CodeFilterOptions));
     }
 
     private static bool MatchesFilter(string value, string filter, FilterOptions options)
@@ -980,7 +1018,10 @@ public class DxfTreeViewModel : ReactiveObject
                 $"{lineNumber}:{type}:{child.DataElement}",
                 child.OriginalGroupCodeLine,
                 child.OriginalDataLine,
-                child);
+                child)
+            {
+                Parent = parent  // Set the parent reference
+            };
             onNodeProcessed?.Invoke();
 
             lineNumber += 2;
