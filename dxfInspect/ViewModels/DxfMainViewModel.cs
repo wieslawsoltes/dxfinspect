@@ -76,12 +76,15 @@ public class MainViewModel : ReactiveObject
         LoadingProgress = 0;
         CurrentSection = string.Empty;
 
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        var parsingTime = TimeSpan.Zero;
+        var viewModelTime = TimeSpan.Zero;
+
         try
         {
             await using var stream = await file.OpenReadAsync();
             var progress = new Progress<DxfParser.ParsingProgress>(p =>
             {
-                // Scale the parsing progress to take up 70% of the total
                 LoadingProgress = p.ProgressPercentage * ParsingWeight;
                 CurrentSection = $"{p.Stage}: {p.CurrentSection}";
 
@@ -91,21 +94,36 @@ public class MainViewModel : ReactiveObject
                 }
             });
 
+            var parsingStopwatch = System.Diagnostics.Stopwatch.StartNew();
             var sections = await DxfParser.ParseStreamAsync(stream, progress);
+            parsingStopwatch.Stop();
+            parsingTime = parsingStopwatch.Elapsed;
 
-            // Update progress for view model creation
             CurrentSection = "Creating view model";
             LoadingProgress = ParsingWeight * 100; // Parsing complete
 
-            // Create the view model with progress reporting
+            // Increment reference count when adding new tab
+            DxfRawTagCache.Instance.IncrementReferenceCount();
+
+            var vmStopwatch = System.Diagnostics.Stopwatch.StartNew();
             await AddNewFileTabAsync(sections, file.Name);
+            vmStopwatch.Stop();
+            viewModelTime = vmStopwatch.Elapsed;
         }
         catch (Exception ex)
         {
             ErrorMessage = $"Failed to load file: {ex.Message}";
+            // Ensure we don't increment reference count if loading fails
+            DxfRawTagCache.Instance.DecrementReferenceCount();
         }
         finally
         {
+            sw.Stop();
+            Console.WriteLine($"Performance Report for {file.Name}:");
+            Console.WriteLine($"  Total time: {sw.Elapsed.TotalMilliseconds:F0}ms");
+            Console.WriteLine($"  Parsing time: {parsingTime.TotalMilliseconds:F0}ms");
+            Console.WriteLine($"  ViewModel creation time: {viewModelTime.TotalMilliseconds:F0}ms");
+
             LoadingProgress = 100;
             IsLoading = false;
         }
@@ -115,7 +133,6 @@ public class MainViewModel : ReactiveObject
     {
         var treeViewModel = new DxfTreeViewModel();
         
-        // Load DXF data with progress reporting
         await Task.Run(() =>
         {
             var totalNodes = sections.Sum(s => CountNodes(s));
@@ -176,5 +193,8 @@ public class MainViewModel : ReactiveObject
             SelectedTab = index > 0 ? Tabs[index - 1] : (Tabs.Count > 1 ? Tabs[1] : null);
         }
         Tabs.Remove(tab);
+
+        // Decrement reference count when closing a tab
+        DxfRawTagCache.Instance.DecrementReferenceCount();
     }
 }
