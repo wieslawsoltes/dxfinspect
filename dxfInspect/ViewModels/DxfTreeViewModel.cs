@@ -392,7 +392,7 @@ public class DxfTreeViewModel : ReactiveObject
         }
     }
 
-    public void LoadDxfData(IList<DxfRawTag> sections, string fileName)
+    public void LoadDxfData(IList<DxfRawTag> sections, string fileName, Action<int>? progressCallback = null)
     {
         _shouldApplyFilters = false;
         try 
@@ -400,7 +400,12 @@ public class DxfTreeViewModel : ReactiveObject
             FileName = fileName;
             _expandedNodes.Clear();
 
-            _allNodes = ConvertToTreeNodes(sections);
+            var processedNodes = 0;
+            _allNodes = ConvertToTreeNodes(sections, 1, () =>
+            {
+                processedNodes++;
+                progressCallback?.Invoke(processedNodes);
+            });
 
             if (_allNodes.Any())
             {
@@ -940,7 +945,11 @@ public class DxfTreeViewModel : ReactiveObject
         return false;
     }
 
-    private static void AddChildNodes(DxfTreeNodeViewModel parent, IList<DxfRawTag> children, ref int lineNumber)
+    private static void AddChildNodes(
+        DxfTreeNodeViewModel parent, 
+        IList<DxfRawTag> children, 
+        ref int lineNumber,
+        Action? onNodeProcessed = null)
     {
         int startLine = lineNumber;
         foreach (var child in children.Where(c => c.IsEnabled))
@@ -959,15 +968,16 @@ public class DxfTreeViewModel : ReactiveObject
                 child.OriginalGroupCodeLine,
                 child.OriginalDataLine,
                 child);
+            onNodeProcessed?.Invoke();
 
             lineNumber += 2;
 
             if (child.Children != null)
             {
-                AddChildNodes(node, child.Children, ref lineNumber);
+                AddChildNodes(node, child.Children, ref lineNumber, onNodeProcessed);
             }
 
-            node.UpdateTotalDataSize(); // Calculate size after children are added
+            node.UpdateTotalDataSize();
             parent.Children.Add(node);
         }
 
@@ -978,7 +988,10 @@ public class DxfTreeViewModel : ReactiveObject
         }
     }
 
-    private static List<DxfTreeNodeViewModel> ConvertToTreeNodes(IList<DxfRawTag> sections, int startLineNumber = 1)
+    private static List<DxfTreeNodeViewModel> ConvertToTreeNodes(
+        IList<DxfRawTag> sections, 
+        int startLineNumber = 1,
+        Action? onNodeProcessed = null)
     {
         var nodes = new List<DxfTreeNodeViewModel>();
         var lineNumber = startLineNumber;
@@ -1001,12 +1014,13 @@ public class DxfTreeViewModel : ReactiveObject
                 section.OriginalGroupCodeLine,
                 section.OriginalDataLine,
                 section);
+            onNodeProcessed?.Invoke();
 
             lineNumber += 2;
 
             if (section.Children != null)
             {
-                AddChildNodes(sectionNode, section.Children, ref lineNumber);
+                AddChildNodes(sectionNode, section.Children, ref lineNumber, onNodeProcessed);
             }
 
             if (sectionNode.Children.Any())
@@ -1015,7 +1029,7 @@ public class DxfTreeViewModel : ReactiveObject
                 sectionNode.UpdateLineRange(sectionStart, lineNumber - 1);
             }
 
-            sectionNode.UpdateTotalDataSize(); // Calculate size after all children are added
+            sectionNode.UpdateTotalDataSize();
             nodes.Add(sectionNode);
         }
 

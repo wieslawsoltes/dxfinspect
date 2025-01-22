@@ -21,6 +21,7 @@ public static class DxfParser
         public long TotalSize { get; set; }
         public double ProgressPercentage => TotalSize == 0 ? 0 : (double)CurrentPosition / TotalSize * 100;
         public string CurrentSection { get; set; } = string.Empty;
+        public string Stage { get; set; } = "Parsing DXF"; // Add stage information
         public Exception? Error { get; set; }
     }
 

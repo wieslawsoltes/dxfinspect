@@ -13,13 +13,15 @@ namespace dxfInspect.ViewModels;
 
 public class MainViewModel : ReactiveObject
 {
+    private const double ParsingWeight = 0.7; // 70% for parsing
+    private const double ViewModelWeight = 0.3; // 30% for view model creation
+
     private ObservableCollection<DxfTabViewModel> _tabs;
     private DxfTabViewModel? _selectedTab;
     private bool _isLoading;
     private double _loadingProgress;
     private string _currentSection = string.Empty;
     private string? _errorMessage;
-
 
     public MainViewModel()
     {
@@ -79,8 +81,9 @@ public class MainViewModel : ReactiveObject
             await using var stream = await file.OpenReadAsync();
             var progress = new Progress<DxfParser.ParsingProgress>(p =>
             {
-                LoadingProgress = p.ProgressPercentage;
-                CurrentSection = p.CurrentSection;
+                // Scale the parsing progress to take up 70% of the total
+                LoadingProgress = p.ProgressPercentage * ParsingWeight;
+                CurrentSection = $"{p.Stage}: {p.CurrentSection}";
 
                 if (p.Error != null)
                 {
@@ -89,7 +92,13 @@ public class MainViewModel : ReactiveObject
             });
 
             var sections = await DxfParser.ParseStreamAsync(stream, progress);
-            AddNewFileTab(sections, file.Name);
+
+            // Update progress for view model creation
+            CurrentSection = "Creating view model";
+            LoadingProgress = ParsingWeight * 100; // Parsing complete
+
+            // Create the view model with progress reporting
+            await AddNewFileTabAsync(sections, file.Name);
         }
         catch (Exception ex)
         {
@@ -97,18 +106,47 @@ public class MainViewModel : ReactiveObject
         }
         finally
         {
+            LoadingProgress = 100;
             IsLoading = false;
         }
     }
 
-    public void AddNewFileTab(IList<DxfRawTag> sections, string fileName)
+    private async Task AddNewFileTabAsync(IList<DxfRawTag> sections, string fileName)
     {
         var treeViewModel = new DxfTreeViewModel();
-        treeViewModel.LoadDxfData(sections, fileName);
         
+        // Load DXF data with progress reporting
+        await Task.Run(() =>
+        {
+            var totalNodes = sections.Sum(s => CountNodes(s));
+            var processedNodes = 0;
+
+            void ReportProgress(int processed)
+            {
+                processedNodes = processed;
+                var vmProgress = (double)processedNodes / totalNodes * 100;
+                LoadingProgress = (ParsingWeight * 100) + (vmProgress * ViewModelWeight);
+            }
+
+            treeViewModel.LoadDxfData(sections, fileName, ReportProgress);
+        });
+
         var tab = new DxfTabViewModel(fileName, treeViewModel);
         Tabs.Add(tab);
         SelectedTab = tab;
+    }
+
+    private int CountNodes(DxfRawTag tag)
+    {
+        var count = 1; // Count the current tag
+        if (tag.Children != null)
+        {
+            foreach (var child in tag.Children)
+            {
+                count += CountNodes(child);
+            }
+        }
+        return count;
     }
 
     private void OpenInNewTab(DxfTreeNodeViewModel node)
