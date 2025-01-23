@@ -195,13 +195,40 @@ namespace dxfInspect.ViewModels
 
         private void ExtractWhitespace(string originalGroupCodeLine, string originalDataLine)
         {
-            var groupCodeTrimmed = originalGroupCodeLine.TrimStart();
-            _leadingCodeWhitespace = originalGroupCodeLine[..^groupCodeTrimmed.Length];
-            _trailingCodeWhitespace = groupCodeTrimmed[Code.ToString().Length..];
+            try 
+            {
+                // Handle group code line whitespace
+                var groupCodeTrimmed = originalGroupCodeLine?.TrimStart() ?? "";
+                var groupCodeTrimmedEnd = originalGroupCodeLine?.TrimEnd() ?? "";
+        
+                _leadingCodeWhitespace = originalGroupCodeLine?.Length > 0 && groupCodeTrimmed.Length < originalGroupCodeLine.Length 
+                    ? originalGroupCodeLine[..(originalGroupCodeLine.Length - groupCodeTrimmed.Length)]
+                    : "";
+            
+                _trailingCodeWhitespace = groupCodeTrimmedEnd.Length > 0 && groupCodeTrimmed.Length > Code.ToString().Length
+                    ? groupCodeTrimmed[Code.ToString().Length..]
+                    : "";
 
-            var dataTrimmed = originalDataLine.TrimStart();
-            _leadingDataWhitespace = originalDataLine[..^dataTrimmed.Length];
-            _trailingDataWhitespace = dataTrimmed[Data.Length..];
+                // Handle data line whitespace
+                var dataTrimmed = originalDataLine?.TrimStart() ?? "";
+                var dataTrimmedEnd = originalDataLine?.TrimEnd() ?? "";
+        
+                _leadingDataWhitespace = originalDataLine?.Length > 0 && dataTrimmed.Length < originalDataLine.Length
+                    ? originalDataLine[..(originalDataLine.Length - dataTrimmed.Length)]
+                    : "";
+            
+                _trailingDataWhitespace = dataTrimmedEnd.Length > 0 && dataTrimmed.Length > Data.Length
+                    ? dataTrimmed[Data.Length..]
+                    : "";
+            }
+            catch
+            {
+                // If any error occurs during whitespace extraction, reset to empty strings
+                _leadingCodeWhitespace = "";
+                _trailingCodeWhitespace = "";
+                _leadingDataWhitespace = "";
+                _trailingDataWhitespace = "";
+            }
         }
 
         private void UpdateOriginalLines()
