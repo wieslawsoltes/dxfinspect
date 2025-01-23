@@ -54,7 +54,7 @@ public class DxfTreeViewModel : ReactiveObject
                         options: new()
                         {
                             CompareAscending = Sort<DxfTreeNodeViewModel>.Ascending(x => x.LineRange),
-                            CompareDescending = Sort<DxfTreeNodeViewModel>.Descending(x => x.LineRange)
+                            CompareDescending = Sort<DxfTreeNodeViewModel>.Descending(x => x.LineRange),
                         },
                         width: new GridLength(200)),
                     x => x.Children,
@@ -63,6 +63,7 @@ public class DxfTreeViewModel : ReactiveObject
                 new TextColumn<DxfTreeNodeViewModel, string>(
                     "Code",
                     x => x.CodeString,
+                    (x, y) => x.Code = int.Parse(y),
                     options: new()
                     {
                         CompareAscending = Sort<DxfTreeNodeViewModel>.Ascending(x => x.Code),
@@ -72,6 +73,7 @@ public class DxfTreeViewModel : ReactiveObject
                 new TextColumn<DxfTreeNodeViewModel, string>(
                     "Data",
                     x => x.Data,
+                    (x, y) => x.Data = y,
                     options: new()
                     {
                         CompareAscending = Sort<DxfTreeNodeViewModel>.Ascending(x => x.Data),

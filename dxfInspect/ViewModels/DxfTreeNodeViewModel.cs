@@ -1,6 +1,8 @@
+using System;
 using System.Collections.ObjectModel;
-using dxfInspect.Model;
 using ReactiveUI;
+using dxfInspect.Model;
+using dxfInspect.Services;
 
 namespace dxfInspect.ViewModels
 {
@@ -11,6 +13,10 @@ namespace dxfInspect.ViewModels
         private int _endLine;
         private long _dataSize;
         private long _totalDataSize;
+        private string _data;
+        private int _code;
+        private string _originalGroupCodeLine;
+        private string _originalDataLine;
 
         public DxfTreeNodeViewModel(
             int startLine,
@@ -26,20 +32,25 @@ namespace dxfInspect.ViewModels
             StartLine = startLine;
             _endLine = endLine;
             _lineRange = new DxfLineRange(startLine, endLine);
-            Code = code;
-            Data = data;
+            _code = code;
+            _data = data;
             Type = type;
             NodeKey = nodeKey;
-            OriginalGroupCodeLine = originalGroupCodeLine;
-            OriginalDataLine = originalDataLine;
+            _originalGroupCodeLine = originalGroupCodeLine;
+            _originalDataLine = originalDataLine;
+            ExtractWhitespace(originalGroupCodeLine, originalDataLine);
             RawTag = rawTag;
             _dataSize = System.Text.Encoding.UTF8.GetByteCount(Data);
-            _totalDataSize = _dataSize; // Initially set to own data size
+            _totalDataSize = _dataSize;
+
+            UpdateDescription();
+            UpdateValueType();
         }
-        
+
         public DxfTreeNodeViewModel? Parent { get; set; }
-        
         public int StartLine { get; }
+        private string _groupCodeDescription = "";
+        private string _groupCodeValueType = "";
 
         public int EndLine
         {
@@ -51,6 +62,86 @@ namespace dxfInspect.ViewModels
         {
             get => _lineRange;
             private set => this.RaiseAndSetIfChanged(ref _lineRange, value);
+        }
+
+        public int Code
+        {
+            get => _code;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _code, value);
+                UpdateNodeKey();
+                UpdateOriginalLines();
+                UpdateDescription();
+                UpdateValueType();
+                    
+                // Update the underlying raw tag
+                if (RawTag != null)
+                {
+                    RawTag.GroupCode = value;
+                }
+            }
+        }
+
+        public string Data
+        {
+            get => _data;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _data, value);
+                _dataSize = System.Text.Encoding.UTF8.GetByteCount(value);
+                UpdateTotalDataSize();
+                UpdateNodeKey();
+                UpdateOriginalLines();
+                    
+                // Update the underlying raw tag
+                if (RawTag != null)
+                {
+                    RawTag.DataElement = value;
+                }
+            }
+        }
+
+        public string Type { get; }
+
+        public string NodeKey { get; private set; }
+
+        public string OriginalGroupCodeLine
+        {
+            get => _originalGroupCodeLine;
+            private set => this.RaiseAndSetIfChanged(ref _originalGroupCodeLine, value);
+        }
+
+        public string OriginalDataLine
+        {
+            get => _originalDataLine;
+            private set => this.RaiseAndSetIfChanged(ref _originalDataLine, value);
+        }
+
+        public DxfRawTag RawTag { get; }
+        
+        public ObservableCollection<DxfTreeNodeViewModel> Children { get; } = [];
+        
+        public bool HasChildren => Children.Count > 0;
+
+        public bool IsExpanded
+        {
+            get => _isExpanded;
+            set => this.RaiseAndSetIfChanged(ref _isExpanded, value);
+        }
+
+        public string CodeString => Code.ToString();
+
+        public string GroupCodeDescription
+        {
+            get => _groupCodeDescription;
+            private set => this.RaiseAndSetIfChanged(ref _groupCodeDescription, value);
+        }
+
+        public string GroupCodeValueType
+        {
+            get => _groupCodeValueType;
+            private set => this.RaiseAndSetIfChanged(ref _groupCodeValueType, value);
         }
 
         public void UpdateTotalDataSize()
@@ -90,30 +181,49 @@ namespace dxfInspect.ViewModels
             }
         }
 
+        private void UpdateNodeKey()
+        {
+            string type = Code == DxfParser.DxfCodeForType ? Data : Code.ToString();
+            NodeKey = $"{StartLine}:{type}:{Data}";
+            this.RaisePropertyChanged(nameof(NodeKey));
+        }
+
+        private string _leadingCodeWhitespace = "";
+        private string _trailingCodeWhitespace = "";
+        private string _leadingDataWhitespace = "";
+        private string _trailingDataWhitespace = "";
+
+        private void ExtractWhitespace(string originalGroupCodeLine, string originalDataLine)
+        {
+            var groupCodeTrimmed = originalGroupCodeLine.TrimStart();
+            _leadingCodeWhitespace = originalGroupCodeLine[..^groupCodeTrimmed.Length];
+            _trailingCodeWhitespace = groupCodeTrimmed[Code.ToString().Length..];
+
+            var dataTrimmed = originalDataLine.TrimStart();
+            _leadingDataWhitespace = originalDataLine[..^dataTrimmed.Length];
+            _trailingDataWhitespace = dataTrimmed[Data.Length..];
+        }
+
+        private void UpdateOriginalLines()
+        {
+            OriginalGroupCodeLine = _leadingCodeWhitespace + Code.ToString() + _trailingCodeWhitespace;
+            OriginalDataLine = _leadingDataWhitespace + Data + _trailingDataWhitespace;
+        }
+
+        private void UpdateDescription()
+        {
+            GroupCodeDescription = DxfGroupCodeInfo.GetDescription(Code);
+        }
+
+        private void UpdateValueType()
+        {
+            GroupCodeValueType = DxfGroupCodeInfo.GetValueType(Code);
+        }
+
         public void UpdateLineRange(int startLine, int endLine)
         {
             _lineRange = new DxfLineRange(startLine, endLine);
             this.RaisePropertyChanged(nameof(LineRange));
         }
-
-        public int Code { get; }
-        public string Data { get; }
-        public string Type { get; }
-        public string NodeKey { get; }
-        public string OriginalGroupCodeLine { get; }
-        public string OriginalDataLine { get; }
-        public DxfRawTag RawTag { get; }
-        public ObservableCollection<DxfTreeNodeViewModel> Children { get; } = [];
-        public bool HasChildren => Children.Count > 0;
-
-        public bool IsExpanded
-        {
-            get => _isExpanded;
-            set => this.RaiseAndSetIfChanged(ref _isExpanded, value);
-        }
-
-        public string CodeString => Code.ToString();
-        public string GroupCodeDescription => DxfGroupCodeInfo.GetDescription(Code);
-        public string GroupCodeValueType => DxfGroupCodeInfo.GetValueType(Code);
     }
 }
