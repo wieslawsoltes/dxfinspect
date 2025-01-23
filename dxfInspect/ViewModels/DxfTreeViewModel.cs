@@ -80,6 +80,15 @@ public class DxfTreeViewModel : ReactiveObject
                         CompareDescending = Sort<DxfTreeNodeViewModel>.Descending(x => x.Data)
                     },
                     width: new GridLength(2, GridUnitType.Star)),
+                new TextColumn<DxfTreeNodeViewModel, int>(
+                    "Objects",
+                    x => x.ObjectCount,
+                    options: new()
+                    {
+                        CompareAscending = Sort<DxfTreeNodeViewModel>.Ascending(x => x.ObjectCount),
+                        CompareDescending = Sort<DxfTreeNodeViewModel>.Descending(x => x.ObjectCount)
+                    },
+                    width: new GridLength(80)),
                 new TextColumn<DxfTreeNodeViewModel, string>(
                     "Size",
                     x => x.FormattedDataSize,

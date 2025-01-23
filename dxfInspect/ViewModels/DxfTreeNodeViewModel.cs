@@ -17,6 +17,7 @@ namespace dxfInspect.ViewModels
         private int _code;
         private string _originalGroupCodeLine;
         private string _originalDataLine;
+        private int _objectCount;
 
         public DxfTreeNodeViewModel(
             int startLine,
@@ -45,6 +46,7 @@ namespace dxfInspect.ViewModels
 
             UpdateDescription();
             UpdateValueType();
+            UpdateObjectCount();
         }
 
         public DxfTreeNodeViewModel? Parent { get; set; }
@@ -143,9 +145,31 @@ namespace dxfInspect.ViewModels
             get => _groupCodeValueType;
             private set => this.RaiseAndSetIfChanged(ref _groupCodeValueType, value);
         }
+        
+        public void UpdateObjectCount()
+        {
+            int count = 0;
+        
+            if (HasChildren)
+            {
+                foreach (var child in Children)
+                {
+                    child.UpdateObjectCount();
 
+                    if (child.Code == DxfParser.DxfCodeForType)
+                    {
+                        count++;
+                    }
+                }
+            }
+        
+            ObjectCount = count;
+        }
+        
         public void UpdateTotalDataSize()
         {
+            UpdateObjectCount();
+            
             var newTotal = _dataSize;
             if (HasChildren)
             {
@@ -180,7 +204,13 @@ namespace dxfInspect.ViewModels
                 return $"{calculatedSize:0.##} {sizes[order]}";
             }
         }
-
+        
+        public int ObjectCount
+        {
+            get => _objectCount;
+            private set => this.RaiseAndSetIfChanged(ref _objectCount, value);
+        }
+        
         private void UpdateNodeKey()
         {
             string type = Code == DxfParser.DxfCodeForType ? Data : Code.ToString();
