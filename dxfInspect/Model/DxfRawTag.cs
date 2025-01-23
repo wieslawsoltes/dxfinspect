@@ -1,6 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace dxfInspect.Model;
 
@@ -10,11 +8,6 @@ public class DxfRawTag
     public int LineNumber { get; set; }
     public string OriginalGroupCodeLine { get; set; } = string.Empty;
     public string OriginalDataLine { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Indicates whether this tag is enabled and should be included in processing
-    /// </summary>
-    public bool IsEnabled { get; set; }
 
     /// <summary>
     /// The group code number for this tag
@@ -35,33 +28,4 @@ public class DxfRawTag
     /// Child tags in the hierarchy
     /// </summary>
     public IList<DxfRawTag>? Children { get; set; }
-
-    public DxfRawTag()
-    {
-        IsEnabled = true;
-    }
-
-    public string GetOriginalTreeText()
-    {
-        var sb = new StringBuilder();
-        BuildOriginalTreeText(this, sb);
-        return sb.ToString();
-    }
-
-    private static void BuildOriginalTreeText(DxfRawTag tag, StringBuilder sb)
-    {
-        if (tag.IsEnabled)
-        {
-            sb.AppendLine(tag.OriginalGroupCodeLine);
-            sb.AppendLine(tag.OriginalDataLine);
-
-            if (tag.Children != null)
-            {
-                foreach (var child in tag.Children.Where(c => c.IsEnabled))
-                {
-                    BuildOriginalTreeText(child, sb);
-                }
-            }
-        }
-    }
 }

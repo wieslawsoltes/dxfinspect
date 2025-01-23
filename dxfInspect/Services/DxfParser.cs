@@ -166,7 +166,6 @@ public static class DxfParser
             LineNumber = lineNumber,
             OriginalGroupCodeLine = originalGroupCodeLine,
             OriginalDataLine = originalDataLine,
-            IsEnabled = true,
             Children = new List<DxfRawTag>()
         };
     }

@@ -53,7 +53,6 @@ public class DxfRawTagCache
         {
             GroupCode = source.GroupCode,
             DataElement = source.DataElement,
-            IsEnabled = source.IsEnabled,
             LineNumber = source.LineNumber,
             OriginalGroupCodeLine = source.OriginalGroupCodeLine,
             OriginalDataLine = source.OriginalDataLine,

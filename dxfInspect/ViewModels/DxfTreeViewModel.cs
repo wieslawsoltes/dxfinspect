@@ -1034,7 +1034,7 @@ public class DxfTreeViewModel : ReactiveObject
         Action? onNodeProcessed = null)
     {
         int startLine = lineNumber;
-        foreach (var child in children.Where(c => c.IsEnabled))
+        foreach (var child in children)
         {
             string type = child.GroupCode == DxfParser.DxfCodeForType
                 ? child.DataElement ?? "TYPE"
@@ -1083,11 +1083,6 @@ public class DxfTreeViewModel : ReactiveObject
 
         foreach (var section in sections)
         {
-            if (!section.IsEnabled)
-            {
-                continue;
-            }
-
             int sectionStart = lineNumber;
             var sectionNode = new DxfTreeNodeViewModel(
                 lineNumber,
