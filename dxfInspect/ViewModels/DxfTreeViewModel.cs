@@ -54,7 +54,7 @@ public class DxfTreeViewModel : ReactiveObject
                         options: new()
                         {
                             CompareAscending = Sort<DxfTreeNodeViewModel>.Ascending(x => x.LineRange),
-                            CompareDescending = Sort<DxfTreeNodeViewModel>.Descending(x => x.LineRange)
+                            CompareDescending = Sort<DxfTreeNodeViewModel>.Descending(x => x.LineRange),
                         },
                         width: new GridLength(200)),
                     x => x.Children,
@@ -63,6 +63,7 @@ public class DxfTreeViewModel : ReactiveObject
                 new TextColumn<DxfTreeNodeViewModel, string>(
                     "Code",
                     x => x.CodeString,
+                    (x, y) => x.Code = int.Parse(y),
                     options: new()
                     {
                         CompareAscending = Sort<DxfTreeNodeViewModel>.Ascending(x => x.Code),
@@ -72,6 +73,7 @@ public class DxfTreeViewModel : ReactiveObject
                 new TextColumn<DxfTreeNodeViewModel, string>(
                     "Data",
                     x => x.Data,
+                    (x, y) => x.Data = y,
                     options: new()
                     {
                         CompareAscending = Sort<DxfTreeNodeViewModel>.Ascending(x => x.Data),
@@ -184,6 +186,7 @@ public class DxfTreeViewModel : ReactiveObject
         RemoveCodeTagCommand = ReactiveCommand.Create<TagModel>(RemoveCodeTag);
         AddDataTagCommand = ReactiveCommand.Create(AddDataTag);
         RemoveDataTagCommand = ReactiveCommand.Create<TagModel>(RemoveDataTag);
+        RemoveNodeCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(RemoveNode);
     }
 
     public ICommand ExpandAllCommand { get; }
@@ -225,7 +228,9 @@ public class DxfTreeViewModel : ReactiveObject
     public ICommand AddDataTagCommand { get; }
 
     public ICommand RemoveDataTagCommand { get; }
-
+    
+    public ICommand RemoveNodeCommand { get; }
+    
     public int OriginalStartLine { get; set; } = 1;
 
     public int OriginalEndLine { get; set; } = int.MaxValue;
@@ -650,6 +655,56 @@ public class DxfTreeViewModel : ReactiveObject
         }
     }
 
+    private void RemoveNode(DxfTreeNodeViewModel? node)
+    {
+        if (node == null) return;
+
+        // Remove from cache
+        RemoveNodeAndChildrenFromCache(node);
+
+        // Remove from parent's children collection
+        if (node.Parent != null)
+        {
+            node.Parent.Children.Remove(node);
+            node.Parent.UpdateTotalDataSize();
+        }
+        else
+        {
+            // If it's a root node, remove from _allNodes
+            _allNodes.Remove(node);
+        }
+
+        // Update source
+        var currentItems = _source.Items.ToList();
+        if (currentItems.Contains(node))
+        {
+            currentItems.Remove(node);
+            _source.Items = currentItems;
+        }
+    }
+
+    private void RemoveNodeAndChildrenFromCache(DxfTreeNodeViewModel node)
+    {
+        // Remove this node from cache
+        _nodeCache.Remove(node.NodeKey);
+    
+        // Remove all children recursively
+        if (node.HasChildren)
+        {
+            foreach (var child in node.Children.ToList())
+            {
+                RemoveNodeAndChildrenFromCache(child);
+            }
+        }
+
+        // If this node has a RawTag, remove it from the DxfRawTagCache
+        if (node.RawTag != null)
+        {
+            var key = DxfRawTagCache.Instance.GenerateKey(node.RawTag);
+            DxfRawTagCache.Instance.RemoveTag(key);
+        }
+    }
+    
     private IClipboard? GetClipboard()
     {
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime

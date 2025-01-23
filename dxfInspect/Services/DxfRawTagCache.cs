@@ -75,6 +75,25 @@ public class DxfRawTagCache
         return newTag;
     }
 
+    public void RemoveTag(string key)
+    {
+        _tagCache.TryRemove(key, out _);
+    }
+
+    public void RemoveTagAndChildren(DxfRawTag tag)
+    {
+        var key = GenerateKey(tag);
+        _tagCache.TryRemove(key, out _);
+
+        if (tag.Children != null)
+        {
+            foreach (var child in tag.Children)
+            {
+                RemoveTagAndChildren(child);
+            }
+        }
+    }
+    
     private void Clear()
     {
         _tagCache.Clear();
