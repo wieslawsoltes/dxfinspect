@@ -12,7 +12,7 @@
 
     <StackPanel Spacing="4" DockPanel.Dock="Top">
 
-      <UniformGrid Columns="3">
+      <UniformGrid Columns="4">
         <Button Content="Expand All"
                 Command="{Binding ExpandAllCommand}"
                 Padding="4"
@@ -21,6 +21,12 @@
                 HorizontalContentAlignment="Center" />
         <Button Content="Collapse All"
                 Command="{Binding CollapseAllCommand}"
+                Padding="4"
+                Margin="0,0,4,0"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Center" />
+        <Button Content="Copy Object Tree"
+                Command="{Binding CopyFilteredObjectTreeCommand}"
                 Padding="4"
                 Margin="0,0,4,0"
                 HorizontalAlignment="Stretch"

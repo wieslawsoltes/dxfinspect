@@ -166,6 +166,7 @@ public class DxfTreeViewModel : ReactiveObject
 
         ExpandAllCommand = ReactiveCommand.CreateFromTask(ExpandAllAsync);
         CollapseAllCommand = ReactiveCommand.CreateFromTask(CollapseAllAsync);
+        CopyFilteredObjectTreeCommand = ReactiveCommand.CreateFromTask(CopyFilteredObjectTree);
         FilterByLineRangeCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(FilterByLineRange);
         FilterByDataCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(FilterByData);
         FilterByCodeCommand = ReactiveCommand.Create<DxfTreeNodeViewModel>(FilterByCode);
@@ -188,7 +189,9 @@ public class DxfTreeViewModel : ReactiveObject
     public ICommand ExpandAllCommand { get; }
 
     public ICommand CollapseAllCommand { get; }
-
+    
+    public ICommand CopyFilteredObjectTreeCommand { get; }
+    
     public ICommand FilterByLineRangeCommand { get; }
 
     public ICommand FilterByDataCommand { get; }
@@ -490,6 +493,20 @@ public class DxfTreeViewModel : ReactiveObject
             _isCollapsing = false;
         }
     }
+    
+    private async Task CopyFilteredObjectTree()
+    {
+        var clipboard = GetClipboard();
+        if (clipboard == null) return;
+
+        var sb = new StringBuilder();
+        foreach (var node in _source.Items)
+        {
+            BuildTreeText(node, sb);
+        }
+
+        await clipboard.SetTextAsync(sb.ToString());
+    }
 
     private void ResetFilters()
     {
@@ -728,6 +745,20 @@ public class DxfTreeViewModel : ReactiveObject
                         BuildFilteredTreeText(child, sb);
                     }
                 }
+            }
+        }
+    }
+
+    private void BuildTreeText(DxfTreeNodeViewModel node, StringBuilder sb)
+    {
+        sb.AppendLine(node.OriginalGroupCodeLine);
+        sb.AppendLine(node.OriginalDataLine);
+
+        if (node.HasChildren)
+        {
+            foreach (var child in node.Children)
+            {
+                BuildTreeText(child, sb);
             }
         }
     }
