@@ -15,24 +15,29 @@ A cross-platform DXF file viewer and inspector built with [Avalonia UI](https://
 ## Features
 
 - Cross-platform support (Windows, macOS, Linux)
-- Tree-based DXF file structure visualization
+- Tree-based DXF file structure visualization with efficient data handling
+- Smart caching system for improved performance with large files
+- Memory-efficient tag processing using weak references
 - Detailed group code information and descriptions
 - Advanced filtering capabilities:
-  - Filter by line range
-  - Filter by group code
-  - Filter by data content
-- Hierarchical data exploration
-- Multi-tab interface for viewing multiple files
-- Context menu actions for quick operations
-- Copy functionalities:
-  - Copy code
-  - Copy data
-  - Copy code + data
-  - Copy entire object tree
-- Expand/Collapse all nodes
-- Open selected nodes in new tabs
-- Support for DXF group code information lookup
-- Light and dark theme support
+    - Filter by line range
+    - Filter by group code with exact match and case sensitivity options
+    - Filter by data content with partial match and case sensitivity options
+    - Auto-complete suggestions for both code and data filters
+    - Real-time filter updates
+- Hierarchical data exploration with size information
+- Multi-tab interface for viewing multiple files or sections
+- Progress tracking during file loading
+- Comprehensive context menu actions including:
+    - Copy code
+    - Copy data
+    - Copy code + data
+    - Copy entire object tree
+    - Filter operations
+    - Open in new tab
+- Size information display showing data size in appropriate units (B, KB, MB, GB)
+- Performance optimizations for handling large DXF files
+- Theme support using Semi.Avalonia styling
 
 ## Installation
 
@@ -65,80 +70,69 @@ dotnet run
 1. Launch DXF Inspect
 2. Click the "Load DXF" button in the top-left corner
 3. Select one or more DXF files to open - each file will open in a new tab
-4. The main interface shows a tree view of the DXF structure
+4. The main interface shows a tree view of the DXF structure with size information
 
 ### Understanding the Interface
 
-- **Tree View**: The main area shows the hierarchical structure of your DXF file
-  - **Lines**: Shows the line range in the file where this element appears
-  - **Code**: The DXF group code number
-  - **Data**: The actual content/value
-  - **Value Type**: The expected data type for this group code
-  - **Description**: Detailed description of what this group code represents
+The tree view displays:
+- **Lines**: Line range in the file
+- **Code**: DXF group code number
+- **Data**: Content value
+- **Size**: Data size in appropriate units
+- **Value Type**: Expected data type for the group code
+- **Description**: Detailed group code description
 
-### Navigation
+### Navigation and Filtering
 
-- Click the triangles (▶) to expand/collapse tree nodes
-- Use "Expand All" button to show all nodes
-- Use "Collapse All" button to collapse the entire tree
-- Switch between multiple files using the tabs at the top
-- Double-click on tabs to rename them
+#### Tree Navigation
+- Use expand/collapse controls for tree nodes
+- "Expand All" and "Collapse All" buttons for quick navigation
+- Multi-tab interface for multiple files or views
 
-### Filtering and Searching
+#### Advanced Filtering System
+- **Code Filters**:
+    - Auto-complete from available codes
+    - Toggle exact match and case sensitivity
+    - Multiple filter tags support
+    - Quick reset options
 
-#### Basic Filters
-- **Code Filter**: 
-  - Enter a group code number to show only matching entries
-  - Click the "X" button to clear the filter
-  - Example: Enter "0" to show only entity type indicators
+- **Data Filters**:
+    - Auto-complete from available values
+    - Toggle exact match and case sensitivity
+    - Multiple filter tags support
+    - Real-time filtering
 
-- **Data Filter**:
-  - Enter any text to filter by content
-  - The filter is case-insensitive
-  - Partial matches are supported
-  - Click the "X" button to clear the filter
-  - Example: Enter "LINE" to show all elements containing "LINE" in their data
+- **Line Range Filter**:
+    - Precise control over line number range
+    - Individual reset controls for start/end
+    - Quick full range reset
 
-- **Line Range**:
-  - Set start and end line numbers to focus on specific sections
-  - Use the "X" buttons to reset individual start/end values
-  - Use the rightmost "X" to reset both values
-  - Example: Set range 100-200 to focus on that section of the file
+### Context Menu Features
 
-#### Advanced Filtering
-Right-click on any element to access advanced filtering options:
-- "Filter by Line Range": Shows only elements within the selected element's line range
-- "Filter by Data": Shows all elements matching the selected element's data
-- "Filter by Code": Shows all elements with the same group code
+Right-click any element to access:
 
-### Context Menu Operations
+1. **Filter Operations**:
+    - Filter by Line Range
+    - Filter by Data
+    - Filter by Code
+    - Reset options for all filters
 
-Right-click on any element to access additional options:
+2. **Copy Operations**:
+    - Copy Code
+    - Copy Data
+    - Copy Code + Data
+    - Copy Object Tree (includes all child elements)
 
-1. **Filtering Options**:
-   - Filter by Line Range
-   - Filter by Data
-   - Filter by Code
-   - Reset Filters
-   - Reset Line Range
+3. **View Operations**:
+    - Open in New Tab (creates focused view of selected element)
 
-2. **Copy Options**:
-   - Copy Code: Copies just the group code
-   - Copy Data: Copies just the data content
-   - Copy Code + Data: Copies both code and data
-   - Copy Object Tree: Copies the entire subtree starting from selected element
+### Performance Features
 
-3. **Tab Operations**:
-   - Open in New Tab: Creates a new tab showing just the selected element and its children
-
-### Tips and Tricks
-
-- Use "Open in New Tab" to focus on specific sections of large files
-- Combine filters to narrow down your search (e.g., specific code within a line range)
-- Reset individual filters instead of all filters to refine your search
-- Use "Copy Object Tree" to export specific sections for documentation or analysis
-- Watch the file name display to always know which file you're viewing
-- Use line ranges to understand the structure of your DXF file
+- Smart caching system for DXF tags
+- Memory-efficient processing using weak references
+- Optimized parsing for large files
+- Progress tracking during file loading
+- Efficient filter application system
 
 ## License
 
