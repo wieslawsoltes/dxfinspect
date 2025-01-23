@@ -268,9 +268,13 @@
                   <MenuItem Header="Reset Line Range"
                            Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).ResetLineRangeCommand}" />
                   <Separator />
+                  <MenuItem Header="Remove"
+                            Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).RemoveNodeCommand}"
+                            CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
+                  <Separator />
                   <MenuItem Header="Copy Code"
-                           Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).CopyCodeCommand}"
-                           CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
+                            Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).CopyCodeCommand}"
+                            CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
                   <MenuItem Header="Copy Data"
                            Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).CopyDataCommand}"
                            CommandParameter="{Binding $parent[TreeDataGridRow].DataContext}" />
