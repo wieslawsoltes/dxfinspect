@@ -3,7 +3,9 @@ using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
 using dxfInspect.Services;
@@ -56,6 +58,33 @@ public partial class DxfMainView : UserControl
         if (files.Count > 0)
         {
             foreach (var file in files)
+            {
+                await _viewModel.LoadDxfFileAsync(file);
+            }
+        }
+    }
+
+    private async void OnDragOver(object? sender, DragEventArgs e)
+    {
+        var files = e.Data.GetFiles()?.ToList();
+        var hasDxf = files?.Any(f => f.Name.EndsWith(".dxf", System.StringComparison.OrdinalIgnoreCase)) ?? false;
+    
+        e.DragEffects = hasDxf 
+            ? DragDropEffects.Copy 
+            : DragDropEffects.None;
+    
+        e.Handled = true;
+    }
+
+    private async void OnDrop(object? sender, DragEventArgs e)
+    {
+        var files = e.Data.GetFiles()?
+            .Where(f => f.Name.EndsWith(".dxf", System.StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        if (files?.Count > 0)
+        {
+            foreach (var file in files.Cast<IStorageFile>())
             {
                 await _viewModel.LoadDxfFileAsync(file);
             }

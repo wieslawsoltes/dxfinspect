@@ -7,7 +7,10 @@
              mc:Ignorable="d" d:DesignWidth="460" d:DesignHeight="800"
              x:Class="dxfInspect.Views.DxfMainView"
              x:CompileBindings="True" x:DataType="vm:MainViewModel"
-             Background="{DynamicResource ThemeBackgroundBrush}">
+             Background="{DynamicResource ThemeBackgroundBrush}"
+             DragDrop.AllowDrop="True"
+             DragDrop.DragOver="OnDragOver"
+             DragDrop.Drop="OnDrop">
   <Panel>
     <DockPanel>
       <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="8">
