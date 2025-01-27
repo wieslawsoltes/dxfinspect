@@ -4,13 +4,30 @@ using System.Text;
 
 namespace SimdDxfParser;
 
-public readonly record struct DxfTag(int Code, string Value);
+public readonly record struct DxfTag(int Code, int ValueIndex);
 
 public sealed class DxfParser : IDisposable
 {
     private MemoryMappedFile? _mappedFile;
     private MemoryMappedViewAccessor? _accessor;
     private bool _isDisposed;
+    private readonly Dictionary<string, int> _stringCache = new();
+    private readonly List<string> _stringValues = new();
+
+    private int GetOrAddString(string value)
+    {
+        if (_stringCache.TryGetValue(value, out int index))
+        {
+            return index;
+        }
+
+        index = _stringValues.Count;
+        _stringValues.Add(value);
+        _stringCache.Add(value, index);
+        return index;
+    }
+
+    public string GetStringValue(DxfTag tag) => _stringValues[tag.ValueIndex];
 
     public IEnumerable<DxfTag> ParseFile(string filePath)
     {
@@ -30,7 +47,7 @@ public sealed class DxfParser : IDisposable
             MemoryMappedFileAccess.Read);
 
         _accessor = _mappedFile.CreateViewAccessor(0, fileInfo.Length, MemoryMappedFileAccess.Read);
-            
+        
         unsafe
         {
             byte* ptr = null;
@@ -65,12 +82,14 @@ public sealed class DxfParser : IDisposable
             var valueLine = reader.ReadLine();
             if (valueLine.IsEmpty)
             {
-                tags.Add(new DxfTag(groupCode, string.Empty));
+                var emptyIndex = GetOrAddString(string.Empty);
+                tags.Add(new DxfTag(groupCode, emptyIndex));
                 continue;
             }
 
             var value = ProcessValue(valueLine);
-            tags.Add(new DxfTag(groupCode, value));
+            var valueIndex = GetOrAddString(value);
+            tags.Add(new DxfTag(groupCode, valueIndex));
         }
 
         return tags;
@@ -92,6 +111,8 @@ public sealed class DxfParser : IDisposable
 
         _accessor?.Dispose();
         _mappedFile?.Dispose();
+        _stringCache.Clear();
+        _stringValues.Clear();
         _isDisposed = true;
     }
 
