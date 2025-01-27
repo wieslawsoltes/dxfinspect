@@ -10,15 +10,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="11.2.3"/>
-    <PackageReference Include="Avalonia.Controls.TreeDataGrid" Version="11.1.0" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.3"/>
-    <PackageReference Include="Avalonia.ReactiveUI" Version="11.2.3"/>
-    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.3"/>
-    <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.2.3"/>
-    <PackageReference Include="Semi.Avalonia" Version="11.2.1.4" />
-    <PackageReference Include="Semi.Avalonia.TreeDataGrid" Version="11.0.10.1" />
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="Avalonia.ReactiveUI" />
+    <PackageReference Include="Avalonia.Fonts.Inter" />
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" />
+    <PackageReference Include="Avalonia.Controls.TreeDataGrid" />
+    <PackageReference Include="Semi.Avalonia" />
+    <PackageReference Include="Semi.Avalonia.TreeDataGrid" />
   </ItemGroup>
 
 </Project>

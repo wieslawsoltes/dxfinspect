@@ -11,6 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{AD98E2D6
 		build.ps1 = build.ps1
 		build.sh = build.sh
 		azure-pipelines.yml = azure-pipelines.yml
+		Directory.Packages.props = Directory.Packages.props
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dxfInspectDesktop", "src\dxfInspectDesktop\dxfInspectDesktop.csproj", "{F9268335-9AA3-44A5-BEE4-C7EFF8660F32}"

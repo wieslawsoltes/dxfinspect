@@ -4,6 +4,8 @@ using Nuke.Common.Git;
 using Nuke.Common.ProjectModel;
 using Nuke.Common.Tools.DotNet;
 using Nuke.Common.IO;
+using static Nuke.Common.IO.FileSystemTasks;
+using static Nuke.Common.IO.PathConstruction;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
 class Build : NukeBuild
@@ -46,21 +48,20 @@ class Build : NukeBuild
         VersionSuffix = VersionSuffix ?? "";
     }
 
-    private void DeleteDirectories(IReadOnlyCollection<AbsolutePath> directories)
+    private void DeleteDirectories(IReadOnlyCollection<string> directories)
     {
         foreach (var directory in directories)
         {
-            directory.DeleteDirectory();
+            DeleteDirectory(directory);
         }
     }
 
     Target Clean => _ => _
         .Executes(() =>
         {
-            
-            DeleteDirectories(SourceDirectory.GlobDirectories("**/bin", "**/obj"));
-            DeleteDirectories(TestsDirectory.GlobDirectories("**/bin", "**/obj"));
-            ArtifactsDirectory.CreateOrCleanDirectory();
+            DeleteDirectories(GlobDirectories(SourceDirectory, "**/bin", "**/obj"));
+            DeleteDirectories(GlobDirectories(TestsDirectory, "**/bin", "**/obj"));
+            EnsureCleanDirectory(ArtifactsDirectory);
         });
 
     Target Restore => _ => _
