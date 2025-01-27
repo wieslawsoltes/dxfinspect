@@ -2,7 +2,7 @@ using System.IO.MemoryMappedFiles;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-public readonly record struct DxfTag(int Code, int ValueIndex);
+namespace Parser;
 
 public sealed class DxfParser : IDisposable
 {

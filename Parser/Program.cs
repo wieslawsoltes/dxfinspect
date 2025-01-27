@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Parser;
 
 var path = "/Users/wieslawsoltes/Downloads/sample-files-master/dxf/dxf-parser/floorplan.dxf";
 using var parser = new DxfParser();
