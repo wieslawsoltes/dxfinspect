@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{5D907E08-5787-4368-8853-8B238A372F96}"
 EndProject
@@ -9,11 +9,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{AD98E2D6
 		Directory.Build.props = Directory.Build.props
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dxfInspectDesktop", "dxfInspectDesktop\dxfInspectDesktop.csproj", "{F9268335-9AA3-44A5-BEE4-C7EFF8660F32}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dxfInspectDesktop", "src\dxfInspectDesktop\dxfInspectDesktop.csproj", "{F9268335-9AA3-44A5-BEE4-C7EFF8660F32}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dxfInspect", "dxfInspect\dxfInspect.csproj", "{FA805819-B51A-4AD4-8846-489E171BF242}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dxfInspect", "src\dxfInspect\dxfInspect.csproj", "{FA805819-B51A-4AD4-8846-489E171BF242}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dxfInspectWeb", "dxfInspectWeb\dxfInspectWeb.csproj", "{24E93D5A-43F6-4BA8-A137-13B6E193C79F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dxfInspectWeb", "src\dxfInspectWeb\dxfInspectWeb.csproj", "{24E93D5A-43F6-4BA8-A137-13B6E193C79F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{F49E6AC3-36A4-4C25-A281-D4C0F3FD8DA7}"
 	ProjectSection(SolutionItems) = preProject
