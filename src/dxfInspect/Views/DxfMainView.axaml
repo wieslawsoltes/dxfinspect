@@ -42,32 +42,34 @@
     </DockPanel>
 
     <!-- Loading Overlay -->
-    <Panel IsVisible="{Binding IsLoading}"
-           Background="{DynamicResource SemiColorBackgroundModal}"
-           ZIndex="1000">
-      <Border Background="{DynamicResource SemiColorBackgroundDialog}"
-              BorderBrush="{DynamicResource SemiColorBorderSecondary}"
-              BorderThickness="1"
-              CornerRadius="8"
-              Padding="20"
-              BoxShadow="0 4 12 0 #1F000000"
-              Width="400"
-              VerticalAlignment="Center"
-              HorizontalAlignment="Center">
-        <StackPanel Spacing="16">
-          <TextBlock Text="Loading DXF File..."
-                     FontSize="18"
-                     HorizontalAlignment="Center"/>
-          <ProgressBar Value="{Binding LoadingProgress}"
-                       Maximum="100"
-                       Height="4"
-                       Margin="0,8"/>
-          <TextBlock Text="{Binding CurrentSection}"
-                     TextAlignment="Center"
-                     TextWrapping="Wrap"/>
-        </StackPanel>
-      </Border>
-    </Panel>
+    <Border IsVisible="{Binding IsLoading}"
+            Background="{DynamicResource ThemeBackgroundBrush}"
+            ZIndex="1000">
+      <Panel Background="{DynamicResource SemiColorBackgroundModal}">
+        <Border Background="{DynamicResource SemiColorBackgroundDialog}"
+                BorderBrush="{DynamicResource SemiColorBorderSecondary}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="20"
+                BoxShadow="0 4 12 0 #1F000000"
+                Width="400"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Center">
+          <StackPanel Spacing="16">
+            <TextBlock Text="Loading DXF File..."
+                       FontSize="18"
+                       HorizontalAlignment="Center"/>
+            <ProgressBar Value="{Binding LoadingProgress}"
+                         Maximum="100"
+                         Height="4"
+                         Margin="0,8"/>
+            <TextBlock Text="{Binding CurrentSection}"
+                       TextAlignment="Center"
+                       TextWrapping="Wrap"/>
+          </StackPanel>
+        </Border>
+      </Panel>
+    </Border>
 
     <!-- Error Message -->
     <Border IsVisible="{Binding ErrorMessage, Converter={x:Static ObjectConverters.IsNotNull}}"
@@ -77,10 +79,21 @@
             CornerRadius="4"
             Padding="12"
             Margin="8"
-            VerticalAlignment="Top">
-      <TextBlock Text="{Binding ErrorMessage}"
-                 Foreground="{DynamicResource SemiColorDanger}"
-                 TextWrapping="Wrap"/>
+            Width="400"
+            BoxShadow="0 4 12 0 #1F000000"
+            VerticalAlignment="Center"
+            HorizontalAlignment="Center"
+            ZIndex="1000">
+      <Grid RowDefinitions="Auto,Auto">
+        <TextBlock Text="Error"
+                   FontWeight="Bold"
+                   Margin="0,0,0,8"
+                   Foreground="{DynamicResource SemiColorDanger}"/>
+        <TextBlock Grid.Row="1"
+                   Text="{Binding ErrorMessage}"
+                   Foreground="{DynamicResource SemiColorDanger}"
+                   TextWrapping="Wrap"/>
+      </Grid>
     </Border>
   </Panel>
 </UserControl>
