@@ -29,7 +29,7 @@ public sealed class DxfParser : IDisposable
 
     public string GetStringValue(DxfTag tag) => _stringValues[tag.ValueIndex];
 
-    public IEnumerable<DxfTag> ParseFile(string filePath)
+    public List<DxfTag> ParseFile(string filePath)
     {
         if (_isDisposed)
             throw new ObjectDisposedException(nameof(DxfParser));
