@@ -21,7 +21,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{F49E6AC3-3
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimdDxfParser", "SimdDxfParser\SimdDxfParser.csproj", "{759C108E-9A8A-47C3-9B4D-5E25BFE3F568}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Parser", "Parser\Parser.csproj", "{759C108E-9A8A-47C3-9B4D-5E25BFE3F568}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
