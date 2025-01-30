@@ -579,16 +579,7 @@ public class DxfTreeViewModel : ReactiveObject
         }
         else
         {
-            // If it's a root node, remove from _allNodes
             _allNodesCache.Remove(node);
-        }
-
-        // Update source
-        var currentItems = _source.Items.ToList();
-        if (currentItems.Contains(node))
-        {
-            currentItems.Remove(node);
-            //_source.Items = currentItems;
         }
     }
 
