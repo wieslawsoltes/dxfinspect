@@ -190,11 +190,6 @@ public class DxfTreeNodeViewModel : ReactiveObject
         private set => this.RaiseAndSetIfChanged(ref _groupCodeValueType, value);
     }
 
-    public void AddChild(DxfTreeNodeViewModel child)
-    {
-        _allNodes.AddOrUpdate(child);
-    }
-    
     public void AddChildRange(IEnumerable<DxfTreeNodeViewModel> children)
     {
         _allNodes.AddOrUpdate(children);
