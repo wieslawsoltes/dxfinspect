@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Reactive.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,35 +14,40 @@ using Avalonia.Input.Platform;
 using Avalonia.VisualTree;
 using dxfInspect.Services;
 using dxfInspect.Model;
+using DynamicData;
 using ReactiveUI;
 
 namespace dxfInspect.ViewModels;
 
 public class DxfTreeViewModel : ReactiveObject
 {
-    private readonly Dictionary<string, DxfTreeNodeViewModel> _nodeCache = new();
+    private readonly SourceCache<DxfTreeNodeViewModel, int> _allNodesCache;
+    private ReadOnlyObservableCollection<DxfTreeNodeViewModel> _filteredCollection;
     private readonly HierarchicalTreeDataGridSource<DxfTreeNodeViewModel> _source;
+    private readonly Dictionary<string, DxfTreeNodeViewModel> _nodeCache = new();
     private bool _isExpanding;
     private bool _isCollapsing;
     private readonly HashSet<string> _expandedNodes = [];
-    private int _lineNumberStart = 1;
-    private int _lineNumberEnd = int.MaxValue;
-    private List<DxfTreeNodeViewModel> _allNodes = [];
+    private bool _isFiltering;
     private bool _hasLoadedFile;
     private string _fileName = "-";
-    private ObservableCollection<TagModel> _codeTags;
-    private ObservableCollection<TagModel> _dataTags;
     private string _newCodeTag = "";
     private string _newDataTag = "";
-    private FilterOptions _codeFilterOptions;
-    private FilterOptions _dataFilterOptions;
     private ObservableCollection<string> _uniqueCodeValues = new();
     private ObservableCollection<string> _uniqueDataValues = new();
-    private bool _shouldApplyFilters;
 
     public DxfTreeViewModel()
     {
-        _source = new HierarchicalTreeDataGridSource<DxfTreeNodeViewModel>(Array.Empty<DxfTreeNodeViewModel>())
+        Filters = new DxfTreeFiltersViewModel();
+        
+        _allNodesCache = new SourceCache<DxfTreeNodeViewModel, int>(x => x.StartLine);
+
+        _allNodesCache.Connect() 
+            .Filter(Filters.Filter)
+            .Bind(out _filteredCollection)
+            .Subscribe();
+   
+        _source = new HierarchicalTreeDataGridSource<DxfTreeNodeViewModel>(_filteredCollection)
         {
             Columns =
             {
@@ -135,46 +139,6 @@ public class DxfTreeViewModel : ReactiveObject
             }
         };
 
-        _codeTags = new ObservableCollection<TagModel>();
-        _dataTags = new ObservableCollection<TagModel>();
-        _codeFilterOptions = new FilterOptions(useExactMatch: true, ignoreCase: true);
-        _dataFilterOptions = new FilterOptions(useExactMatch: false, ignoreCase: true);
-
-        this.WhenAnyValue(x => x.CodeFilterOptions.UseExactMatch,
-                x => x.CodeFilterOptions.IgnoreCase)
-            .Subscribe(_ => ApplyFilters());
-
-        this.WhenAnyValue(x => x.DataFilterOptions.UseExactMatch,
-                x => x.DataFilterOptions.IgnoreCase)
-            .Subscribe(_ => ApplyFilters());
-
-        // Set up reactive properties to trigger filter application
-        this.WhenAnyValue(
-                x => x.LineNumberStart,
-                x => x.LineNumberEnd,
-                x => x._shouldApplyFilters)
-            .Where(_ => _shouldApplyFilters)
-            .Subscribe(_ => ApplyFilters());
-
-        // Monitor code tags collection changes
-        this.WhenAnyValue(x => x.CodeTags.Count)
-            .Where(_ => _shouldApplyFilters)
-            .Subscribe(_ => ApplyFilters());
-
-        // Monitor data tags collection changes
-        this.WhenAnyValue(x => x.DataTags.Count)
-            .Where(_ => _shouldApplyFilters)
-            .Subscribe(_ => ApplyFilters());
-
-        // Set up filter options monitoring
-        this.WhenAnyValue(
-                x => x.CodeFilterOptions.UseExactMatch,
-                x => x.CodeFilterOptions.IgnoreCase,
-                x => x.DataFilterOptions.UseExactMatch,
-                x => x.DataFilterOptions.IgnoreCase)
-            .Where(_ => _shouldApplyFilters)
-            .Subscribe(_ => ApplyFilters());
-
         ExpandAllCommand = ReactiveCommand.CreateFromTask(ExpandAllAsync);
         CollapseAllCommand = ReactiveCommand.CreateFromTask(CollapseAllAsync);
         CopyFilteredObjectTreeCommand = ReactiveCommand.CreateFromTask(CopyFilteredObjectTree);
@@ -184,8 +148,8 @@ public class DxfTreeViewModel : ReactiveObject
         ResetFiltersCommand = ReactiveCommand.Create(ResetFilters);
         ResetCodeCommand = ReactiveCommand.Create(ResetCode);
         ResetDataCommand = ReactiveCommand.Create(ResetData);
-        ReseLineNumberStartCommand = ReactiveCommand.Create(ResetLineNumberStart);
-        ResetLineNumberEndCommand = ReactiveCommand.Create(ResetLineNumberEnd);
+        ReseLineNumberStartCommand = ReactiveCommand.Create(Filters.ResetLineNumberStart);
+        ResetLineNumberEndCommand = ReactiveCommand.Create(Filters.ResetLineNumberEnd);
         ResetLineRangeCommand = ReactiveCommand.Create(ResetLineRange);
         CopyCodeAndDataCommand = ReactiveCommand.CreateFromTask<DxfTreeNodeViewModel>(CopyCodeAndData);
         CopyObjectTreeCommand = ReactiveCommand.CreateFromTask<DxfTreeNodeViewModel>(CopyObjectTree);
@@ -239,22 +203,8 @@ public class DxfTreeViewModel : ReactiveObject
     public ICommand RemoveDataTagCommand { get; }
     
     public ICommand RemoveNodeCommand { get; }
-    
-    public int OriginalStartLine { get; set; } = 1;
 
-    public int OriginalEndLine { get; set; } = int.MaxValue;
-
-    public int LineNumberStart
-    {
-        get => _lineNumberStart;
-        set => this.RaiseAndSetIfChanged(ref _lineNumberStart, value);
-    }
-
-    public int LineNumberEnd
-    {
-        get => _lineNumberEnd;
-        set => this.RaiseAndSetIfChanged(ref _lineNumberEnd, value);
-    }
+    public DxfTreeFiltersViewModel Filters { get; }
 
     public bool HasLoadedFile
     {
@@ -268,18 +218,6 @@ public class DxfTreeViewModel : ReactiveObject
         set => this.RaiseAndSetIfChanged(ref _fileName, value);
     }
 
-    public ObservableCollection<TagModel> CodeTags
-    {
-        get => _codeTags;
-        private set => this.RaiseAndSetIfChanged(ref _codeTags, value);
-    }
-
-    public ObservableCollection<TagModel> DataTags
-    {
-        get => _dataTags;
-        private set => this.RaiseAndSetIfChanged(ref _dataTags, value);
-    }
-
     public string NewCodeTag
     {
         get => _newCodeTag;
@@ -290,18 +228,6 @@ public class DxfTreeViewModel : ReactiveObject
     {
         get => _newDataTag;
         set => this.RaiseAndSetIfChanged(ref _newDataTag, value);
-    }
-
-    public FilterOptions CodeFilterOptions
-    {
-        get => _codeFilterOptions;
-        set => this.RaiseAndSetIfChanged(ref _codeFilterOptions, value);
-    }
-
-    public FilterOptions DataFilterOptions
-    {
-        get => _dataFilterOptions;
-        set => this.RaiseAndSetIfChanged(ref _dataFilterOptions, value);
     }
 
     public ObservableCollection<string> UniqueCodeValues
@@ -317,135 +243,167 @@ public class DxfTreeViewModel : ReactiveObject
     }
 
     public ITreeDataGridSource<DxfTreeNodeViewModel> Source => _source;
-    
-    public DxfTreeViewModel CreateFilteredView(DxfTreeNodeViewModel selectedNode)
+   
+    public static DxfTreeViewModel CreateFilteredView(DxfTreeNodeViewModel selectedNode, string fileName, Action<int>? progressCallback = null)
     {
         var filteredViewModel = new DxfTreeViewModel();
-        filteredViewModel.FileName = this.FileName;
-        filteredViewModel.HasLoadedFile = true;
+
+        filteredViewModel.FileName = fileName;
+        filteredViewModel.HasLoadedFile = false;
+
+        filteredViewModel._isFiltering = true;
+        filteredViewModel.Filters.Disable();
+        using var _ = filteredViewModel._allNodesCache.SuspendNotifications();
+        
         var rawTags = new List<DxfRawTag>();
+        var rootTag = DxfRawTagCache.Instance.GetOrCreate(selectedNode.RawTag);
+        rawTags.Add(rootTag);
 
-        if (selectedNode.RawTag != null)
+        var processedNodes = 0;
+        var nodes = ConvertToTreeNodes(
+            rawTags,
+            filteredViewModel.Filters,
+            selectedNode.StartLine, () =>
+            {
+                processedNodes++;
+                progressCallback?.Invoke(processedNodes);
+            });
+
+        filteredViewModel._allNodesCache.Edit(x =>
         {
-            // Use the cache to get the raw tag - no need to copy
-            var rootTag = DxfRawTagCache.Instance.GetOrCreate(selectedNode.RawTag);
-            rawTags.Add(rootTag);
+            x.AddOrUpdate(nodes);
+        });
+   
+        filteredViewModel.HasLoadedFile = true;
 
-            // Rest of the initialization code...
-            filteredViewModel.OriginalStartLine = selectedNode.StartLine;
-            filteredViewModel.OriginalEndLine = selectedNode.EndLine;
-            filteredViewModel.LineNumberStart = selectedNode.StartLine;
-            filteredViewModel.LineNumberEnd = selectedNode.EndLine;
+        filteredViewModel._isFiltering = false;
+        
+        var allNodes = filteredViewModel._allNodesCache.Items.SelectMany(GetAllNodes).ToList();
 
-            filteredViewModel._allNodes = ConvertToTreeNodes(rawTags, selectedNode.StartLine);
+        filteredViewModel.Filters.OriginalStartLine = selectedNode.StartLine;
+        filteredViewModel.Filters.OriginalEndLine = selectedNode.EndLine;
+        filteredViewModel.Filters.LineNumberStart = selectedNode.StartLine;
+        filteredViewModel.Filters.LineNumberEnd = selectedNode.EndLine;
 
-            foreach (var node in filteredViewModel._allNodes.SelectMany(n => GetAllNodes(n)))
-            {
-                filteredViewModel._nodeCache[node.NodeKey] = node;
-            }
+        filteredViewModel.Initialize(allNodes);
 
-            // Build unique values for filtering
-            var uniqueCodes = new HashSet<string>();
-            var uniqueData = new HashSet<string>();
-
-            foreach (var node in filteredViewModel._allNodes.SelectMany(n => GetAllNodes(n)))
-            {
-                uniqueCodes.Add(node.CodeString);
-                uniqueData.Add(node.Data);
-            }
-
-            filteredViewModel.UniqueCodeValues = new ObservableCollection<string>(uniqueCodes.OrderBy(x => x));
-            filteredViewModel.UniqueDataValues = new ObservableCollection<string>(uniqueData.OrderBy(x => x));
-
-            // Copy existing filters if any
-            if (CodeTags.Any() || DataTags.Any())
-            {
-                foreach (var tag in CodeTags)
-                {
-                    filteredViewModel.CodeTags.Add(new TagModel(tag.Value));
-                }
-                foreach (var tag in DataTags)
-                {
-                    filteredViewModel.DataTags.Add(new TagModel(tag.Value));
-                }
-
-                filteredViewModel.CodeFilterOptions.UseExactMatch = CodeFilterOptions.UseExactMatch;
-                filteredViewModel.CodeFilterOptions.IgnoreCase = CodeFilterOptions.IgnoreCase;
-                filteredViewModel.DataFilterOptions.UseExactMatch = DataFilterOptions.UseExactMatch;
-                filteredViewModel.DataFilterOptions.IgnoreCase = DataFilterOptions.IgnoreCase;
-            }
-
-            filteredViewModel._shouldApplyFilters = true;
-            filteredViewModel.ApplyFilters();
-        }
+        filteredViewModel.Filters.Enable();
 
         return filteredViewModel;
     }
 
     public void LoadDxfData(IList<DxfRawTag> sections, string fileName, Action<int>? progressCallback = null)
     {
-        _shouldApplyFilters = false;
-        try
+        _expandedNodes.Clear();
+        _nodeCache.Clear();
+
+        FileName = fileName;
+        HasLoadedFile = false;
+
+        _isFiltering = true;
+        Filters.Disable();
+        using var _ = _allNodesCache.SuspendNotifications();
+
+        _allNodesCache.Edit(x =>
         {
-            FileName = fileName;
-            _expandedNodes.Clear();
-            _nodeCache.Clear();
+            x.Clear();
 
             // Cache all raw tags without clearing existing cache
-            var cachedSections = new List<DxfRawTag>();
-            foreach (var section in sections)
-            {
-                var cachedSection = DxfRawTagCache.Instance.GetOrCreate(section);
-                cachedSections.Add(cachedSection);
-            }
+            var cachedSections = sections.Select(s => DxfRawTagCache.Instance.GetOrCreate(s)).ToList();
 
             var processedNodes = 0;
-            _allNodes = ConvertToTreeNodes(cachedSections, 1, () =>
+            var nodes = ConvertToTreeNodes(cachedSections, Filters, 1, () =>
             {
                 processedNodes++;
                 progressCallback?.Invoke(processedNodes);
             });
 
-            // Rest of the initialization code...
-            if (_allNodes.Any())
-            {
-                var allNodes = _allNodes.SelectMany(GetAllNodes).ToList();
-                OriginalEndLine = allNodes.Max(n => n.EndLine);
-                LineNumberEnd = OriginalEndLine;
-                OriginalStartLine = 1;
-                LineNumberStart = 1;
+            // Add nodes to the source list
+            x.AddOrUpdate(nodes);
+        });
+  
+        HasLoadedFile = true;
 
-                foreach (var node in allNodes)
-                {
-                    _nodeCache[node.NodeKey] = node;
-                }
+        _isFiltering = false;
 
-                var codes = new HashSet<string>();
-                var data = new HashSet<string>();
+        var allNodes = _allNodesCache.Items.SelectMany(GetAllNodes).ToList();
 
-                foreach (var node in allNodes)
-                {
-                    codes.Add(node.CodeString);
-                    data.Add(node.Data);
-                }
+        Filters.OriginalStartLine = 1;
+        Filters.OriginalEndLine = allNodes.Max(n => n.EndLine);
+        Filters.LineNumberEnd = Filters.OriginalEndLine;
+        Filters.LineNumberStart = 1;
 
-                UniqueCodeValues = new ObservableCollection<string>(codes.OrderBy(x => x));
-                UniqueDataValues = new ObservableCollection<string>(data.OrderBy(x => x));
-            }
-
-            HasLoadedFile = true;
-            _shouldApplyFilters = true;
-            ApplyFilters();
-        }
-        finally
-        {
-            _shouldApplyFilters = true;
-        }
+        Initialize(allNodes);
+   
+        Filters.Enable();
 
         // Optionally run garbage collection on the cache
         DxfRawTagCache.Instance.CollectGarbage();
     }
 
+    public void Initialize(IReadOnlyList<DxfTreeNodeViewModel> allNodes)
+    {
+        foreach (var node in allNodes)
+        {
+            _nodeCache[node.NodeKey] = node;
+        }
+
+        var uniqueCodes = new HashSet<string>();
+        var uniqueData = new HashSet<string>();
+
+        foreach (var node in allNodes)
+        {
+            uniqueCodes.Add(node.CodeString);
+            uniqueData.Add(node.Data);
+        }
+
+        UniqueCodeValues = new ObservableCollection<string>(uniqueCodes.OrderBy(x => x));
+        UniqueDataValues = new ObservableCollection<string>(uniqueData.OrderBy(x => x));
+
+        InitializeFiltering(_allNodesCache.Items);
+        UpdateObjectCount(_allNodesCache.Items);
+        UpdateTotalDataSize(_allNodesCache.Items);
+    }
+
+    private void InitializeFiltering(IEnumerable<DxfTreeNodeViewModel> nodes)
+    {
+        foreach (var node in nodes)
+        {
+            node.InitializeFiltering();
+
+            if (node.Nodes.Any())
+            {
+                InitializeFiltering(node.Nodes);
+            }
+        }
+    }
+
+    private void UpdateObjectCount(IEnumerable<DxfTreeNodeViewModel> nodes)
+    {
+        foreach (var node in nodes)
+        {
+            node.UpdateObjectCount();
+
+            if (node.HasChildren)
+            {
+                UpdateObjectCount(node.Children);
+            }
+        }
+    }
+
+    private void UpdateTotalDataSize(IEnumerable<DxfTreeNodeViewModel> nodes)
+    {
+        foreach (var node in nodes)
+        {
+            node.UpdateTotalDataSize();
+
+            if (node.HasChildren)
+            {
+                UpdateTotalDataSize(node.Children);
+            }
+        }
+    }
+    
     private async Task ExpandAllAsync(CancellationToken cancellationToken)
     {
         if (_isExpanding)
@@ -457,10 +415,12 @@ public class DxfTreeViewModel : ReactiveObject
         {
             _isExpanding = true;
 
+            // TODO:
+            /*
             await Task.Run(() =>
             {
                 _expandedNodes.Clear();
-                foreach (var node in _allNodes)
+                foreach (var node in _allNodesCache.Items)
                 {
                     if (cancellationToken.IsCancellationRequested)
                     {
@@ -470,8 +430,9 @@ public class DxfTreeViewModel : ReactiveObject
                     ExpandAllNodes([node]);
                 }
             }, cancellationToken);
+            */
 
-            ApplyFilters();
+            _source.ExpandAll();
         }
         finally
         {
@@ -490,6 +451,8 @@ public class DxfTreeViewModel : ReactiveObject
         {
             _isCollapsing = true;
 
+            // TODO:
+            /*
             await Task.Run(() =>
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -497,17 +460,18 @@ public class DxfTreeViewModel : ReactiveObject
                     return;
                 }
 
-                CollapseAllNodes(_allNodes);
+                CollapseAllNodes(_allNodesCache.Items);
             }, cancellationToken);
+            */
 
-            ApplyFilters();
+            _source.CollapseAll();
         }
         finally
         {
             _isCollapsing = false;
         }
     }
-    
+
     private async Task CopyFilteredObjectTree()
     {
         var clipboard = GetClipboard();
@@ -524,68 +488,28 @@ public class DxfTreeViewModel : ReactiveObject
 
     private void ResetFilters()
     {
-        _shouldApplyFilters = false;
-        try
-        {
-            ResetCode();
-            ResetCodeFilterOptions();
-            ResetData();
-            ResetDataFilterOptions();
-        }
-        finally
-        {
-            _shouldApplyFilters = true;
-            ApplyFilters();
-        }
+        ResetCode();
+        Filters.ResetCodeFilterOptions();
+        ResetData();
+        Filters.ResetDataFilterOptions();
     }
 
     private void ResetCode()
     {
-        CodeTags.Clear();
+        Filters.CodeTags.Clear();
         NewCodeTag = "";
     }
 
     private void ResetData()
     {
-        DataTags.Clear();
+        Filters.DataTags.Clear();
         NewDataTag = "";
     }
 
     private void ResetLineRange()
     {
-        _shouldApplyFilters = false;
-        try
-        {
-            ResetLineNumberStart();
-            ResetLineNumberEnd();
-        }
-        finally
-        {
-            _shouldApplyFilters = true;
-            ApplyFilters();
-        }
-    }
-
-    private void ResetLineNumberStart()
-    {
-        LineNumberStart = OriginalStartLine;
-    }
-
-    private void ResetLineNumberEnd()
-    {
-        LineNumberEnd = OriginalEndLine;
-    }
-
-    public void ResetCodeFilterOptions()
-    {
-        CodeFilterOptions.UseExactMatch = true;
-        CodeFilterOptions.IgnoreCase = true;
-    }
-
-    public void ResetDataFilterOptions()
-    {
-        DataFilterOptions.UseExactMatch = false;
-        DataFilterOptions.IgnoreCase = true;
+        Filters.ResetLineNumberStart();
+        Filters.ResetLineNumberEnd();
     }
 
     private async Task CopyCode(DxfTreeNodeViewModel? nodeView)
@@ -616,52 +540,28 @@ public class DxfTreeViewModel : ReactiveObject
     {
         if (!string.IsNullOrWhiteSpace(NewCodeTag))
         {
-            _shouldApplyFilters = false;
-            try
-            {
-                CodeTags.Add(new TagModel(NewCodeTag));
-                NewCodeTag = "";
-            }
-            finally
-            {
-                _shouldApplyFilters = true;
-                ApplyFilters();
-            }
+            Filters.CodeTags.Add(new TagModel(NewCodeTag));
+            NewCodeTag = "";
         }
     }
 
     private void RemoveCodeTag(TagModel tag)
     {
-        if (CodeTags.Remove(tag))
-        {
-            ApplyFilters();
-        }
+        Filters.CodeTags.Remove(tag);
     }
 
     private void AddDataTag()
     {
         if (!string.IsNullOrWhiteSpace(NewDataTag))
         {
-            _shouldApplyFilters = false;
-            try
-            {
-                DataTags.Add(new TagModel(NewDataTag));
-                NewDataTag = "";
-            }
-            finally
-            {
-                _shouldApplyFilters = true;
-                ApplyFilters();
-            }
+            Filters.DataTags.Add(new TagModel(NewDataTag));
+            NewDataTag = "";
         }
     }
 
     private void RemoveDataTag(TagModel tag)
     {
-        if (DataTags.Remove(tag))
-        {
-            ApplyFilters();
-        }
+        Filters.DataTags.Remove(tag);
     }
 
     private void RemoveNode(DxfTreeNodeViewModel? node)
@@ -674,13 +574,13 @@ public class DxfTreeViewModel : ReactiveObject
         // Remove from parent's children collection
         if (node.Parent != null)
         {
-            node.Parent.Children.Remove(node);
+            node.Parent.RemoveChild(node);
             node.Parent.UpdateTotalDataSize();
         }
         else
         {
             // If it's a root node, remove from _allNodes
-            _allNodes.Remove(node);
+            _allNodesCache.Remove(node);
         }
 
         // Update source
@@ -688,7 +588,7 @@ public class DxfTreeViewModel : ReactiveObject
         if (currentItems.Contains(node))
         {
             currentItems.Remove(node);
-            _source.Items = currentItems;
+            //_source.Items = currentItems;
         }
     }
 
@@ -771,9 +671,9 @@ public class DxfTreeViewModel : ReactiveObject
 
     private void BuildFilteredTreeText(DxfTreeNodeViewModel node, StringBuilder sb)
     {
-        bool nodeMatches = MatchesFilters(node);
+        bool nodeMatches = Filters.MatchesFilters(node);
         bool isTypeNode = node.Code == DxfParser.DxfCodeForType;
-        bool hasMatchingDescendant = node.HasChildren && HasMatchingDescendant(node.Children.ToList());
+        bool hasMatchingDescendant = node.HasChildren && HasMatchingDescendant(node.Children);
 
         if (nodeMatches || hasMatchingDescendant)
         {
@@ -841,12 +741,8 @@ public class DxfTreeViewModel : ReactiveObject
                 endLine = allLines.Max(r => r.EndLine);
             }
 
-            LineNumberStart = startLine;
-            LineNumberEnd = endLine;
-
-            // TODO:
-            // ResetCode();
-            // ResetData();
+            Filters.LineNumberStart = startLine;
+            Filters.LineNumberEnd = endLine;
         }
     }
 
@@ -871,10 +767,9 @@ public class DxfTreeViewModel : ReactiveObject
         if (nodeView != null)
         {
             var codeValue = nodeView.Code.ToString();
-            if (!CodeTags.Any(t => t.Value.Equals(codeValue, StringComparison.OrdinalIgnoreCase)))
+            if (!Filters.CodeTags.Any(t => t.Value.Equals(codeValue, StringComparison.OrdinalIgnoreCase)))
             {
-                CodeTags.Add(new TagModel(codeValue));
-                ApplyFilters();
+                Filters.CodeTags.Add(new TagModel(codeValue));
             }
         }
     }
@@ -884,193 +779,20 @@ public class DxfTreeViewModel : ReactiveObject
         if (nodeView != null)
         {
             var dataValue = nodeView.Data;
-            if (!DataTags.Any(t => t.Value.Equals(dataValue, StringComparison.OrdinalIgnoreCase)))
+            if (!Filters.DataTags.Any(t => t.Value.Equals(dataValue, StringComparison.OrdinalIgnoreCase)))
             {
-                DataTags.Add(new TagModel(dataValue));
-                ApplyFilters();
+                Filters.DataTags.Add(new TagModel(dataValue));
             }
         }
     }
 
-    private void ApplyFilters()
-    {
-        if (!_shouldApplyFilters || !HasLoadedFile)
-        {
-            return;
-        }
-
-        // Create new filtered nodes
-        var filteredNodes = FilterNodes(_allNodes);
-
-        // Important: Update the source with new nodes
-        _source.Items = filteredNodes;
-    }
-
-    private List<DxfTreeNodeViewModel> FilterNodes(List<DxfTreeNodeViewModel> nodes)
-    {
-        var result = new List<DxfTreeNodeViewModel>();
-        var visibleNodes = new HashSet<string>();
-
-        // First pass: Mark all nodes that match the filters and their ancestors
-        foreach (var node in _allNodes.SelectMany(GetAllNodes))
-        {
-            if (MatchesFilters(node))
-            {
-                // Mark this node and all its ancestors as visible
-                MarkNodeAndAncestorsVisible(node, visibleNodes);
-            }
-        }
-
-        // Second pass: Create filtered tree with visible nodes
-        foreach (var node in nodes)
-        {
-            if (visibleNodes.Contains(node.NodeKey))
-            {
-                var filteredNode = CreateFilteredNode(node, visibleNodes);
-                result.Add(filteredNode);
-            }
-        }
-
-        return result;
-    }
-
-    private void MarkNodeAndAncestorsVisible(DxfTreeNodeViewModel node, HashSet<string> visibleNodes)
-    {
-        var current = node;
-        while (current != null)
-        {
-            visibleNodes.Add(current.NodeKey);
-
-            // Move to parent if it exists
-            current = GetParentNode(current);
-        }
-    }
-
-    private DxfTreeNodeViewModel? GetParentNode(DxfTreeNodeViewModel node)
-    {
-        if (node.RawTag?.Parent == null) return null;
-
-        var parentKey = GetNodeKey(node.RawTag.Parent);
-        return _nodeCache.TryGetValue(parentKey, out var parentNode) ? parentNode : null;
-    }
-
-    private string GetNodeKey(DxfRawTag tag)
-    {
-        string type = tag.GroupCode == DxfParser.DxfCodeForType
-            ? tag.DataElement ?? "TYPE"
-            : tag.GroupCode.ToString();
-
-        return $"{tag.LineNumber}:{type}:{tag.DataElement}";
-    }
-
-    private DxfTreeNodeViewModel CreateFilteredNode(DxfTreeNodeViewModel originalNode, HashSet<string> visibleNodes)
-    {
-        // Create a new node instance
-        var newNode = new DxfTreeNodeViewModel(
-            originalNode.StartLine,
-            originalNode.EndLine,
-            originalNode.Code,
-            originalNode.Data,
-            originalNode.Type,
-            originalNode.NodeKey,
-            originalNode.OriginalGroupCodeLine,
-            originalNode.OriginalDataLine,
-            originalNode.RawTag) 
-        { 
-            IsExpanded = _expandedNodes.Contains(originalNode.NodeKey)
-        };
-
-        // Add visible children
-        if (originalNode.HasChildren)
-        {
-            foreach (var child in originalNode.Children)
-            {
-                if (visibleNodes.Contains(child.NodeKey))
-                {
-                    var newChild = CreateFilteredNode(child, visibleNodes);
-                    newChild.Parent = newNode;  // Set parent reference
-                    newNode.Children.Add(newChild);
-                }
-            }
-        }
-
-        newNode.UpdateTotalDataSize();
-        return newNode;
-    }
-    
-    private bool MatchesFilters(DxfTreeNodeViewModel nodeView)
-    {
-        // Line range filter - this is always required
-        bool matchesLineRange = nodeView.StartLine >= LineNumberStart &&
-                                nodeView.EndLine <= (LineNumberEnd == 1 ? int.MaxValue : LineNumberEnd);
-        if (!matchesLineRange) return false;
-
-        // If no filters are active, show everything within line range
-        if (CodeTags.Count == 0 && DataTags.Count == 0)
-        {
-            return true;
-        }
-
-        // If we have a Data filter
-        if (DataTags.Count > 0)
-        {
-            bool matchesData = DataTags.Any(tag => MatchesFilter(nodeView.Data, tag.Value, DataFilterOptions));
-
-            // Direct match with Data filter
-            if (matchesData)
-            {
-                // If we also have Code filters and this isn't a group element,
-                // it must also match a Code filter
-                if (CodeTags.Count > 0 && nodeView.Code != DxfParser.DxfCodeForType)
-                {
-                    return CodeTags.Any(tag => MatchesFilter(nodeView.CodeString, tag.Value, CodeFilterOptions));
-                }
-                return true;
-            }
-
-            // For children of matching Code 0 elements
-            if (nodeView.Parent?.Code == DxfParser.DxfCodeForType && 
-                DataTags.Any(tag => MatchesFilter(nodeView.Parent.Data, tag.Value, DataFilterOptions)))
-            {
-                // If we have Code filters, only show matching children
-                if (CodeTags.Count > 0)
-                {
-                    return CodeTags.Any(tag => MatchesFilter(nodeView.CodeString, tag.Value, CodeFilterOptions));
-                }
-                // If no Code filters, show all children of matching Data groups
-                return true;
-            }
-
-            // Hide everything else when we have a Data filter
-            return false;
-        }
-
-        // If we only have Code filters, show matching elements
-        return CodeTags.Any(tag => MatchesFilter(nodeView.CodeString, tag.Value, CodeFilterOptions));
-    }
-
-    private static bool MatchesFilter(string value, string filter, FilterOptions options)
-    {
-        if (string.IsNullOrEmpty(filter))
-            return true;
-
-        var comparison = options.IgnoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-
-        if (options.UseExactMatch)
-        {
-            return value.Equals(filter, comparison);
-        }
-
-        return value.Contains(filter, comparison);
-    }
-
-    private IEnumerable<DxfTreeNodeViewModel> GetAllNodes(DxfTreeNodeViewModel node)
+    private static IEnumerable<DxfTreeNodeViewModel> GetAllNodes(DxfTreeNodeViewModel node)
     {
         yield return node;
 
-        if (node.HasChildren)
+        if (node.Nodes.Any())
         {
-            foreach (var child in node.Children)
+            foreach (var child in node.Nodes)
             {
                 foreach (var descendant in GetAllNodes(child))
                 {
@@ -1080,12 +802,12 @@ public class DxfTreeViewModel : ReactiveObject
         }
     }
 
-    private bool HasMatchingDescendant(List<DxfTreeNodeViewModel> nodes)
+    private bool HasMatchingDescendant(IReadOnlyList<DxfTreeNodeViewModel> nodes)
     {
         foreach (var node in nodes)
         {
-            if (MatchesFilters(node)) return true;
-            if (node.HasChildren && HasMatchingDescendant(node.Children.ToList())) return true;
+            if (Filters.MatchesFilters(node)) return true;
+            if (node.HasChildren && HasMatchingDescendant(node.Children)) return true;
         }
 
         return false;
@@ -1094,9 +816,12 @@ public class DxfTreeViewModel : ReactiveObject
     private static void AddChildNodes(
         DxfTreeNodeViewModel parent,
         IList<DxfRawTag> children,
+        DxfTreeFiltersViewModel filters,
         ref int lineNumber,
         Action? onNodeProcessed = null)
     {
+        var toAddChildren = new List<DxfTreeNodeViewModel>();
+        
         int startLine = lineNumber;
         foreach (var child in children)
         {
@@ -1113,7 +838,8 @@ public class DxfTreeViewModel : ReactiveObject
                 $"{lineNumber}:{type}:{child.DataElement}",
                 child.OriginalGroupCodeLine,
                 child.OriginalDataLine,
-                child)
+                child,
+                filters)
             {
                 Parent = parent  // Set the parent reference
             };
@@ -1123,14 +849,15 @@ public class DxfTreeViewModel : ReactiveObject
 
             if (child.Children != null)
             {
-                AddChildNodes(node, child.Children, ref lineNumber, onNodeProcessed);
+                AddChildNodes(node, child.Children, filters, ref lineNumber, onNodeProcessed);
             }
 
-            node.UpdateTotalDataSize();
-            parent.Children.Add(node);
+            toAddChildren.Add(node);
         }
 
-        if (parent.Children.Any())
+        parent.AddChildRange(toAddChildren);
+        
+        if (toAddChildren.Any())
         {
             parent.EndLine = lineNumber - 1;
             parent.UpdateLineRange(startLine, lineNumber - 1);
@@ -1139,6 +866,7 @@ public class DxfTreeViewModel : ReactiveObject
 
     private static List<DxfTreeNodeViewModel> ConvertToTreeNodes(
         IList<DxfRawTag> sections,
+        DxfTreeFiltersViewModel filters,
         int startLineNumber = 1,
         Action? onNodeProcessed = null)
     {
@@ -1157,30 +885,30 @@ public class DxfTreeViewModel : ReactiveObject
                 $"{lineNumber}:SECTION:{section.DataElement}",
                 section.OriginalGroupCodeLine,
                 section.OriginalDataLine,
-                section);
+                section,
+                filters);
             onNodeProcessed?.Invoke();
 
             lineNumber += 2;
 
             if (section.Children != null)
             {
-                AddChildNodes(sectionNode, section.Children, ref lineNumber, onNodeProcessed);
+                AddChildNodes(sectionNode, section.Children, filters, ref lineNumber, onNodeProcessed);
             }
 
-            if (sectionNode.Children.Any())
+            if (sectionNode.Nodes.Any())
             {
                 sectionNode.EndLine = lineNumber - 1;
                 sectionNode.UpdateLineRange(sectionStart, lineNumber - 1);
             }
 
-            sectionNode.UpdateTotalDataSize();
             nodes.Add(sectionNode);
         }
 
         return nodes;
     }
 
-    private void ExpandAllNodes(List<DxfTreeNodeViewModel> nodes)
+    private void ExpandAllNodes(IReadOnlyList<DxfTreeNodeViewModel> nodes)
     {
         foreach (var node in nodes)
         {
@@ -1188,12 +916,12 @@ public class DxfTreeViewModel : ReactiveObject
             {
                 node.IsExpanded = true;
                 _expandedNodes.Add(node.NodeKey);
-                ExpandAllNodes(node.Children.ToList());
+                ExpandAllNodes(node.Children);
             }
         }
     }
 
-    private void CollapseAllNodes(List<DxfTreeNodeViewModel> nodes)
+    private void CollapseAllNodes(IEnumerable<DxfTreeNodeViewModel> nodes)
     {
         foreach (var node in nodes)
         {

@@ -1,15 +1,22 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using ReactiveUI;
 using dxfInspect.Model;
 using dxfInspect.Services;
+using DynamicData;
+using DynamicData.Binding;
 
 namespace dxfInspect.ViewModels;
 
 public class DxfTreeNodeViewModel : ReactiveObject
 {
+    private readonly SourceCache<DxfTreeNodeViewModel, int> _allNodes;
+    private ReadOnlyObservableCollection<DxfTreeNodeViewModel> _filteredCollection;
     private bool _isExpanded;
     private DxfLineRange _lineRange;
+    private int _startLine;
     private int _endLine;
     private long _dataSize;
     private long _totalDataSize;
@@ -17,7 +24,15 @@ public class DxfTreeNodeViewModel : ReactiveObject
     private int _code;
     private string _originalGroupCodeLine;
     private string _originalDataLine;
+    private readonly DxfTreeFiltersViewModel _filters;
     private int _objectCount;
+    private string _groupCodeDescription = "";
+    private string _groupCodeValueType = "";   
+    private string _leadingCodeWhitespace = "";
+    private string _trailingCodeWhitespace = "";
+    private string _leadingDataWhitespace = "";
+    private string _trailingDataWhitespace = "";
+    private IDisposable _disposeConnection;
 
     public DxfTreeNodeViewModel(
         int startLine,
@@ -28,8 +43,12 @@ public class DxfTreeNodeViewModel : ReactiveObject
         string nodeKey,
         string originalGroupCodeLine,
         string originalDataLine,
-        DxfRawTag rawTag)
+        DxfRawTag rawTag,
+        DxfTreeFiltersViewModel filters)
     {
+        _filters = filters;
+        _allNodes = new SourceCache<DxfTreeNodeViewModel, int>(x => x.StartLine);
+
         StartLine = startLine;
         _endLine = endLine;
         _lineRange = new DxfLineRange(startLine, endLine);
@@ -46,13 +65,36 @@ public class DxfTreeNodeViewModel : ReactiveObject
 
         UpdateDescription();
         UpdateValueType();
-        UpdateObjectCount();
+    }
+
+    public void InitializeFiltering()
+    { 
+        using var _ = _allNodes.SuspendNotifications();
+
+        if (_allNodes.Items.Any())
+        {
+            _disposeConnection = _allNodes.Connect()
+                .Filter(_filters.Filter)
+                .Sort(SortExpressionComparer<DxfTreeNodeViewModel>.Ascending(x => x.StartLine))
+                .Bind(out _filteredCollection)
+                .Subscribe();
+        }
+        else
+        {
+            _disposeConnection = _allNodes.Connect()
+                .Sort(SortExpressionComparer<DxfTreeNodeViewModel>.Ascending(x => x.StartLine))
+                .Bind(out _filteredCollection)
+                .Subscribe();
+        }
     }
 
     public DxfTreeNodeViewModel? Parent { get; set; }
-    public int StartLine { get; }
-    private string _groupCodeDescription = "";
-    private string _groupCodeValueType = "";
+
+    public int StartLine
+    {
+        get => _startLine;
+        set => this.RaiseAndSetIfChanged(ref _startLine, value);
+    }
 
     public int EndLine
     {
@@ -121,9 +163,11 @@ public class DxfTreeNodeViewModel : ReactiveObject
     }
 
     public DxfRawTag RawTag { get; }
-        
-    public ObservableCollection<DxfTreeNodeViewModel> Children { get; } = [];
-        
+
+    public IEnumerable<DxfTreeNodeViewModel> Nodes => _allNodes.Items;
+
+    public IReadOnlyList<DxfTreeNodeViewModel> Children => _filteredCollection;
+
     public bool HasChildren => Children.Count > 0;
 
     public bool IsExpanded
@@ -145,11 +189,26 @@ public class DxfTreeNodeViewModel : ReactiveObject
         get => _groupCodeValueType;
         private set => this.RaiseAndSetIfChanged(ref _groupCodeValueType, value);
     }
-        
+
+    public void AddChild(DxfTreeNodeViewModel child)
+    {
+        _allNodes.AddOrUpdate(child);
+    }
+    
+    public void AddChildRange(IEnumerable<DxfTreeNodeViewModel> children)
+    {
+        _allNodes.AddOrUpdate(children);
+    }
+
+    public void RemoveChild(DxfTreeNodeViewModel child)
+    {
+        _allNodes.Remove(child);
+    }
+
     public void UpdateObjectCount()
     {
         int count = 0;
-        
+
         if (HasChildren)
         {
             foreach (var child in Children)
@@ -210,18 +269,13 @@ public class DxfTreeNodeViewModel : ReactiveObject
         get => _objectCount;
         private set => this.RaiseAndSetIfChanged(ref _objectCount, value);
     }
-        
+
     private void UpdateNodeKey()
     {
         string type = Code == DxfParser.DxfCodeForType ? Data : Code.ToString();
         NodeKey = $"{StartLine}:{type}:{Data}";
         this.RaisePropertyChanged(nameof(NodeKey));
     }
-
-    private string _leadingCodeWhitespace = "";
-    private string _trailingCodeWhitespace = "";
-    private string _leadingDataWhitespace = "";
-    private string _trailingDataWhitespace = "";
 
     private void ExtractWhitespace(string originalGroupCodeLine, string originalDataLine)
     {
@@ -263,7 +317,7 @@ public class DxfTreeNodeViewModel : ReactiveObject
 
     private void UpdateOriginalLines()
     {
-        OriginalGroupCodeLine = _leadingCodeWhitespace + Code.ToString() + _trailingCodeWhitespace;
+        OriginalGroupCodeLine = _leadingCodeWhitespace + Code + _trailingCodeWhitespace;
         OriginalDataLine = _leadingDataWhitespace + Data + _trailingDataWhitespace;
     }
 
