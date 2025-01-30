@@ -11,6 +11,7 @@ namespace dxfInspect.ViewModels;
 
 public class DxfTreeFiltersViewModel : ReactiveObject
 {
+    private readonly Subject<Unit> _filterChanged = new();
     private bool _shouldApplyFilters;
     private int _lineNumberStart = 1;
     private int _lineNumberEnd = int.MaxValue;
@@ -18,8 +19,6 @@ public class DxfTreeFiltersViewModel : ReactiveObject
     private ObservableCollection<TagModel> _dataTags = new();
     private FilterOptions _codeFilterOptions = new(useExactMatch: true, ignoreCase: true);
     private FilterOptions _dataFilterOptions = new(useExactMatch: false, ignoreCase: true);
-
-    private readonly Subject<Unit> _filterChanged = new();
     
     public DxfTreeFiltersViewModel()
     {
@@ -51,15 +50,7 @@ public class DxfTreeFiltersViewModel : ReactiveObject
             .Select(_ => new Func<DxfTreeNodeViewModel, bool>(MatchesFilters))
             .StartWith(_ => true);
     }
-    
-    private void NotifyFilterChanged()
-    {
-        if (_shouldApplyFilters)
-        {
-            _filterChanged.OnNext(Unit.Default);
-        }
-    }
-
+ 
     public IObservable<Func<DxfTreeNodeViewModel,bool>> Filter { get; }
 
     public int OriginalStartLine { get; set; } = 1;
@@ -101,7 +92,7 @@ public class DxfTreeFiltersViewModel : ReactiveObject
         get => _dataFilterOptions;
         set => this.RaiseAndSetIfChanged(ref _dataFilterOptions, value);
     }
-
+ 
     public void Enable() => _shouldApplyFilters = true;
     
     public void Disable() => _shouldApplyFilters = false;
@@ -209,5 +200,13 @@ public class DxfTreeFiltersViewModel : ReactiveObject
         }
 
         return value.Contains(filter, comparison);
+    }
+
+    private void NotifyFilterChanged()
+    {
+        if (_shouldApplyFilters)
+        {
+            _filterChanged.OnNext(Unit.Default);
+        }
     }
 }

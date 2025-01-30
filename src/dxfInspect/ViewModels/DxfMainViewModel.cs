@@ -15,7 +15,6 @@ public class MainViewModel : ReactiveObject
 {
     private const double ParsingWeight = 0.7; // 70% for parsing
     private const double ViewModelWeight = 0.3; // 30% for view model creation
-
     private ObservableCollection<DxfTabViewModel> _tabs;
     private DxfTabViewModel? _selectedTab;
     private bool _isLoading;
@@ -67,6 +66,7 @@ public class MainViewModel : ReactiveObject
     }
 
     public ICommand CloseTabCommand { get; }
+
     public ICommand OpenInNewTabCommand { get; }
 
     public async Task LoadDxfFileAsync(IStorageFile file)

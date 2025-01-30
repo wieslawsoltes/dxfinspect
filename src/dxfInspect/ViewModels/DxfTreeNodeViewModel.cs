@@ -67,27 +67,6 @@ public class DxfTreeNodeViewModel : ReactiveObject
         UpdateValueType();
     }
 
-    public void InitializeFiltering()
-    { 
-        using var _ = _allNodes.SuspendNotifications();
-
-        if (_allNodes.Items.Any())
-        {
-            _disposeConnection = _allNodes.Connect()
-                .Filter(_filters.Filter)
-                .Sort(SortExpressionComparer<DxfTreeNodeViewModel>.Ascending(x => x.StartLine))
-                .Bind(out _filteredCollection)
-                .Subscribe();
-        }
-        else
-        {
-            _disposeConnection = _allNodes.Connect()
-                .Sort(SortExpressionComparer<DxfTreeNodeViewModel>.Ascending(x => x.StartLine))
-                .Bind(out _filteredCollection)
-                .Subscribe();
-        }
-    }
-
     public DxfTreeNodeViewModel? Parent { get; set; }
 
     public int StartLine
@@ -190,6 +169,54 @@ public class DxfTreeNodeViewModel : ReactiveObject
         private set => this.RaiseAndSetIfChanged(ref _groupCodeValueType, value);
     }
 
+    public long TotalDataSize => _totalDataSize;
+
+    public string FormattedDataSize
+    {
+        get
+        {
+            var size = _totalDataSize;
+            string[] sizes = { "B", "KB", "MB", "GB" };
+            int order = 0;
+            double calculatedSize = size;
+
+            while (calculatedSize >= 1024 && order < sizes.Length - 1)
+            {
+                order++;
+                calculatedSize /= 1024;
+            }
+
+            return $"{calculatedSize:0.##} {sizes[order]}";
+        }
+    }
+        
+    public int ObjectCount
+    {
+        get => _objectCount;
+        private set => this.RaiseAndSetIfChanged(ref _objectCount, value);
+    }
+
+    public void InitializeFiltering()
+    { 
+        using var _ = _allNodes.SuspendNotifications();
+
+        if (_allNodes.Items.Any())
+        {
+            _disposeConnection = _allNodes.Connect()
+                .Filter(_filters.Filter)
+                .Sort(SortExpressionComparer<DxfTreeNodeViewModel>.Ascending(x => x.StartLine))
+                .Bind(out _filteredCollection)
+                .Subscribe();
+        }
+        else
+        {
+            _disposeConnection = _allNodes.Connect()
+                .Sort(SortExpressionComparer<DxfTreeNodeViewModel>.Ascending(x => x.StartLine))
+                .Bind(out _filteredCollection)
+                .Subscribe();
+        }
+    }
+
     public void AddChildRange(IEnumerable<DxfTreeNodeViewModel> children)
     {
         _allNodes.AddOrUpdate(children);
@@ -238,33 +265,12 @@ public class DxfTreeNodeViewModel : ReactiveObject
         this.RaisePropertyChanged(nameof(FormattedDataSize));
     }
 
-    public long TotalDataSize => _totalDataSize;
-
-    public string FormattedDataSize
+    public void UpdateLineRange(int startLine, int endLine)
     {
-        get
-        {
-            var size = _totalDataSize;
-            string[] sizes = { "B", "KB", "MB", "GB" };
-            int order = 0;
-            double calculatedSize = size;
-
-            while (calculatedSize >= 1024 && order < sizes.Length - 1)
-            {
-                order++;
-                calculatedSize /= 1024;
-            }
-
-            return $"{calculatedSize:0.##} {sizes[order]}";
-        }
+        _lineRange = new DxfLineRange(startLine, endLine);
+        this.RaisePropertyChanged(nameof(LineRange));
     }
-        
-    public int ObjectCount
-    {
-        get => _objectCount;
-        private set => this.RaiseAndSetIfChanged(ref _objectCount, value);
-    }
-
+    
     private void UpdateNodeKey()
     {
         string type = Code == DxfParser.DxfCodeForType ? Data : Code.ToString();
@@ -324,11 +330,5 @@ public class DxfTreeNodeViewModel : ReactiveObject
     private void UpdateValueType()
     {
         GroupCodeValueType = DxfGroupCodeInfo.GetValueType(Code);
-    }
-
-    public void UpdateLineRange(int startLine, int endLine)
-    {
-        _lineRange = new DxfLineRange(startLine, endLine);
-        this.RaisePropertyChanged(nameof(LineRange));
     }
 }
