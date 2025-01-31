@@ -160,9 +160,9 @@ public class DxfTreeFiltersViewModel : ReactiveObject
 
     private bool HasMatchingDescendant(DxfTreeNodeViewModel node)
     {
-        if (!node.HasChildren) return false;
+        if (!node.Nodes.Any()) return false;
 
-        foreach (var child in node.Children)
+        foreach (var child in node.Nodes)
         {
             if (NodeMatchesFilters(child) || HasMatchingDescendant(child))
             {
