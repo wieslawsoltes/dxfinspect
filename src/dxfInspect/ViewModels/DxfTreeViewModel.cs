@@ -15,6 +15,7 @@ using Avalonia.VisualTree;
 using dxfInspect.Services;
 using dxfInspect.Model;
 using DynamicData;
+using DynamicData.Binding;
 using ReactiveUI;
 
 namespace dxfInspect.ViewModels;
@@ -44,6 +45,7 @@ public class DxfTreeViewModel : ReactiveObject
 
         _allNodesCache.Connect() 
             .Filter(Filters.Filter)
+            .Sort(SortExpressionComparer<DxfTreeNodeViewModel>.Ascending(x => x.StartLine))
             .Bind(out _filteredCollection)
             .Subscribe();
    
