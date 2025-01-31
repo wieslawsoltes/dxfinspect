@@ -15,7 +15,6 @@ public class MainViewModel : ReactiveObject
 {
     private const double ParsingWeight = 0.7; // 70% for parsing
     private const double ViewModelWeight = 0.3; // 30% for view model creation
-
     private ObservableCollection<DxfTabViewModel> _tabs;
     private DxfTabViewModel? _selectedTab;
     private bool _isLoading;
@@ -33,7 +32,7 @@ public class MainViewModel : ReactiveObject
     public ObservableCollection<DxfTabViewModel> Tabs
     {
         get => _tabs;
-        private set => this.RaiseAndSetIfChanged(ref _tabs, value);
+        set => this.RaiseAndSetIfChanged(ref _tabs, value);
     }
 
     public DxfTabViewModel? SelectedTab
@@ -67,6 +66,7 @@ public class MainViewModel : ReactiveObject
     }
 
     public ICommand CloseTabCommand { get; }
+
     public ICommand OpenInNewTabCommand { get; }
 
     public async Task LoadDxfFileAsync(IStorageFile file)
@@ -135,17 +135,17 @@ public class MainViewModel : ReactiveObject
         
         await Task.Run(() =>
         {
-            var totalNodes = sections.Sum(s => CountNodes(s));
-            var processedNodes = 0;
+            var totalNodes = sections.Sum(CountNodes);
+
+            treeViewModel.LoadDxfData(sections, fileName, ReportProgress);
+            return;
 
             void ReportProgress(int processed)
             {
-                processedNodes = processed;
+                var processedNodes = processed;
                 var vmProgress = (double)processedNodes / totalNodes * 100;
                 LoadingProgress = (ParsingWeight * 100) + (vmProgress * ViewModelWeight);
             }
-
-            treeViewModel.LoadDxfData(sections, fileName, ReportProgress);
         });
 
         var tab = new DxfTabViewModel(fileName, treeViewModel);
@@ -168,21 +168,21 @@ public class MainViewModel : ReactiveObject
 
     private void OpenInNewTab(DxfTreeNodeViewModel node)
     {
-        var filteredViewModel = SelectedTab?.Content.CreateFilteredView(node);
-        if (filteredViewModel != null && SelectedTab != null)
+        if (SelectedTab is null)
         {
-            // Get the base filename without path
-            string baseFileName = System.IO.Path.GetFileName(SelectedTab.Title.Split(" - ")[0]);
-            
-            // Create suffix using entity type and line range
-            string entityType = node.Code == DxfParser.DxfCodeForType ? node.Data : $"Code {node.Code}";
-            string lineRange = $"[{node.LineRange}]";
-            
-            var newTitle = $"{baseFileName} - {entityType} {lineRange}";
-            var newTab = new DxfTabViewModel(newTitle, filteredViewModel);
-            Tabs.Add(newTab);
-            SelectedTab = newTab;
+            return;
         }
+
+        var selectedTreeViewModel = SelectedTab.Content;
+        var filteredViewModel = DxfTreeViewModel.CreateFilteredView(node, selectedTreeViewModel.FileName);
+        var baseFileName = System.IO.Path.GetFileName(SelectedTab.Title.Split(" - ")[0]);
+        var entityType = node.Code == DxfParser.DxfCodeForType ? node.Data : $"Code {node.Code}";
+        var lineRange = $"[{node.LineRange}]";
+        var newTitle = $"{baseFileName} - {entityType} {lineRange}";
+        var newTab = new DxfTabViewModel(newTitle, filteredViewModel);
+
+        Tabs.Add(newTab);
+        SelectedTab = newTab;
     }
 
     private void CloseTab(DxfTabViewModel tab)

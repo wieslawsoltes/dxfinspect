@@ -77,7 +77,7 @@
                     VerticalAlignment="Stretch"
                     VerticalContentAlignment="Center" />
           </Grid>
-          <ItemsControl ItemsSource="{Binding CodeTags}">
+          <ItemsControl ItemsSource="{Binding Filters.CodeTags}">
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate>
                 <WrapPanel />
@@ -106,9 +106,9 @@
           </ItemsControl>
           <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,4,0,4">
             <CheckBox Content="Exact Match" 
-                      IsChecked="{Binding CodeFilterOptions.UseExactMatch}"/>
+                      IsChecked="{Binding Filters.CodeFilterOptions.UseExactMatch}"/>
             <CheckBox Content="Ignore Case" 
-                      IsChecked="{Binding CodeFilterOptions.IgnoreCase}"/>
+                      IsChecked="{Binding Filters.CodeFilterOptions.IgnoreCase}"/>
           </StackPanel>
         </StackPanel>
 
@@ -149,7 +149,7 @@
                     VerticalAlignment="Stretch"
                     VerticalContentAlignment="Center" />
           </Grid>
-          <ItemsControl ItemsSource="{Binding DataTags}">
+          <ItemsControl ItemsSource="{Binding Filters.DataTags}">
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate>
                 <WrapPanel />
@@ -178,9 +178,9 @@
           </ItemsControl>
           <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,4,0,4">
             <CheckBox Content="Exact Match" 
-                      IsChecked="{Binding DataFilterOptions.UseExactMatch}"/>
+                      IsChecked="{Binding Filters.DataFilterOptions.UseExactMatch}"/>
             <CheckBox Content="Ignore Case" 
-                      IsChecked="{Binding DataFilterOptions.IgnoreCase}"/>
+                      IsChecked="{Binding Filters.DataFilterOptions.IgnoreCase}"/>
           </StackPanel>
         </StackPanel>
         
@@ -188,7 +188,7 @@
           <TextBlock Text="Line Range:" />
           <Grid ColumnDefinitions="*,Auto,*,Auto">
             <NumericUpDown Grid.Column="0"
-                           Value="{Binding LineNumberStart}"
+                           Value="{Binding Filters.LineNumberStart}"
                            Minimum="1">
               <NumericUpDown.InnerRightContent>
                 <Button Content="X"
@@ -207,7 +207,7 @@
                        VerticalAlignment="Center"
                        Margin="8,0" />
             <NumericUpDown Grid.Column="2"
-                           Value="{Binding LineNumberEnd}"
+                           Value="{Binding Filters.LineNumberEnd}"
                            Minimum="1">
               <NumericUpDown.InnerRightContent>
                 <Button Content="X"
