@@ -126,65 +126,136 @@ public class DxfTreeFiltersViewModel : ReactiveObject
             return true;
         }
 
-        // Line range filter
-        bool matchesLineRange = nodeView.StartLine >= LineNumberStart &&
-                                nodeView.EndLine <= (LineNumberEnd == 1 ? int.MaxValue : LineNumberEnd);
-        if (!matchesLineRange) return false;
-
-        // If no filters are active, show everything within line range
-        if (CodeTags.Count == 0 && DataTags.Count == 0)
+        try
         {
-            return true;
-        }
+            // Line range filter
+            bool matchesLineRange = nodeView.StartLine >= LineNumberStart &&
+                                  nodeView.EndLine <= (LineNumberEnd == 1 ? int.MaxValue : LineNumberEnd);
+            if (!matchesLineRange) return false;
 
-        // Check if this node or any of its descendants match the filters
-        if (NodeMatchesFilters(nodeView) || HasMatchingDescendant(nodeView))
-        {
-            return true;
-        }
-
-        // Check if any ancestor matches (especially for type 0 entities)
-        return HasMatchingAncestor(nodeView);
-    }
-
-    private bool NodeMatchesFilters(DxfTreeNodeViewModel node)
-    {
-        bool matchesCode = CodeTags.Count == 0 || 
-                           CodeTags.Any(tag => MatchesFilter(node.CodeString, tag.Value, CodeFilterOptions));
-    
-        bool matchesData = DataTags.Count == 0 ||
-                           DataTags.Any(tag => MatchesFilter(node.Data, tag.Value, DataFilterOptions));
-
-        return matchesCode && matchesData;
-    }
-
-    private bool HasMatchingDescendant(DxfTreeNodeViewModel node)
-    {
-        if (!node.Nodes.Any()) return false;
-
-        foreach (var child in node.Nodes)
-        {
-            if (NodeMatchesFilters(child) || HasMatchingDescendant(child))
+            // If no filters are active, show everything within line range
+            if (!HasActiveFilters())
             {
                 return true;
             }
-        }
 
-        return false;
+            return EvaluateNodeAgainstFilters(nodeView);
+        }
+        catch (Exception)
+        {
+            // If something goes wrong during filtering, show the node
+            return true;
+        }
     }
 
-    private bool HasMatchingAncestor(DxfTreeNodeViewModel node)
+    private bool HasActiveFilters()
     {
+        return CodeTags.Count > 0 || DataTags.Count > 0;
+    }
+
+    private bool EvaluateNodeAgainstFilters(DxfTreeNodeViewModel node)
+    {
+        bool hasCodeFilters = CodeTags.Count > 0;
+        bool hasDataFilters = DataTags.Count > 0;
+
+        // Keep track of matches for each filter type
+        bool? codeMatch = null;
+        bool? dataMatch = null;
+
+        // Check current node
+        if (hasCodeFilters)
+        {
+            codeMatch = MatchesCodeFilters(node);
+        }
+
+        if (hasDataFilters)
+        {
+            dataMatch = MatchesDataFilters(node);
+        }
+
+        // If node matches all active filters directly
+        if ((!hasCodeFilters || codeMatch == true) && (!hasDataFilters || dataMatch == true))
+        {
+            return true;
+        }
+
+        // Check ancestors
         var current = node.Parent;
         while (current != null)
         {
-            if (NodeMatchesFilters(current))
+            if (hasCodeFilters && !codeMatch.GetValueOrDefault())
+            {
+                if (MatchesCodeFilters(current))
+                {
+                    codeMatch = true;
+                }
+            }
+
+            if (hasDataFilters && !dataMatch.GetValueOrDefault())
+            {
+                if (MatchesDataFilters(current))
+                {
+                    dataMatch = true;
+                }
+            }
+
+            // If we've found matches for all active filters, we can stop
+            if ((!hasCodeFilters || codeMatch == true) && (!hasDataFilters || dataMatch == true))
             {
                 return true;
             }
+
             current = current.Parent;
         }
+
+        // Check descendants recursively
+        if (CheckDescendantsForMatches(node, hasCodeFilters && !codeMatch.GetValueOrDefault(),
+            hasDataFilters && !dataMatch.GetValueOrDefault()))
+        {
+            return true;
+        }
+
+        // If we have both types of filters, we need matches for both
+        if (hasCodeFilters && hasDataFilters)
+        {
+            return codeMatch == true && dataMatch == true;
+        }
+
+        // If we only have one type of filter, we need a match for that type
+        return (hasCodeFilters && codeMatch == true) || (hasDataFilters && dataMatch == true);
+    }
+
+    private bool CheckDescendantsForMatches(DxfTreeNodeViewModel node, bool needsCodeMatch, bool needsDataMatch)
+    {
+        if (!node.Nodes.Any() || (!needsCodeMatch && !needsDataMatch))
+        {
+            return false;
+        }
+
+        foreach (var child in node.Nodes)
+        {
+            bool foundCodeMatch = !needsCodeMatch || MatchesCodeFilters(child);
+            bool foundDataMatch = !needsDataMatch || MatchesDataFilters(child);
+
+            if ((foundCodeMatch && foundDataMatch) || 
+                CheckDescendantsForMatches(child, needsCodeMatch && !foundCodeMatch, 
+                    needsDataMatch && !foundDataMatch))
+            {
+                return true;
+            }
+        }
+
         return false;
+    }
+
+    private bool MatchesCodeFilters(DxfTreeNodeViewModel node)
+    {
+        return CodeTags.Any(tag => MatchesFilter(node.CodeString, tag.Value, CodeFilterOptions));
+    }
+
+    private bool MatchesDataFilters(DxfTreeNodeViewModel node)
+    {
+        return DataTags.Any(tag => MatchesFilter(node.Data, tag.Value, DataFilterOptions));
     }
 
     private bool MatchesFilter(string value, string filter, FilterOptions options)
