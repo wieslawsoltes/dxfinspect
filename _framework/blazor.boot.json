@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "dxfInspectWeb.dll",
   "resources": {
-    "hash": "sha256-eWzsNsH1ZL2oJ4bvx8RDyREDE6hs45ASILJUNUGtWow=",
+    "hash": "sha256-QkkkeC/w5iRfLv9lEAFcDweEL+BhZlCjhZ37rcuMDQI=",
     "jsModuleNative": {
       "dotnet.native.js": "sha256-bNPuqe+Q5Pdi/MB/jgvCs0kSZAOA4X61tdIQel6F+f8="
     },
@@ -9,7 +9,7 @@
       "dotnet.runtime.js": "sha256-gypqZnsxxUh4y4EJmawvOCaX4hoTaesVGwIgWXwZcNw="
     },
     "wasmNative": {
-      "dotnet.native.wasm": "sha256-GyLAg1RzLNRgeczewR/BlqZyxohk9XpSZCCkL1HtZbA="
+      "dotnet.native.wasm": "sha256-LN1mKKNqrWPLyB1atC8qQIkxmw2if2rqARhaHldHYRA="
     },
     "wasmSymbols": {
       "dotnet.native.js.symbols": "sha256-owZRsHNjimLNi1Uspq14Ze0rwxvbu/SlGDIH4DYL+c8="
@@ -20,14 +20,14 @@
       "icudt_no_CJK.dat": "sha256-L7sV7NEYP37/Qr2FPCePo5cJqRgTXRwGHuwF5Q+0Nfs="
     },
     "coreAssembly": {
-      "System.Private.CoreLib.wasm": "sha256-slpHDeO4W0qLZtvZWCqEm4TBC1gRKoBAReQKLkGW68M=",
+      "System.Private.CoreLib.wasm": "sha256-F0bI7tobsgm/hGQaG12EIPQNBOzPlExJ0ZldtUX3phk=",
       "System.Runtime.InteropServices.JavaScript.wasm": "sha256-Ec2+eLiRn9w7Mmvl+xX35w5MyAYUnCOlXS6ZJ6LtCzc="
     },
     "assembly": {
       "Avalonia.Base.wasm": "sha256-osMCicI080pLKPetOWYe1/iMcPcHDrWaFvstRu3x4AU=",
       "Avalonia.Browser.wasm": "sha256-keAASNJMLqLXl6w3yodWfDPdCVbI5GawRqnApLohHeE=",
       "Avalonia.Controls.wasm": "sha256-u0beqXM9TUg4tMPNQXwwbQSKBbHjOZde9SwyR+5+/Vc=",
-      "Avalonia.Controls.TreeDataGrid.wasm": "sha256-8TZKpu8CQiAYb/K6rYsGEXa+oKETYdVF92pkSQC8Rq0=",
+      "Avalonia.Controls.TreeDataGrid.wasm": "sha256-fB0H3IRUz/hkW0wymr1wB/pFfXrJ02vNQwnF/EXxubs=",
       "Avalonia.Dialogs.wasm": "sha256-8XuON7p8G0fX0PjhuPLxrY0cv6DdaTxm/MalzdqipGQ=",
       "Avalonia.Fonts.Inter.wasm": "sha256-TvD30hMJ2ECzk39vOMdiWSwFeiMgCsQp3jqo6NkJQ/I=",
       "Avalonia.Markup.wasm": "sha256-XBp0QAMfYMj2jVQ8NRnsptmMYKqiQfuNdFeunRHIhf0=",
@@ -36,10 +36,11 @@
       "Avalonia.OpenGL.wasm": "sha256-LM9kljWbhpggNnyPYtbx2i8rRRxI5Fe2/tKrVhnOyJE=",
       "Avalonia.Skia.wasm": "sha256-BF4ONNev3OECIdp9yUOsl3jdKYFqnuGO7D6EwjQGewA=",
       "Avalonia.Vulkan.wasm": "sha256-ieRDwObyb+7bJBMBF1R0BwZ9OyNkcJYVlIG6nZXMSUg=",
-      "dxfInspect.wasm": "sha256-LbBZ/xqGPwr+jSxh9l/T21+wsbAiOyCVXvdXWdbCmn0=",
-      "dxfInspectWeb.wasm": "sha256-FcWA0vMyjTf2oxkggKTzVRtAIcW3eFd4NlBsLXa+MT4=",
+      "dxfInspect.wasm": "sha256-aGDaBo9xfragkNnCI3p8j1rPV+da65WmyOYBV8KuPac=",
+      "dxfInspectWeb.wasm": "sha256-BeTv1cFHr6yc8xQoGqCrCdARKEnoiI+D6FYOrrGrM8Y=",
+      "DynamicData.wasm": "sha256-Ra/8rllIB6vpzPMz6NdU0X7PV+aa3WVyXrwOHvb+q88=",
       "HarfBuzzSharp.wasm": "sha256-0zIlPKg6RDaxWftK9ugwZrU9c1b6Juj2TVKyBwe/EWw=",
-      "ReactiveUI.wasm": "sha256-ds8bgNcako0x2M1F4e24ysf9u35wOVXeLtTcqId9ytM=",
+      "ReactiveUI.wasm": "sha256-pym/MZCyY1df8EQGxThCnGlL5HraFkC5+VaOR/oBoos=",
       "Semi.Avalonia.wasm": "sha256-QMsLBuqsAa2t9puwCKcFoWMcdisGjCPwX+c22c/zMSQ=",
       "Semi.Avalonia.TreeDataGrid.wasm": "sha256-ujKU0DZirVZsOdacUo5k2PFDmcyeDTQ9BwZ6jo8uk/c=",
       "SkiaSharp.wasm": "sha256-zkuheZ8PL2vigiFp9GYacly4ujW8C4m6NrRtmyJZrYw=",
@@ -55,11 +56,11 @@
       "System.Console.wasm": "sha256-i2QyqCfniQM6Iot0U8dL71td/XFkmAZUaHdD7/aZESc=",
       "System.Diagnostics.TraceSource.wasm": "sha256-p5j6lPoyx2eIYK+pOkr5Mc8NJRxuG1AmBmbm3WiMBZE=",
       "System.wasm": "sha256-JTFuCK158shXIWK3NjdzwK5OZag1jcRJzsH8H5Gd6OA=",
-      "System.Linq.wasm": "sha256-/KCrMRae5BYslanRg8NWiDFwKJYzbKbJmcjRMqx7EZg=",
+      "System.Linq.wasm": "sha256-kP6HElEZmApagXxGgFsZy/DcsXMvzqQRGx9lYF5lAes=",
       "System.Linq.Expressions.wasm": "sha256-nZRMC8S8aD4sxsap+adT+TI38LBr7zeexegVQv/kzh0=",
-      "System.ObjectModel.wasm": "sha256-58ieigusUuY0zYXC2Ue45Op3evWc6ouSlphIrOTVD2o=",
+      "System.ObjectModel.wasm": "sha256-InyVhRknGZBwmu88FymJEr3PC3JV7vKBVdZWhq6IugQ=",
       "System.Private.Uri.wasm": "sha256-4/owQV6EvuCpURQrg2VUHe4nIIeGkCyYPJASJ0Z9E48=",
-      "System.Reactive.wasm": "sha256-FPysmrGTryeuT7ngDlSj9uClR9jGZOl4KMZzdiXLKFE=",
+      "System.Reactive.wasm": "sha256-W4NTgreUUorrR4YGghKTHr+aayrio79XUEAhraX+HjY=",
       "System.Runtime.Serialization.Primitives.wasm": "sha256-/Be8v4LWmw5bshLLklHZSYOPK3+rfVoHnXEC/J+/MJg="
     },
     "coreVfs": {
