@@ -68,14 +68,15 @@
                     Command="{Binding AddCodeTagCommand}"
                     Margin="4,0,0,0"/>
             <Button Grid.Column="2"
-                    Content="X"
                     Command="{Binding ResetCodeCommand}"
                     Margin="8,0,0,0"
                     Padding="8,0,8,0"
                     HorizontalAlignment="Stretch"
                     HorizontalContentAlignment="Center"
                     VerticalAlignment="Stretch"
-                    VerticalContentAlignment="Center" />
+                    VerticalContentAlignment="Center" >
+              <PathIcon Theme="{DynamicResource InnerPathIcon}" Data="{DynamicResource SemiIconClose}"/>
+            </Button>
           </Grid>
           <ItemsControl ItemsSource="{Binding Filters.CodeTags}">
             <ItemsControl.ItemsPanel>
@@ -93,7 +94,8 @@
                     <TextBlock Text="{Binding Value}" 
                                Foreground="White"
                                VerticalAlignment="Center"/>
-                    <Button Content="×"
+                    <Button Theme="{DynamicResource InnerIconButton}"
+                            Content="{DynamicResource SemiIconClose}"
                             Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).RemoveCodeTagCommand}"
                             CommandParameter="{Binding}"
                             Padding="4"
@@ -140,14 +142,15 @@
                     Command="{Binding AddDataTagCommand}"
                     Margin="4,0,0,0"/>
             <Button Grid.Column="2"
-                    Content="X"
                     Command="{Binding ResetDataCommand}"
                     Margin="8,0,0,0"
                     Padding="8,0,8,0"
                     HorizontalAlignment="Stretch"
                     HorizontalContentAlignment="Center"
                     VerticalAlignment="Stretch"
-                    VerticalContentAlignment="Center" />
+                    VerticalContentAlignment="Center" >
+              <PathIcon Theme="{DynamicResource InnerPathIcon}" Data="{DynamicResource SemiIconClose}"/>
+            </Button>
           </Grid>
           <ItemsControl ItemsSource="{Binding Filters.DataTags}">
             <ItemsControl.ItemsPanel>
@@ -165,7 +168,8 @@
                     <TextBlock Text="{Binding Value}" 
                                Foreground="White"
                                VerticalAlignment="Center"/>
-                    <Button Content="×"
+                    <Button Theme="{DynamicResource InnerIconButton}"
+                            Content="{DynamicResource SemiIconClose}"
                             Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).RemoveDataTagCommand}"
                             CommandParameter="{Binding}"
                             Padding="4"
@@ -191,8 +195,9 @@
                            Value="{Binding Filters.LineNumberStart}"
                            Minimum="1">
               <NumericUpDown.InnerRightContent>
-                <Button Content="X"
-                        Command="{Binding ReseLineNumberStartCommand}"
+                <Button Command="{Binding ReseLineNumberStartCommand}"
+                        Theme="{DynamicResource InnerIconButton}"
+                        Content="{DynamicResource SemiIconClose}"
                         Margin="0,0,0,0"
                         Padding="8,0,8,0"
                         HorizontalAlignment="Stretch"
@@ -210,8 +215,9 @@
                            Value="{Binding Filters.LineNumberEnd}"
                            Minimum="1">
               <NumericUpDown.InnerRightContent>
-                <Button Content="X"
-                        Command="{Binding ResetLineNumberEndCommand}"
+                <Button Command="{Binding ResetLineNumberEndCommand}"
+                        Theme="{DynamicResource InnerIconButton}"
+                        Content="{DynamicResource SemiIconClose}"
                         Margin="0,0,0,0"
                         Padding="8,0,8,0"
                         HorizontalAlignment="Stretch"
@@ -222,14 +228,15 @@
               </NumericUpDown.InnerRightContent>
             </NumericUpDown>
             <Button Grid.Column="3" 
-                    Content="X"
                     Command="{Binding ResetLineRangeCommand}"
                     Margin="8,0,0,0"
                     Padding="8,0,8,0"
                     HorizontalAlignment="Stretch"
                     HorizontalContentAlignment="Center"
                     VerticalAlignment="Stretch"
-                    VerticalContentAlignment="Center" />
+                    VerticalContentAlignment="Center" >
+              <PathIcon Theme="{DynamicResource InnerPathIcon}" Data="{DynamicResource SemiIconClose}"/>
+            </Button>
           </Grid>
         </StackPanel>
 

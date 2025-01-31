@@ -23,7 +23,8 @@
           <DataTemplate x:DataType="vm:DxfTabViewModel">
             <StackPanel Orientation="Horizontal">
               <TextBlock Text="{Binding Title}" VerticalAlignment="Center"/>
-              <Button Content="×"
+              <Button Theme="{DynamicResource InnerIconButton}"
+                      Content="{DynamicResource SemiIconClose}"
                       Command="{Binding $parent[TabControl].((vm:MainViewModel)DataContext).CloseTabCommand}"
                       CommandParameter="{Binding}"
                       Margin="8,0,0,0"
