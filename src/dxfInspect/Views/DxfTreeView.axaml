@@ -68,16 +68,17 @@
                     Command="{Binding AddCodeTagCommand}"
                     Margin="4,0,0,0"/>
             <Button Grid.Column="2"
-                    Content="X"
                     Command="{Binding ResetCodeCommand}"
                     Margin="8,0,0,0"
                     Padding="8,0,8,0"
                     HorizontalAlignment="Stretch"
                     HorizontalContentAlignment="Center"
                     VerticalAlignment="Stretch"
-                    VerticalContentAlignment="Center" />
+                    VerticalContentAlignment="Center" >
+              <PathIcon Theme="{DynamicResource InnerPathIcon}" Data="{DynamicResource SemiIconClose}"/>
+            </Button>
           </Grid>
-          <ItemsControl ItemsSource="{Binding CodeTags}">
+          <ItemsControl ItemsSource="{Binding Filters.CodeTags}">
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate>
                 <WrapPanel />
@@ -93,7 +94,8 @@
                     <TextBlock Text="{Binding Value}" 
                                Foreground="White"
                                VerticalAlignment="Center"/>
-                    <Button Content="×"
+                    <Button Theme="{DynamicResource InnerIconButton}"
+                            Content="{DynamicResource SemiIconClose}"
                             Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).RemoveCodeTagCommand}"
                             CommandParameter="{Binding}"
                             Padding="4"
@@ -106,9 +108,9 @@
           </ItemsControl>
           <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,4,0,4">
             <CheckBox Content="Exact Match" 
-                      IsChecked="{Binding CodeFilterOptions.UseExactMatch}"/>
+                      IsChecked="{Binding Filters.CodeFilterOptions.UseExactMatch}"/>
             <CheckBox Content="Ignore Case" 
-                      IsChecked="{Binding CodeFilterOptions.IgnoreCase}"/>
+                      IsChecked="{Binding Filters.CodeFilterOptions.IgnoreCase}"/>
           </StackPanel>
         </StackPanel>
 
@@ -140,16 +142,17 @@
                     Command="{Binding AddDataTagCommand}"
                     Margin="4,0,0,0"/>
             <Button Grid.Column="2"
-                    Content="X"
                     Command="{Binding ResetDataCommand}"
                     Margin="8,0,0,0"
                     Padding="8,0,8,0"
                     HorizontalAlignment="Stretch"
                     HorizontalContentAlignment="Center"
                     VerticalAlignment="Stretch"
-                    VerticalContentAlignment="Center" />
+                    VerticalContentAlignment="Center" >
+              <PathIcon Theme="{DynamicResource InnerPathIcon}" Data="{DynamicResource SemiIconClose}"/>
+            </Button>
           </Grid>
-          <ItemsControl ItemsSource="{Binding DataTags}">
+          <ItemsControl ItemsSource="{Binding Filters.DataTags}">
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate>
                 <WrapPanel />
@@ -165,7 +168,8 @@
                     <TextBlock Text="{Binding Value}" 
                                Foreground="White"
                                VerticalAlignment="Center"/>
-                    <Button Content="×"
+                    <Button Theme="{DynamicResource InnerIconButton}"
+                            Content="{DynamicResource SemiIconClose}"
                             Command="{Binding $parent[UserControl].((vm:DxfTreeViewModel)DataContext).RemoveDataTagCommand}"
                             CommandParameter="{Binding}"
                             Padding="4"
@@ -178,9 +182,9 @@
           </ItemsControl>
           <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,4,0,4">
             <CheckBox Content="Exact Match" 
-                      IsChecked="{Binding DataFilterOptions.UseExactMatch}"/>
+                      IsChecked="{Binding Filters.DataFilterOptions.UseExactMatch}"/>
             <CheckBox Content="Ignore Case" 
-                      IsChecked="{Binding DataFilterOptions.IgnoreCase}"/>
+                      IsChecked="{Binding Filters.DataFilterOptions.IgnoreCase}"/>
           </StackPanel>
         </StackPanel>
         
@@ -188,11 +192,12 @@
           <TextBlock Text="Line Range:" />
           <Grid ColumnDefinitions="*,Auto,*,Auto">
             <NumericUpDown Grid.Column="0"
-                           Value="{Binding LineNumberStart}"
+                           Value="{Binding Filters.LineNumberStart}"
                            Minimum="1">
               <NumericUpDown.InnerRightContent>
-                <Button Content="X"
-                        Command="{Binding ReseLineNumberStartCommand}"
+                <Button Command="{Binding ReseLineNumberStartCommand}"
+                        Theme="{DynamicResource InnerIconButton}"
+                        Content="{DynamicResource SemiIconClose}"
                         Margin="0,0,0,0"
                         Padding="8,0,8,0"
                         HorizontalAlignment="Stretch"
@@ -207,11 +212,12 @@
                        VerticalAlignment="Center"
                        Margin="8,0" />
             <NumericUpDown Grid.Column="2"
-                           Value="{Binding LineNumberEnd}"
+                           Value="{Binding Filters.LineNumberEnd}"
                            Minimum="1">
               <NumericUpDown.InnerRightContent>
-                <Button Content="X"
-                        Command="{Binding ResetLineNumberEndCommand}"
+                <Button Command="{Binding ResetLineNumberEndCommand}"
+                        Theme="{DynamicResource InnerIconButton}"
+                        Content="{DynamicResource SemiIconClose}"
                         Margin="0,0,0,0"
                         Padding="8,0,8,0"
                         HorizontalAlignment="Stretch"
@@ -222,14 +228,15 @@
               </NumericUpDown.InnerRightContent>
             </NumericUpDown>
             <Button Grid.Column="3" 
-                    Content="X"
                     Command="{Binding ResetLineRangeCommand}"
                     Margin="8,0,0,0"
                     Padding="8,0,8,0"
                     HorizontalAlignment="Stretch"
                     HorizontalContentAlignment="Center"
                     VerticalAlignment="Stretch"
-                    VerticalContentAlignment="Center" />
+                    VerticalContentAlignment="Center" >
+              <PathIcon Theme="{DynamicResource InnerPathIcon}" Data="{DynamicResource SemiIconClose}"/>
+            </Button>
           </Grid>
         </StackPanel>
 
