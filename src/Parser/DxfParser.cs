@@ -4,6 +4,8 @@ using System.Text;
 
 namespace Parser;
 
+public readonly record struct DxfTag(int Code, int ValueIndex);
+
 public sealed class DxfParser : IDisposable
 {
     private MemoryMappedFile? _mappedFile;
